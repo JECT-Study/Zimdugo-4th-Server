@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: zimdugo-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: zimdugo
+      POSTGRES_USER: zimdugo
+      POSTGRES_PASSWORD: zimdugo
