@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE suppressions PUBLIC
-        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
-        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+  "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+  "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 
 <!--
     테스트 코드 Checkstyle 예외 규칙
@@ -10,24 +10,24 @@
 -->
 <suppressions>
 
-    <!-- 테스트 코드: 메서드명 규칙 완화 (snake_case 허용) -->
-    <suppress checks="MethodName"
-              files="src[\\/]test[\\/]"/>
+  <!-- 테스트 코드: 메서드명 규칙 완화 (snake_case 허용) -->
+  <suppress checks="MethodName"
+            files="src[\\/]test[\\/]"/>
 
-    <!-- 테스트 코드: 메서드 길이 완화 -->
-    <suppress checks="MethodLength"
-              files="src[\\/]test[\\/]"/>
+  <!-- 테스트 코드: 메서드 길이 완화 -->
+  <suppress checks="MethodLength"
+            files="src[\\/]test[\\/]"/>
 
-    <!-- 테스트 코드: 매직 넘버 허용 -->
-    <suppress checks="MagicNumber"
-              files="src[\\/]test[\\/]"/>
+  <!-- 테스트 코드: 매직 넘버 허용 -->
+  <suppress checks="MagicNumber"
+            files="src[\\/]test[\\/]"/>
 
-    <!-- 테스트 코드: 파일 길이 완화 -->
-    <suppress checks="FileLength"
-              files="src[\\/]test[\\/]"/>
+  <!-- 테스트 코드: 파일 길이 완화 -->
+  <suppress checks="FileLength"
+            files="src[\\/]test[\\/]"/>
 
-    <!-- 테스트 코드: 상수명 규칙 완화 (ArchUnit 필드명 snake_case 허용) -->
-    <suppress checks="ConstantName"
-              files="src[\\/]test[\\/]"/>
+  <!-- 테스트 코드: 상수명 규칙 완화 (ArchUnit 필드명 snake_case 허용) -->
+  <suppress checks="ConstantName"
+            files="src[\\/]test[\\/]"/>
 
 </suppressions>

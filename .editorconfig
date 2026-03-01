@@ -22,9 +22,6 @@ indent_size = 2
 [*.md]
 trim_trailing_whitespace = false
 
-[*.properties]
-charset = utf-8
-
 [{gradlew,*.bat}]
 end_of_line = crlf
 
