@@ -49,12 +49,45 @@ checkstyle {
 - 하단 **Checkstyle** 탭에서 현재 파일 또는 프로젝트 전체 검사 가능
 - 에디터에서 실시간으로 위반 사항 표시
 
+## Git Pre-commit Hook
+
+커밋 시 자동으로 `checkstyleMain`을 실행합니다.
+
+### 설치
+
+첫 빌드 시 자동 설치됩니다. (`scripts/pre-commit` → `.git/hooks/pre-commit` 복사)
+
+수동 설치:
+
+```bash
+./gradlew installGitHooks
+```
+
+### 우회
+
+hook을 건너뛰어야 할 때:
+
+```bash
+git commit --no-verify -m "메시지"
+```
+
+### 재설치
+
+스크립트 수정 후 재설치가 필요하면:
+
+```bash
+rm .git/hooks/pre-commit
+./gradlew installGitHooks
+```
+
 ## 설정 파일 구조
 
 ```
 config/checkstyle/
 ├── checkstyle.xml       # 메인 규칙 설정
 └── suppressions.xml     # 테스트 코드 예외 규칙
+scripts/
+└── pre-commit           # Git pre-commit hook 스크립트
 ```
 
 ## 주요 규칙 요약

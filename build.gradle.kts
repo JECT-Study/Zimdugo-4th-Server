@@ -68,3 +68,22 @@ tasks.withType<Checkstyle> {
         html.required.set(true)
     }
 }
+
+tasks.register<Copy>("installGitHooks") {
+    description = "pre-commit hook을 설치합니다 (Checkstyle 검사 자동 실행)"
+    group = "setup"
+
+    onlyIf {
+        !file("${rootDir}/.git/hooks/pre-commit").exists()
+    }
+
+    from("${rootDir}/scripts/pre-commit")
+    into("${rootDir}/.git/hooks")
+    filePermissions {
+        unix("rwxr-xr-x")
+    }
+}
+
+tasks.named("compileJava") {
+    dependsOn("installGitHooks")
+}
