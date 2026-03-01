@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    코딩 컨벤션 Checkstyle 설정
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- Suppressions -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/suppressions.xml"/>
+        <property name="optional" value="false"/>
+    </module>
+
+    <!-- SuppressWarningsFilter: @SuppressWarnings("checkstyle:...") 지원 -->
+    <module name="SuppressWarningsFilter"/>
+
+    <!-- 파일 최대 500줄 -->
+    <module name="FileLength">
+        <property name="max" value="500"/>
+    </module>
+
+    <!-- 줄 길이 120자 (Checker 레벨 모듈) -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <!-- import, package, URL은 제외 -->
+        <property name="ignorePattern" value="^(package|import) .*|.*https?://.*"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- SuppressWarnings 어노테이션 지원 -->
+        <module name="SuppressWarningsHolder"/>
+
+        <!-- ==================== -->
+        <!-- 네이밍 규칙           -->
+        <!-- ==================== -->
+
+        <!-- 클래스: PascalCase -->
+        <module name="TypeName">
+            <property name="format" value="^[A-Z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern"
+                     value="클래스명은 PascalCase여야 합니다: ''{0}''"/>
+        </module>
+
+        <!-- 메서드: camelCase -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern"
+                     value="메서드명은 camelCase여야 합니다: ''{0}''"/>
+        </module>
+
+        <!-- 변수: camelCase -->
+        <module name="MemberName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern"
+                     value="멤버 변수명은 camelCase여야 합니다: ''{0}''"/>
+        </module>
+
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <module name="ParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+        <!-- 상수: UPPER_SNAKE_CASE -->
+        <module name="ConstantName">
+            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+            <message key="name.invalidPattern"
+                     value="상수명은 UPPER_SNAKE_CASE여야 합니다: ''{0}''"/>
+        </module>
+
+        <!-- 패키지: 소문자 -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+            <message key="name.invalidPattern"
+                     value="패키지명은 소문자여야 합니다: ''{0}''"/>
+        </module>
+
+        <!-- 접근제어자 순서: public protected private abstract default static final transient volatile synchronized native strictfp -->
+        <module name="ModifierOrder"/>
+
+        <!-- ==================== -->
+        <!-- Import 규칙          -->
+        <!-- ==================== -->
+
+        <!-- import * 금지 -->
+        <module name="AvoidStarImport"/>
+
+        <!-- 미사용 import 금지 -->
+        <module name="UnusedImports"/>
+
+        <!-- ==================== -->
+        <!-- 코드 품질            -->
+        <!-- ==================== -->
+
+        <!-- 메서드 최대 30줄 -->
+        <module name="MethodLength">
+            <property name="max" value="30"/>
+            <property name="countEmpty" value="false"/>
+        </module>
+
+        <!-- 파라미터 최대 5개 -->
+        <module name="ParameterNumber">
+            <property name="max" value="5"/>
+            <!-- @Override 메서드 제외 -->
+            <property name="ignoreOverriddenMethods" value="true"/>
+        </module>
+
+        <!-- if/for/while/do 중괄호 필수 -->
+        <module name="NeedBraces"/>
+
+        <!-- 빈 블록 금지 -->
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+            <property name="tokens" value="LITERAL_TRY, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, LITERAL_SWITCH"/>
+        </module>
+
+        <!-- equals() 오버라이드 시 hashCode()도 필수 -->
+        <module name="EqualsHashCode"/>
+
+        <!-- switch문에 default 필수 -->
+        <module name="MissingSwitchDefault"/>
+
+        <!-- fall-through 금지 -->
+        <module name="FallThrough"/>
+
+        <!-- 매직 넘버 금지 (-1, 0, 1, 2는 허용) -->
+        <module name="MagicNumber">
+            <property name="ignoreNumbers" value="-1, 0, 1, 2"/>
+            <property name="ignoreAnnotation" value="true"/>
+            <property name="ignoreHashCodeMethod" value="true"/>
+            <property name="ignoreFieldDeclaration" value="true"/>
+        </module>
+
+        <!-- ==================== -->
+        <!-- 기타                  -->
+        <!-- ==================== -->
+
+        <!-- 하나의 파일에 하나의 최상위 클래스 -->
+        <module name="OneTopLevelClass"/>
+
+        <!-- String 비교시 equals 사용 강제 -->
+        <module name="StringLiteralEquality"/>
+
+        <!-- 불필요한 세미콜론 금지 -->
+        <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>
+
+    </module>
+</module>
