@@ -5,6 +5,11 @@ spring:
     active: local
   jpa:
     open-in-view: false
+  boot:
+    admin:
+      client:
+        url: http://localhost:8080
+        auto-deregistration: false
 
 ---
 spring:
@@ -28,6 +33,12 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
 ---
 spring:
   config:
@@ -40,3 +51,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
