@@ -62,28 +62,31 @@ jobs:
               reviewRequestText = `🔔 ${head}과 ${tail} 님에게 PR 리뷰 요청이 왔습니다.`;
             }
 
-            const MAX_DESC_LENGTH = 200;
-            const body = (pr.body ?? '').replace(/\s+/g, ' ').trim();
-            const description = !body
+            const MAX_DESC_LENGTH = 300;
+            const bodyRaw = (pr.body ?? '').replace(/\r/g, '').trim();
+            const bodyWithLineBreaks = bodyRaw
+              .split('\n')
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0)
+              .join('\n');
+            const description = !bodyWithLineBreaks
               ? '_PR 설명이 없습니다._'
-              : body.length > MAX_DESC_LENGTH
-                ? `${body.slice(0, MAX_DESC_LENGTH)}...`
-                : body;
+              : bodyWithLineBreaks.length > MAX_DESC_LENGTH
+                ? `${bodyWithLineBreaks.slice(0, MAX_DESC_LENGTH)}...`
+                : bodyWithLineBreaks;
 
             const message = {
-              username: '짐두고 백엔드 PR 알리미',
+              username: '📢짐두고 백엔드 PR 알리미',
               content: reviewRequestText,
               embeds: [{
-                title: `PR #${pr.number}`,
-                description: `**${pr.title}**\n\n${description}`,
+                title: `PR #${pr.number} [ ${pr.title} ]`,
+                description,
                 url: pr.html_url,
                 color: 0x2EAF83,
                 fields: [
                   { name: '작성자', value: `📝 **@${pr.user.login}**`, inline: false },
                   { name: '브랜치', value: `\`${pr.head.ref}\` → \`${pr.base.ref}\``, inline: true },
-                  { name: '링크', value: `[PR 바로가기](${pr.html_url})`, inline: true }
                 ],
-                footer: { text: '리뷰 부탁드립니다' }
               }]
             };
 
