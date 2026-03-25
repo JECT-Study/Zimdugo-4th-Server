@@ -1,0 +1,102 @@
+name: 디스코드 PR 리뷰 알림
+
+on:
+  pull_request:
+    types:
+      - review_requested
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-review-discord-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 디스코드 알림 전송
+        uses: actions/github-script@v7
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_BE }}
+        with:
+          script: |
+            const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+            if (!webhookUrl) {
+              core.warning('DISCORD_WEBHOOK_BE 시크릿이 없어 알림 전송을 건너뜁니다.');
+              return;
+            }
+
+
+            const mapping = {
+              'buddle031': '944930352047226931',
+              'mike7643': '469791913050898443',
+              'zxcv9203': '382356905990815744'
+            };
+
+            await new Promise((resolve) => setTimeout(resolve, 7000));
+
+            const pr = context.payload.pull_request;
+            const prInfo = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+
+            const requestedReviewers = prInfo.data.requested_reviewers ?? [];
+            const mentionParts = requestedReviewers.map((r) => {
+              const discordId = mapping[r.login];
+              return discordId ? `<@${discordId}>` : `**@${r.login}**`;
+            });
+
+            let reviewRequestText = '🔔 리뷰 대상 확인이 필요합니다.';
+            if (mentionParts.length === 1) {
+              reviewRequestText = `🔔 ${mentionParts[0]} 님에게 PR 리뷰 요청이 왔습니다.`;
+            } else if (mentionParts.length === 2) {
+              reviewRequestText = `🔔 ${mentionParts[0]} 님과 ${mentionParts[1]} 님에게 PR 리뷰 요청이 왔습니다.`;
+            } else if (mentionParts.length > 2) {
+              const head = mentionParts.slice(0, -1).map((m) => `${m} 님`).join(', ');
+              const tail = mentionParts[mentionParts.length - 1];
+              reviewRequestText = `🔔 ${head}과 ${tail} 님에게 PR 리뷰 요청이 왔습니다.`;
+            }
+
+            const MAX_DESC_LENGTH = 300;
+            const bodyRaw = (pr.body ?? '').replace(/\r/g, '').trim();
+            const bodyWithLineBreaks = bodyRaw
+              .split('\n')
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0)
+              .join('\n');
+            const description = !bodyWithLineBreaks
+              ? '_PR 설명이 없습니다._'
+              : bodyWithLineBreaks.length > MAX_DESC_LENGTH
+                ? `${bodyWithLineBreaks.slice(0, MAX_DESC_LENGTH)}...`
+                : bodyWithLineBreaks;
+
+            const message = {
+              username: '📢짐두고 백엔드 PR 알리미',
+              content: reviewRequestText,
+              embeds: [{
+                title: `PR #${pr.number}\n[ ${pr.title} ]`,
+                description,
+                url: pr.html_url,
+                color: 0x2EAF83,
+                fields: [
+                  { name: '작성자', value: `📝 **@${pr.user.login}**`, inline: false },
+                  { name: '브랜치', value: `\`${pr.head.ref}\` → \`${pr.base.ref}\``, inline: true },
+                ],
+              }]
+            };
+
+            const res = await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(message)
+            });
+
+            if (!res.ok) {
+              const text = await res.text();
+              core.setFailed(`디스코드 웹훅 호출 실패 (${res.status}): ${text}`);
+            }
