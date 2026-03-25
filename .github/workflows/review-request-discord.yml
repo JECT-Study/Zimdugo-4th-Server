@@ -79,8 +79,7 @@ jobs:
               username: '📢짐두고 백엔드 PR 알리미',
               content: reviewRequestText,
               embeds: [{
-                title: `PR #${pr.number} [ ${pr.title} ]`,
-                description,
+                description: `**[PR #${pr.number}](${pr.html_url})**\n**[\\[ ${pr.title} \\]](${pr.html_url})**\n\n${description}`,
                 url: pr.html_url,
                 color: 0x2EAF83,
                 fields: [
