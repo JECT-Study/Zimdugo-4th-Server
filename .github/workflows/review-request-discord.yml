@@ -69,9 +69,7 @@ jobs:
             const requestedReviewers = prInfo.data.requested_reviewers ?? [];
             const mentionParts = requestedReviewers.map((r) => {
               const discordId = mapping[r.login];
-
-              // return discordId ? `<@${discordId}>` : `**@${r.login}**`;
-              return `**@${r.login}**`;
+              return discordId ? `<@${discordId}>` : `**@${r.login}**`;
             });
 
             let reviewRequestText = '🔔 리뷰 대상 확인이 필요합니다.';
