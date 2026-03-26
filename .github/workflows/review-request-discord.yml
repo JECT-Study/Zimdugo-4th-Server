@@ -6,12 +6,9 @@ on:
       - review_requested
 
 permissions:
+  actions: read
   contents: read
   pull-requests: read
-
-concurrency:
-  group: pr-review-discord-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
 
 jobs:
   notify:
@@ -39,6 +36,30 @@ jobs:
             await new Promise((resolve) => setTimeout(resolve, 7000));
 
             const pr = context.payload.pull_request;
+            const currentRunId = Number(context.runId);
+
+            const workflowRuns = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event: 'pull_request',
+              per_page: 100,
+            });
+
+            const hasNewerRunForSamePr = (workflowRuns.data.workflow_runs ?? []).some((run) => {
+              if (run.id === currentRunId) return false;
+              if (run.name !== context.workflow) return false;
+
+              const includesThisPr = (run.pull_requests ?? []).some((linkedPr) => linkedPr.number === pr.number);
+              if (!includesThisPr) return false;
+
+              return run.id > currentRunId;
+            });
+
+            if (hasNewerRunForSamePr) {
+              core.info(`더 최신 run이 있어 현재 run(${currentRunId})은 알림 전송을 건너뜁니다.`);
+              return;
+            }
+
             const prInfo = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -48,7 +69,9 @@ jobs:
             const requestedReviewers = prInfo.data.requested_reviewers ?? [];
             const mentionParts = requestedReviewers.map((r) => {
               const discordId = mapping[r.login];
-              return discordId ? `<@${discordId}>` : `**@${r.login}**`;
+
+              // return discordId ? `<@${discordId}>` : `**@${r.login}**`;
+              return `**@${r.login}**`;
             });
 
             let reviewRequestText = '🔔 리뷰 대상 확인이 필요합니다.';
