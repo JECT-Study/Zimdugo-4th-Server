@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:zimdugo;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: my-secret-key-my-secret-key-my-secret-key-123456
+  access-token-expiration-seconds: 900
+  refresh-token-expiration-seconds: 2592000

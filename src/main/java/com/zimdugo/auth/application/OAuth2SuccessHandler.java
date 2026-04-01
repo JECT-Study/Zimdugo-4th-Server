@@ -34,9 +34,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Authentication authentication
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Authentication authentication
     ) throws IOException {
 
         DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
@@ -62,12 +62,12 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         // RT -> HttpOnly Cookie
         ResponseCookie rtCookie = ResponseCookie.from("refreshToken", tokens.refreshToken())
-                .httpOnly(true)
-                .secure(false) // 운영 true
-                .path("/api/auth/refresh")
-                .maxAge(rtTtl)
-                .sameSite("Strict")
-                .build();
+            .httpOnly(true)
+            .secure(false) // 운영 true
+            .path("/api/auth/refresh")
+            .maxAge(rtTtl)
+            .sameSite("Strict")
+            .build();
 
         response.setHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
