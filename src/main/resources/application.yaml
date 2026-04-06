@@ -72,6 +72,7 @@ spring:
   config:
     activate:
       on-profile: local
+    import: optional:classpath:application-private.yaml
 
   datasource:
     url: jdbc:postgresql://localhost:5432/zimdugo

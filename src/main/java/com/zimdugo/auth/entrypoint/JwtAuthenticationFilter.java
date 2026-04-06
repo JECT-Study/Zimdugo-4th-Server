@@ -1,5 +1,6 @@
 package com.zimdugo.auth.entrypoint;
 
+import com.zimdugo.auth.application.AccessTokenValidationService;
 import com.zimdugo.auth.application.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,6 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final int BEARER_PREFIX_LENGTH = BEARER_PREFIX.length();
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final AccessTokenValidationService accessTokenValidationService;
 
     @Override
     protected void doFilterInternal(
@@ -33,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authorization != null && authorization.startsWith(BEARER_PREFIX)) {
             String accessToken = authorization.substring(BEARER_PREFIX_LENGTH);
 
-            if (jwtTokenProvider.validateToken(accessToken)) {
+            if (accessTokenValidationService.isValidForAuthentication(accessToken)) {
                 Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }

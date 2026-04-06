@@ -93,6 +93,20 @@ class RedisRefreshTokenRepositoryTest {
     }
 
     @Test
+    @DisplayName("유저 기준 전체 삭제 시 해당 유저의 모든 RT가 제거된다")
+    void deleteAllByUserId_removesAllUserTokens() {
+        repository.save(1L, "sid-1", "jti-1", "token-1", Duration.ofDays(30));
+        repository.save(1L, "sid-2", "jti-2", "token-2", Duration.ofDays(30));
+        repository.save(2L, "sid-3", "jti-3", "token-3", Duration.ofDays(30));
+
+        repository.deleteAllByUserId(1L);
+
+        assertThat(repository.matches(1L, "sid-1", "token-1")).isFalse();
+        assertThat(repository.matches(1L, "sid-2", "token-2")).isFalse();
+        assertThat(repository.matches(2L, "sid-3", "token-3")).isTrue();
+    }
+
+    @Test
     @DisplayName("사용된 jti는 재사용 탐지에서 true를 반환한다")
     void isJtiUsed_returnsTrueAfterMarkJtiUsed() {
         assertThat(repository.isJtiUsed("jti-1")).isFalse();

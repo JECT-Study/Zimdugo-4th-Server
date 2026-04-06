@@ -2,7 +2,6 @@ package com.zimdugo.auth.application;
 
 import com.zimdugo.auth.domain.AuthTokens;
 import com.zimdugo.auth.domain.RefreshTokenRepository;
-import com.zimdugo.common.config.JwtProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -44,6 +43,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         Long userId = Long.valueOf(attributes.get("userId").toString());
         String email = attributes.get("email") != null ? attributes.get("email").toString() : null;
+        String role = attributes.get("role") != null ? attributes.get("role").toString() : "USER";
 
         // 세션 식별자
         String sid = UUID.randomUUID().toString();
@@ -52,7 +52,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         long uv = refreshTokenRepository.getUserVersion(userId);
 
         // AT + RT 발급
-        AuthTokens tokens = jwtTokenProvider.generateTokens(userId, email, sid, uv);
+        AuthTokens tokens = jwtTokenProvider.generateTokens(userId, email, role, sid, uv);
 
         Duration rtTtl = Duration.ofSeconds(jwtProperties.refreshTokenExpirationSeconds());
 

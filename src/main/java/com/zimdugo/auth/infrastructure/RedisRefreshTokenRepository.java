@@ -11,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.Set;
 
 @Slf4j
 @Repository
@@ -42,6 +43,17 @@ public class RedisRefreshTokenRepository implements RefreshTokenRepository {
     public void delete(Long userId, String sid) {
         Boolean deleted = stringRedisTemplate.delete(rtKey(userId, sid));
         log.info("RT deleted. key={}, result={}", rtKey(userId, sid), deleted);
+    }
+
+    @Override
+    public void deleteAllByUserId(Long userId) {
+        Set<String> keys = stringRedisTemplate.keys("auth:rt:" + userId + ":*");
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        Long deletedCount = stringRedisTemplate.delete(keys);
+        log.info("All RT deleted for user. userId={}, count={}", userId, deletedCount);
     }
 
     @Override

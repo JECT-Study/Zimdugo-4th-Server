@@ -1,8 +1,6 @@
 package com.zimdugo.auth.application;
 
 import com.zimdugo.auth.domain.AuthTokens;
-import com.zimdugo.auth.domain.JwtPrincipal;
-import com.zimdugo.common.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -18,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Component
@@ -39,23 +38,25 @@ public class JwtTokenProvider {
      * sid는 호출부에서 생성해서 넘기거나, 여기서 새로 만들어도 됨.
      * uv는 Redis에서 조회한 값을 넘겨받음.
      */
-    public AuthTokens generateTokens(Long userId, String email, String sid, long uv) {
+    public AuthTokens generateTokens(Long userId, String email, String role, String sid, long uv) {
         String accessJti  = UUID.randomUUID().toString();
         String refreshJti = UUID.randomUUID().toString();
 
-        String accessToken  = generateAccessToken(userId, email, sid, uv, accessJti);
-        String refreshToken = generateRefreshToken(userId, sid, refreshJti);
+        String accessToken  = generateAccessToken(userId, email, role, sid, uv, accessJti);
+        String refreshToken = generateRefreshToken(userId, sid, uv, refreshJti);
 
         return new AuthTokens(accessToken, refreshToken, sid, refreshJti);
     }
 
-    private String generateAccessToken(Long userId, String email, String sid, long uv, String jti) {
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    private String generateAccessToken(Long userId, String email, String role, String sid, long uv, String jti) {
         Instant now    = Instant.now();
         Instant expiry = now.plusSeconds(jwtProperties.accessTokenExpirationSeconds());
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
+                .claim("role", normalizeRole(role))
                 .claim("sid", sid)
                 .claim("uv", uv)
                 .claim("typ", "AT")
@@ -66,13 +67,14 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    private String generateRefreshToken(Long userId, String sid, String jti) {
+    private String generateRefreshToken(Long userId, String sid, long uv, String jti) {
         Instant now    = Instant.now();
         Instant expiry = now.plusSeconds(jwtProperties.refreshTokenExpirationSeconds());
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("sid", sid)
+                .claim("uv", uv)
                 .claim("typ", "RT")
                 .id(jti)                        // jti
                 .issuedAt(Date.from(now))
@@ -126,17 +128,19 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
         Long   userId = Long.valueOf(claims.getSubject());
-        String email  = claims.get("email", String.class);
-        String sid    = claims.get("sid",   String.class);
-        String jti    = claims.getId();
-        long   uv     = getUv(token);
-
-        JwtPrincipal principal = new JwtPrincipal(userId, email, sid, jti, uv);
+        String role = normalizeRole(claims.get("role", String.class));
 
         return new UsernamePasswordAuthenticationToken(
-                principal,
+                String.valueOf(userId),
                 token,
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                List.of(new SimpleGrantedAuthority("ROLE_" + role))
         );
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null || role.isBlank()) {
+            return "USER";
+        }
+        return role.toUpperCase(Locale.ROOT);
     }
 }

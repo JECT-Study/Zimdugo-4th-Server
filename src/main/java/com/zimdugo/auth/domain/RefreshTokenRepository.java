@@ -13,6 +13,8 @@ public interface RefreshTokenRepository {
     /** 해당 세션 RT 삭제 (로그아웃, Rotation 시 폐기) */
     void delete(Long userId, String sid);
 
+    void deleteAllByUserId(Long userId);
+
     /** jti가 이미 사용된 적 있는지 확인 (재사용 탐지) */
     boolean isJtiUsed(String jti);
 
