@@ -38,9 +38,9 @@ public class SecurityConfig {
 
     private void configureBasicSecurity(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.ignoringRequestMatchers(
-                "/h2-console/**",
                 "/api/auth/refresh",
                 "/api/auth/logout",
+                "/api/auth/withdraw",
                 "/instances"
             ))
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
@@ -54,7 +54,6 @@ public class SecurityConfig {
     private void configureAuthorization(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers(
-                "/h2-console/**",
                 "/login/**",
                 "/oauth2/**",
                 "/api/auth/refresh",
