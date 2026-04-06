@@ -24,7 +24,8 @@ public class AuthController {
     private static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 60L * 60L * 24L * 30L;
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
     private static final String REFRESH_TOKEN_HEADER_NAME = "X-Refresh-Token";
-    private static final String SAME_SITE_POLICY = "Lax";
+    private static final String SAME_SITE_POLICY = "Strict";
+    private static final String REFRESH_TOKEN_COOKIE_PATH = "/api/auth/refresh";
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final AuthCommandService authCommandService;
@@ -83,7 +84,7 @@ public class AuthController {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
             .httpOnly(true)
             .secure(false)
-            .path("/")
+            .path(REFRESH_TOKEN_COOKIE_PATH)
             .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE)
             .sameSite(SAME_SITE_POLICY)
             .build();
@@ -93,7 +94,7 @@ public class AuthController {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
             .httpOnly(true)
             .secure(false)
-            .path("/")
+            .path(REFRESH_TOKEN_COOKIE_PATH)
             .maxAge(0)
             .sameSite(SAME_SITE_POLICY)
             .build();

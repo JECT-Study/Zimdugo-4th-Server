@@ -32,14 +32,8 @@ public class AuthCommandService {
             throw new BusinessException(ErrorCode.REFRESH_TOKEN_MISMATCH);
         }
 
-        long tokenUv = jwtTokenProvider.getUv(refreshToken);
-        long currentUv = refreshTokenRepository.getUserVersion(userId);
-        if (tokenUv != currentUv) {
-            throw new BusinessException(ErrorCode.REFRESH_TOKEN_REVOKED);
-        }
-
         User user = userQueryService.findById(userId);
-        AuthTokens newTokens = reissueTokens(user, sid, currentUv);
+        AuthTokens newTokens = reissueTokens(user, sid);
 
         return new AuthRefreshResult(
             user.getId(),
@@ -52,10 +46,8 @@ public class AuthCommandService {
     @Transactional
     public void logout(String refreshToken, String accessToken) {
         LogoutTarget logoutTarget = extractLogoutTarget(refreshToken, accessToken);
-
         if (logoutTarget != null) {
-            refreshTokenRepository.incrementUserVersion(logoutTarget.userId());
-            refreshTokenRepository.deleteAllByUserId(logoutTarget.userId());
+            refreshTokenRepository.delete(logoutTarget.userId(), logoutTarget.sid());
         }
     }
 
@@ -69,19 +61,17 @@ public class AuthCommandService {
         }
     }
 
-    private AuthTokens reissueTokens(User user, String sid, long uv) {
+    private AuthTokens reissueTokens(User user, String sid) {
         AuthTokens newTokens = jwtTokenProvider.generateTokens(
             user.getId(),
             user.getEmail(),
             user.getRoleOrDefault().name(),
-            sid,
-            uv
+            sid
         );
 
         refreshTokenRepository.save(
             user.getId(),
             newTokens.sid(),
-            newTokens.refreshJti(),
             newTokens.refreshToken(),
             Duration.ofSeconds(REFRESH_TOKEN_COOKIE_MAX_AGE)
         );

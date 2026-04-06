@@ -42,7 +42,6 @@ public class AccountWithdrawalService {
         userStore.store(user);
 
         socialAccountStore.deleteAllByUserId(userId);
-        refreshTokenRepository.incrementUserVersion(userId);
         refreshTokenRepository.deleteAllByUserId(userId);
     }
 }
