@@ -1,5 +1,14 @@
 package com.zimdugo.auth.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.zimdugo.auth.application.JwtTokenProvider;
 import com.zimdugo.auth.domain.AuthTokens;
 import com.zimdugo.auth.domain.RefreshTokenRepository;
@@ -29,15 +38,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -95,11 +95,7 @@ class AuthFlowIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        stringRedisTemplate.getConnectionFactory()
-            .getConnection()
-            .serverCommands()
-            .flushAll();
-
+        stringRedisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
         socialAccountJpaRepository.deleteAll();
         userJpaRepository.deleteAll();
     }
@@ -117,14 +113,12 @@ class AuthFlowIntegrationTest {
             userId,
             "test@zimdugo.com",
             "USER",
-            "test-sid",
-            1L
+            "test-sid"
         );
 
         refreshTokenRepository.save(
             userId,
             tokens.sid(),
-            tokens.refreshJti(),
             tokens.refreshToken(),
             Duration.ofDays(30)
         );
@@ -152,14 +146,12 @@ class AuthFlowIntegrationTest {
             userId,
             "logout@zimdugo.com",
             "USER",
-            "logout-sid",
-            1L
+            "logout-sid"
         );
 
         refreshTokenRepository.save(
             userId,
             tokens.sid(),
-            tokens.refreshJti(),
             tokens.refreshToken(),
             Duration.ofDays(30)
         );
@@ -177,8 +169,8 @@ class AuthFlowIntegrationTest {
     }
 
     @Test
-    @DisplayName("logout from one session invalidates all sessions and old AT")
-    void logout_invalidatesAllSessionsAndAccessTokens() throws Exception {
+    @DisplayName("logout invalidates only current session token")
+    void logout_invalidatesOnlyCurrentSessionToken() throws Exception {
         User savedUser = userStore.store(
             new User("multi@zimdugo.com", "multi-session", null, UserStatus.ACTIVE)
         );
@@ -189,35 +181,27 @@ class AuthFlowIntegrationTest {
             userId,
             "multi@zimdugo.com",
             "USER",
-            "sid-1",
-            1L
+            "sid-1"
         );
         AuthTokens session2 = jwtTokenProvider.generateTokens(
             userId,
             "multi@zimdugo.com",
             "USER",
-            "sid-2",
-            1L
+            "sid-2"
         );
 
         refreshTokenRepository.save(
             userId,
             session1.sid(),
-            session1.refreshJti(),
             session1.refreshToken(),
             Duration.ofDays(30)
         );
         refreshTokenRepository.save(
             userId,
             session2.sid(),
-            session2.refreshJti(),
             session2.refreshToken(),
             Duration.ofDays(30)
         );
-
-        mockMvc.perform(get("/api/v1/me")
-                .header("Authorization", "Bearer " + session2.accessToken()))
-            .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/auth/logout")
                 .with(csrf())
@@ -225,20 +209,16 @@ class AuthFlowIntegrationTest {
             .andExpect(status().isOk());
 
         assertThat(refreshTokenRepository.matches(userId, session1.sid(), session1.refreshToken())).isFalse();
-        assertThat(refreshTokenRepository.matches(userId, session2.sid(), session2.refreshToken())).isFalse();
+        assertThat(refreshTokenRepository.matches(userId, session2.sid(), session2.refreshToken())).isTrue();
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(csrf())
                 .cookie(new Cookie("refreshToken", session2.refreshToken())))
-            .andExpect(status().is4xxClientError());
-
-        mockMvc.perform(get("/api/v1/me")
-                .header("Authorization", "Bearer " + session2.accessToken()))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("withdraw deactivates user, deletes social links, and revokes tokens")
+    @DisplayName("withdraw sets user as deleted, removes social links, and revokes refresh token")
     void withdraw_deletesSessionAndDeactivatesUser() throws Exception {
         User savedUser = userStore.store(
             new User("withdraw@zimdugo.com", "withdraw-user", null, UserStatus.ACTIVE)
@@ -260,14 +240,12 @@ class AuthFlowIntegrationTest {
             userId,
             "withdraw@zimdugo.com",
             "USER",
-            "withdraw-sid",
-            1L
+            "withdraw-sid"
         );
 
         refreshTokenRepository.save(
             userId,
             tokens.sid(),
-            tokens.refreshJti(),
             tokens.refreshToken(),
             Duration.ofDays(30)
         );
@@ -283,8 +261,14 @@ class AuthFlowIntegrationTest {
         assertThat(socialAccountJpaRepository.findAllByUserId(userId)).isEmpty();
         assertThat(refreshTokenRepository.matches(userId, tokens.sid(), tokens.refreshToken())).isFalse();
 
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .cookie(new Cookie("refreshToken", tokens.refreshToken())))
+            .andExpect(status().is4xxClientError());
+
         mockMvc.perform(get("/api/v1/me")
                 .header("Authorization", "Bearer " + tokens.accessToken()))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("DELETED"));
     }
 }
