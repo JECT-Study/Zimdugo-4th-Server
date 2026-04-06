@@ -1,4 +1,4 @@
-package com.zimdugo.user.domain;
+package com.zimdugo.identity.domain;
 
 public enum AuthProvider {
     GOOGLE,

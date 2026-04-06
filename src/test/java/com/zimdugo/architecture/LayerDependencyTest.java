@@ -24,24 +24,22 @@ class LayerDependencyTest {
     }
 
     @Nested
-    @DisplayName("레이어 의존성 규칙")
+    @DisplayName("Layer Dependency Rules")
     class LayerDependencyRules {
 
         @Test
-        @DisplayName("domain 레이어는 다른 레이어에 의존하지 않는다")
+        @DisplayName("domain should not depend on other layers")
         void domain_should_not_depend_on_other_layers() {
             noClasses()
                 .that().resideInAPackage("..domain..")
                 .should().dependOnClassesThat()
-                .resideInAnyPackage(
-                    "..entrypoint..", "..application..", "..infrastructure.."
-                )
+                .resideInAnyPackage("..entrypoint..", "..application..", "..infrastructure..")
                 .allowEmptyShould(true)
                 .check(importedClasses);
         }
 
         @Test
-        @DisplayName("application 레이어는 domain만 의존할 수 있다")
+        @DisplayName("application should not depend on entrypoint or infrastructure")
         void application_should_only_depend_on_domain() {
             noClasses()
                 .that().resideInAPackage("..application..")
@@ -52,7 +50,7 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("entrypoint 레이어는 application만 의존할 수 있다 (계층 건너뛰기 금지)")
+        @DisplayName("entrypoint should not depend on domain or infrastructure")
         void entrypoint_should_only_depend_on_application() {
             noClasses()
                 .that().resideInAPackage("..entrypoint..")
@@ -63,25 +61,23 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("infrastructure 레이어는 domain만 의존할 수 있다")
+        @DisplayName("infrastructure should not depend on entrypoint or application")
         void infrastructure_should_only_depend_on_domain() {
             noClasses()
                 .that().resideInAPackage("..infrastructure..")
                 .should().dependOnClassesThat()
-                .resideInAnyPackage(
-                    "..entrypoint..", "..application.."
-                )
+                .resideInAnyPackage("..entrypoint..", "..application..")
                 .allowEmptyShould(true)
                 .check(importedClasses);
         }
     }
 
     @Nested
-    @DisplayName("클래스 위치 규칙")
+    @DisplayName("Class Location Rules")
     class ClassLocationRules {
 
         @Test
-        @DisplayName("@RestController는 entrypoint 패키지에만 위치해야 한다")
+        @DisplayName("@RestController should reside in entrypoint package")
         void rest_controllers_should_reside_in_entrypoint() {
             classes()
                 .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
@@ -91,22 +87,22 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("@Entity는 domain 패키지에만 위치해야 한다")
-        void entities_should_reside_in_domain() {
+        @DisplayName("@Entity should reside in infrastructure package")
+        void entities_should_reside_in_infrastructure() {
             classes()
                 .that().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().resideInAPackage("..domain..")
+                .should().resideInAPackage("..infrastructure..")
                 .allowEmptyShould(true)
                 .check(importedClasses);
         }
     }
 
     @Nested
-    @DisplayName("도메인 간 의존성 규칙")
+    @DisplayName("Slice Rules")
     class DomainSliceRules {
 
         @Test
-        @DisplayName("도메인 간 순환 의존이 없어야 한다")
+        @DisplayName("slices should be free of cycles")
         void no_circular_dependencies_between_domains() {
             slices()
                 .matching("com.zimdugo.(*)..")
