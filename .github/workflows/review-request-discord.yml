@@ -5,6 +5,10 @@ on:
     types:
       - review_requested
 
+concurrency:
+  group: review-request-discord-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   actions: read
   contents: read
