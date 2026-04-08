@@ -39,6 +39,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private UserRole role;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -50,6 +54,7 @@ public class User {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.status = status;
+        this.role = UserRole.USER;
     }
 
     @PrePersist
@@ -57,11 +62,17 @@ public class User {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.role == null) {
+            this.role = UserRole.USER;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+        if (this.role == null) {
+            this.role = UserRole.USER;
+        }
     }
 
     public void updateProfile(String nickname, String profileImageUrl) {
@@ -71,5 +82,13 @@ public class User {
 
     public void changeStatus(UserStatus status) {
         this.status = status;
+    }
+
+    public void changeRole(UserRole role) {
+        this.role = role != null ? role : UserRole.USER;
+    }
+
+    public UserRole getRoleOrDefault() {
+        return role != null ? role : UserRole.USER;
     }
 }
