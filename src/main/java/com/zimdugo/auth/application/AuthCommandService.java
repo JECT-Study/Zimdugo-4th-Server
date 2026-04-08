@@ -65,7 +65,7 @@ public class AuthCommandService {
         AuthTokens newTokens = jwtTokenProvider.generateTokens(
             user.getId(),
             user.getEmail(),
-            user.getRoleOrDefault().name(),
+            "USER",
             sid
         );
 

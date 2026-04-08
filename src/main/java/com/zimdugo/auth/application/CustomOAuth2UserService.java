@@ -3,12 +3,10 @@ package com.zimdugo.auth.application;
 import com.zimdugo.auth.domain.OAuth2UserInfo;
 import com.zimdugo.auth.domain.OAuth2UserInfoFactory;
 import com.zimdugo.user.domain.SocialAccount;
-import com.zimdugo.user.domain.SocialAccountReader;
-import com.zimdugo.user.domain.SocialAccountStore;
 import com.zimdugo.user.domain.User;
-import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
-import com.zimdugo.user.domain.UserStore;
+import com.zimdugo.user.infrastructure.SocialAccountJpaRepository;
+import com.zimdugo.user.infrastructure.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -30,9 +28,8 @@ import java.util.Map;
 @Transactional
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-    private final UserStore userStore;
-    private final SocialAccountReader socialAccountReader;
-    private final SocialAccountStore socialAccountStore;
+    private final UserJpaRepository userJpaRepository;
+    private final SocialAccountJpaRepository socialAccountJpaRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -50,12 +47,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         attributes.put("userId", user.getId());
         attributes.put("email", user.getEmail());      // null 가능
         attributes.put("nickname", user.getNickname());
-        attributes.put("role", user.getRoleOrDefault().name());
 
         String nameAttributeKey = resolveNameAttributeKey(user, userInfo);
 
         return new DefaultOAuth2User(
-                List.of(new SimpleGrantedAuthority(toAuthority(user.getRoleOrDefault()))),
+                List.of(new SimpleGrantedAuthority("ROLE_USER")),
                 attributes,
                 nameAttributeKey
         );
@@ -71,19 +67,10 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     }
 
     private User findOrCreateUser(OAuth2UserInfo userInfo) {
-        return socialAccountReader
-            .findByProviderAndProviderUserId(userInfo.getProvider(), userInfo.getProviderUserId())
-            .map(socialAccount -> syncAndGetUser(socialAccount, userInfo))
-            .orElseGet(() -> createNewUser(userInfo));
-    }
-
-    private User syncAndGetUser(SocialAccount socialAccount, OAuth2UserInfo userInfo) {
-        socialAccount.updateProviderProfile(
-            normalize(userInfo.getEmail()),
-            normalize(userInfo.getProfileImageUrl())
-        );
-        SocialAccount saved = socialAccountStore.store(socialAccount);
-        return saved.getUser();
+        return socialAccountJpaRepository
+                .findByProviderAndProviderUserId(userInfo.getProvider(), userInfo.getProviderUserId())
+                .map(SocialAccount::getUser)
+                .orElseGet(() -> createNewUser(userInfo));
     }
 
     private User createNewUser(OAuth2UserInfo userInfo) {
@@ -98,7 +85,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 UserStatus.ACTIVE
         );
 
-        User savedUser = userStore.store(user);
+        User savedUser = userJpaRepository.save(user);
 
         SocialAccount socialAccount = new SocialAccount(
                 savedUser,
@@ -108,7 +95,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 profileImageUrl
         );
 
-        socialAccountStore.store(socialAccount);
+        socialAccountJpaRepository.save(socialAccount);
 
         return savedUser;
     }
@@ -140,9 +127,5 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             return "email";
         }
         return "userId";
-    }
-
-    private String toAuthority(UserRole role) {
-        return "ROLE_" + role.name();
     }
 }
