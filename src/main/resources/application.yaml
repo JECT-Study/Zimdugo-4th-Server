@@ -67,6 +67,10 @@ jwt:
   access-token-expiration-seconds: 900
   refresh-token-expiration-seconds: 2592000
 
+springdoc:
+  swagger-ui:
+    display-request-duration: true
+
 ---
 spring:
   config:

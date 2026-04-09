@@ -50,6 +50,9 @@ dependencies {
     // Validation
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
+    // API Docs
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
+
     // Jackson
     implementation("com.fasterxml.jackson.core:jackson-databind")
 
