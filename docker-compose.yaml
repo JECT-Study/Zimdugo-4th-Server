@@ -8,3 +8,9 @@ services:
       POSTGRES_DB: zimdugo
       POSTGRES_USER: zimdugo
       POSTGRES_PASSWORD: zimdugo
+
+  redis:
+    image: redis:7-alpine
+    container_name: zimdugo-redis
+    ports:
+      - "6379:6379"
