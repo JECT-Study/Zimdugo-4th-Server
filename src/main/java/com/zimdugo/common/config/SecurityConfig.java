@@ -58,7 +58,11 @@ public class SecurityConfig {
                 "/oauth2/**",
                 "/api/auth/refresh",
                 "/api/auth/logout",
-                "/instances"
+                "/instances",
+                "/swagger-ui.html",
+                "/swagger-ui/**",
+                "/v3/api-docs",
+                "/v3/api-docs/**"
             ).permitAll()
             .anyRequest().authenticated()
         );
