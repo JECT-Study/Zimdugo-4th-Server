@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserStoreAdapter implements UserStore {
 
-    private final UserJpaRepository userJpaRepository;
+    private final UserRepository userRepository;
 
     @Override
     public User store(User user) {
-        UserJpaEntity saved = userJpaRepository.save(UserEntityMapper.toEntity(user));
+        UserJpaEntity saved = userRepository.save(UserEntityMapper.toEntity(user));
         return UserEntityMapper.toDomain(saved);
     }
 }

@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserReaderAdapter implements UserReader {
 
-    private final UserJpaRepository userJpaRepository;
+    private final UserRepository userRepository;
 
     @Override
     public Optional<User> findById(Long id) {
-        return userJpaRepository.findById(id).map(UserEntityMapper::toDomain);
+        return userRepository.findById(id).map(UserEntityMapper::toDomain);
     }
 }

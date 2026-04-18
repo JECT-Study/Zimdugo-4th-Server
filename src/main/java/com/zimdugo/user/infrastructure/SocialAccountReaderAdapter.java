@@ -12,17 +12,17 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SocialAccountReaderAdapter implements SocialAccountReader {
 
-    private final SocialAccountJpaRepository socialAccountJpaRepository;
+    private final SocialAccountRepository socialAccountRepository;
 
     @Override
     public Optional<SocialAccount> findByProviderAndProviderUserId(AuthProvider provider, String providerUserId) {
-        return socialAccountJpaRepository.findByProviderAndProviderUserId(provider, providerUserId)
+        return socialAccountRepository.findByProviderAndProviderUserId(provider, providerUserId)
             .map(SocialAccountEntityMapper::toDomain);
     }
 
     @Override
     public List<SocialAccount> findAllByUserId(Long userId) {
-        return socialAccountJpaRepository.findAllByUserId(userId).stream()
+        return socialAccountRepository.findAllByUserId(userId).stream()
             .map(SocialAccountEntityMapper::toDomain)
             .toList();
     }

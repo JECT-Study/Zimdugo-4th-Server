@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface SocialAccountJpaRepository extends JpaRepository<SocialAccountJpaEntity, Long> {
+public interface SocialAccountRepository extends JpaRepository<SocialAccountJpaEntity, Long> {
 
     Optional<SocialAccountJpaEntity> findByProviderAndProviderUserId(
         AuthProvider provider,

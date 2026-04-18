@@ -19,8 +19,8 @@ import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserReader;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.domain.UserStore;
-import com.zimdugo.user.infrastructure.SocialAccountJpaRepository;
-import com.zimdugo.user.infrastructure.UserJpaRepository;
+import com.zimdugo.user.infrastructure.SocialAccountRepository;
+import com.zimdugo.user.infrastructure.UserRepository;
 import jakarta.servlet.http.Cookie;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,10 +76,10 @@ class AuthFlowIntegrationTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
-    private UserJpaRepository userJpaRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    private SocialAccountJpaRepository socialAccountJpaRepository;
+    private SocialAccountRepository socialAccountRepository;
 
     @Autowired
     private UserStore userStore;
@@ -96,8 +96,8 @@ class AuthFlowIntegrationTest {
     @BeforeEach
     void setUp() {
         stringRedisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
-        socialAccountJpaRepository.deleteAll();
-        userJpaRepository.deleteAll();
+        socialAccountRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -258,7 +258,7 @@ class AuthFlowIntegrationTest {
 
         User withdrawnUser = userReader.findById(userId).orElseThrow();
         assertThat(withdrawnUser.getStatus()).isEqualTo(UserStatus.DELETED);
-        assertThat(socialAccountJpaRepository.findAllByUserId(userId)).isEmpty();
+        assertThat(socialAccountRepository.findAllByUserId(userId)).isEmpty();
         assertThat(refreshTokenRepository.matches(userId, tokens.sid(), tokens.refreshToken())).isFalse();
 
         mockMvc.perform(post("/api/auth/refresh")

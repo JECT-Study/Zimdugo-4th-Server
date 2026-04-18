@@ -76,16 +76,10 @@ public class UserJpaEntity {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
-        if (this.role == null) {
-            this.role = UserRole.USER;
-        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-        if (this.role == null) {
-            this.role = UserRole.USER;
-        }
     }
 }

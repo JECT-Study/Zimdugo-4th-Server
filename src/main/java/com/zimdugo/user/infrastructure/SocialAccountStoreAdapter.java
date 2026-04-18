@@ -11,21 +11,21 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SocialAccountStoreAdapter implements SocialAccountStore {
 
-    private final SocialAccountJpaRepository socialAccountJpaRepository;
-    private final UserJpaRepository userJpaRepository;
+    private final SocialAccountRepository socialAccountRepository;
+    private final UserRepository userRepository;
 
     @Override
     public SocialAccount store(SocialAccount socialAccount) {
         Long userId = socialAccount.getUser().getId();
-        UserJpaEntity userEntity = userJpaRepository.findById(userId)
+        UserJpaEntity userEntity = userRepository.findById(userId)
             .orElseThrow(() -> new NoSuchElementException("user not found. id=" + userId));
         return SocialAccountEntityMapper.toDomain(
-            socialAccountJpaRepository.save(SocialAccountEntityMapper.toEntity(socialAccount, userEntity))
+            socialAccountRepository.save(SocialAccountEntityMapper.toEntity(socialAccount, userEntity))
         );
     }
 
     @Override
     public void deleteAllByUserId(Long userId) {
-        socialAccountJpaRepository.deleteAllByUserId(userId);
+        socialAccountRepository.deleteAllByUserId(userId);
     }
 }

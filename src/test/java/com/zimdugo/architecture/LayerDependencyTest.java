@@ -24,11 +24,11 @@ class LayerDependencyTest {
     }
 
     @Nested
-    @DisplayName("Layer Dependency Rules")
+    @DisplayName("레이어 의존성 규칙")
     class LayerDependencyRules {
 
         @Test
-        @DisplayName("domain should not depend on other layers")
+        @DisplayName("domain은 다른 레이어에 의존하지 않는다")
         void domain_should_not_depend_on_other_layers() {
             noClasses()
                 .that().resideInAPackage("..domain..")
@@ -39,7 +39,7 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("application should not depend on entrypoint or infrastructure")
+        @DisplayName("application은 entrypoint/infrastructure에 의존하지 않는다")
         void application_should_only_depend_on_domain() {
             noClasses()
                 .that().resideInAPackage("..application..")
@@ -50,7 +50,7 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("entrypoint should not depend on domain or infrastructure")
+        @DisplayName("entrypoint는 domain/infrastructure에 의존하지 않는다")
         void entrypoint_should_only_depend_on_application() {
             noClasses()
                 .that().resideInAPackage("..entrypoint..")
@@ -61,7 +61,7 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("infrastructure should not depend on entrypoint or application")
+        @DisplayName("infrastructure는 entrypoint/application에 의존하지 않는다")
         void infrastructure_should_only_depend_on_domain() {
             noClasses()
                 .that().resideInAPackage("..infrastructure..")
@@ -73,11 +73,11 @@ class LayerDependencyTest {
     }
 
     @Nested
-    @DisplayName("Class Location Rules")
+    @DisplayName("클래스 위치 규칙")
     class ClassLocationRules {
 
         @Test
-        @DisplayName("@RestController should reside in entrypoint package")
+        @DisplayName("@RestController는 entrypoint 패키지에 위치한다")
         void rest_controllers_should_reside_in_entrypoint() {
             classes()
                 .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
@@ -87,7 +87,7 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("@Entity should reside in infrastructure package")
+        @DisplayName("@Entity는 infrastructure 패키지에 위치한다")
         void entities_should_reside_in_infrastructure() {
             classes()
                 .that().areAnnotatedWith("jakarta.persistence.Entity")
@@ -98,11 +98,11 @@ class LayerDependencyTest {
     }
 
     @Nested
-    @DisplayName("Slice Rules")
+    @DisplayName("슬라이스 규칙")
     class DomainSliceRules {
 
         @Test
-        @DisplayName("slices should be free of cycles")
+        @DisplayName("슬라이스 간 순환 의존성이 없어야 한다")
         void no_circular_dependencies_between_domains() {
             slices()
                 .matching("com.zimdugo.(*)..")
