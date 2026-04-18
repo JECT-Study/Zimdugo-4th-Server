@@ -1,24 +1,22 @@
 package com.zimdugo.auth.application;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimdugo.auth.domain.AuthTokens;
 import com.zimdugo.auth.domain.RefreshTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @Component
@@ -32,7 +30,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
-    private final ObjectMapper objectMapper;
+    private final OAuth2CallbackUrlCookieManager callbackUrlCookieManager;
 
     @Override
     public void onAuthenticationSuccess(
@@ -40,6 +38,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         HttpServletResponse response,
         Authentication authentication
     ) throws IOException {
+        String callbackUrl = callbackUrlCookieManager.resolveCallbackUrl(request);
+
         DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
@@ -60,17 +60,17 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             .sameSite(SAME_SITE_POLICY)
             .build();
 
-        response.setHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
+        response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
+        callbackUrlCookieManager.clearCallbackUrl(response);
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("message", "oauth login success");
-        body.put("userId", userId);
-        body.put("email", email);
-        body.put("accessToken", tokens.accessToken());
+        log.info("oauth login success. userId={}, sid={}, callbackUrl={}", userId, sid, callbackUrl);
+        response.sendRedirect(appendCode(callbackUrl, "LOGIN_SUCCESS"));
+    }
 
-        log.info("oauth login success. userId={}, sid={}", userId, sid);
-        response.getWriter().write(objectMapper.writeValueAsString(body));
+    private String appendCode(String callbackUrl, String code) {
+        return UriComponentsBuilder.fromUriString(callbackUrl)
+            .replaceQueryParam("code", code)
+            .build(true)
+            .toUriString();
     }
 }

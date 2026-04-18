@@ -56,6 +56,9 @@ class AuthControllerTest {
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @MockitoBean
+    private OAuth2CallbackUrlCaptureFilter oAuth2CallbackUrlCaptureFilter;
+
     @Test
     @DisplayName("유효한 RT로 리프레시 요청 시 200을 반환한다")
     void refresh_withValidRT_returns200() throws Exception {
