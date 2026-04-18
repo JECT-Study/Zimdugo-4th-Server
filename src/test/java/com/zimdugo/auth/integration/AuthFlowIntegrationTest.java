@@ -130,7 +130,7 @@ class AuthFlowIntegrationTest {
                 .cookie(new Cookie("refreshToken", tokens.refreshToken())))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.accessToken").exists());
+            .andExpect(jsonPath("$.data.accessToken").exists());
     }
 
     @Test
@@ -269,6 +269,6 @@ class AuthFlowIntegrationTest {
         mockMvc.perform(get("/api/v1/me")
                 .header("Authorization", "Bearer " + tokens.accessToken()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("DELETED"));
+            .andExpect(jsonPath("$.data.status").value("DELETED"));
     }
 }

@@ -2,6 +2,8 @@ package com.zimdugo.user.entrypoint;
 
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.core.response.RestResponse;
+import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.user.application.UserProfileDto;
 import com.zimdugo.user.application.UserQueryService;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +21,12 @@ public class UserController {
     private final UserQueryService userQueryService;
 
     @GetMapping("/me")
-    public ResponseEntity<UserProfileResponse> me(
+    public ResponseEntity<RestResponse<UserProfileResponse>> me(
         Authentication authentication
     ) {
         UserProfileDto profile = userQueryService.getProfile(extractUserId(authentication));
-        return ResponseEntity.ok(UserProfileResponse.from(profile));
+        UserProfileResponse response = UserProfileResponse.from(profile);
+        return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK, response));
     }
 
     private Long extractUserId(Authentication authentication) {

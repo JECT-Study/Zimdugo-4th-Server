@@ -1,15 +1,14 @@
 package com.zimdugo.user.infrastructure;
 
-import com.zimdugo.user.domain.User;
-import com.zimdugo.user.infrastructure.persistence.UserJpaEntity;
+import com.zimdugo.user.infrastructure.persistence.User;
 
 final class UserEntityMapper {
 
     private UserEntityMapper() {
     }
 
-    static User toDomain(UserJpaEntity entity) {
-        return new User(
+    static com.zimdugo.user.domain.User toDomain(User entity) {
+        return new com.zimdugo.user.domain.User(
             entity.getId(),
             entity.getEmail(),
             entity.getNickname(),
@@ -21,8 +20,8 @@ final class UserEntityMapper {
         );
     }
 
-    static UserJpaEntity toEntity(User user) {
-        return new UserJpaEntity(
+    static User toEntity(com.zimdugo.user.domain.User user) {
+        return new User(
             user.getId(),
             user.getEmail(),
             user.getNickname(),
