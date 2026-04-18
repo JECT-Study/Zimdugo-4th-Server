@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17
+    image: postgis/postgis:16-3.4
     container_name: zimdugo-postgres
     ports:
       - "5432:5432"
@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: zimdugo
       POSTGRES_USER: zimdugo
       POSTGRES_PASSWORD: zimdugo
+    volumes:
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
 
   redis:
     image: redis:7-alpine
