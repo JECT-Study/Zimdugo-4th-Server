@@ -26,7 +26,7 @@ public class UserController {
     ) {
         UserProfileDto profile = userQueryService.getProfile(extractUserId(authentication));
         UserProfileResponse response = UserProfileResponse.from(profile);
-        return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK, response));
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, response));
     }
 
     private Long extractUserId(Authentication authentication) {

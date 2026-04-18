@@ -48,7 +48,7 @@ public class AuthController {
             createRefreshTokenCookie(result.refreshToken()).toString()
         );
 
-        return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK, createRefreshResponse(result)));
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, createRefreshResponse(result)));
     }
 
     @PostMapping("/logout")
