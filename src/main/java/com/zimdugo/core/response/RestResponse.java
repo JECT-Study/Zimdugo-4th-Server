@@ -27,7 +27,7 @@ public class RestResponse<T> {
         this.validationErrors = validationErrors;
     }
 
-    public static <T> RestResponse<T> ok(SuccessCode code, T data) {
+    public static <T> RestResponse<T> of(SuccessCode code, T data) {
         return success(code, data);
     }
 
