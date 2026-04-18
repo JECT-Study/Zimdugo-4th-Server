@@ -19,7 +19,7 @@ public class UserQueryService {
     private final UserReader userReader;
     private final SocialAccountReader socialAccountReader;
 
-    public UserProfileResponse getProfile(Long userId) {
+    public UserProfileDto getProfile(Long userId) {
         User user = findById(userId);
 
         List<SocialAccount> socialAccounts = socialAccountReader.findAllByUserId(userId);
@@ -28,7 +28,7 @@ public class UserQueryService {
             .map(sa -> sa.getProvider().name().toLowerCase())
             .toList();
 
-        return new UserProfileResponse(
+        return new UserProfileDto(
             user.getId(),
             user.getEmail(),
             user.getNickname(),

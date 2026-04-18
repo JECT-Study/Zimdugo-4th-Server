@@ -2,8 +2,8 @@ package com.zimdugo.user.entrypoint;
 
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.user.application.UserProfileDto;
 import com.zimdugo.user.application.UserQueryService;
-import com.zimdugo.user.application.UserProfileResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,7 +22,8 @@ public class UserController {
     public ResponseEntity<UserProfileResponse> me(
         Authentication authentication
     ) {
-        return ResponseEntity.ok(userQueryService.getProfile(extractUserId(authentication)));
+        UserProfileDto profile = userQueryService.getProfile(extractUserId(authentication));
+        return ResponseEntity.ok(UserProfileResponse.from(profile));
     }
 
     private Long extractUserId(Authentication authentication) {
