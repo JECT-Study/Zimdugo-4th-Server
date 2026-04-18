@@ -19,15 +19,15 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: ${GOOGLE_CLIENT_ID:dummy-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-google-client-secret}
             scope:
               - profile
               - email
 
           naver:
-            client-id: ${NAVER_CLIENT_ID}
-            client-secret: ${NAVER_CLIENT_SECRET}
+            client-id: ${NAVER_CLIENT_ID:dummy-naver-client-id}
+            client-secret: ${NAVER_CLIENT_SECRET:dummy-naver-client-secret}
             client-name: Naver
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
@@ -38,8 +38,8 @@ spring:
               - profile_image
 
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-id: ${KAKAO_CLIENT_ID:dummy-kakao-client-id}
+            client-secret: ${KAKAO_CLIENT_SECRET:dummy-kakao-client-secret}
             client-authentication-method: client_secret_post
             client-name: Kakao
             authorization-grant-type: authorization_code
@@ -63,7 +63,7 @@ spring:
             user-name-attribute: id
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:change-me-local-jwt-secret-key-32bytes!}
   access-token-expiration-seconds: 900
   refresh-token-expiration-seconds: 2592000
 
@@ -79,9 +79,9 @@ spring:
     import: optional:classpath:application-private.yaml
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/zimdugo
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:zimdugo}
+    username: ${DB_USERNAME:zimdugo}
+    password: ${DB_PASSWORD:zimdugo}
     driver-class-name: org.postgresql.Driver
 
   data:
