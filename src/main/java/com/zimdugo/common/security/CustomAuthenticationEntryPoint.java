@@ -2,11 +2,10 @@ package com.zimdugo.common.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.core.exception.ErrorResponse;
+import com.zimdugo.core.response.RestResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -28,7 +27,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType(APPLICATION_JSON);
         response.setCharacterEncoding(UTF_8);
 
-        Map<String, Object> body = ErrorResponse.of(ErrorCode.UNAUTHORIZED, request.getRequestURI());
+        RestResponse<Void> body = RestResponse.error(ErrorCode.UNAUTHORIZED);
 
         response.getWriter().write(objectMapper.writeValueAsString(body));
     }
