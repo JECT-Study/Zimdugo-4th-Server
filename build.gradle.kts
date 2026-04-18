@@ -55,10 +55,18 @@ dependencies {
 
     // Jackson
     implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // DB
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("com.h2database:h2")
+
+    // Netty DNS (mac OS 관련입니다)
+    runtimeOnly("io.netty:netty-resolver-dns-native-macos") {
+        artifact {
+            classifier = "osx-aarch_64"
+        }
+    }
 
     // Lombok
     compileOnly("org.projectlombok:lombok")
