@@ -1,9 +1,5 @@
 package com.zimdugo.architecture;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
-import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
-
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -11,6 +7,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 class LayerDependencyTest {
 
@@ -24,11 +24,11 @@ class LayerDependencyTest {
     }
 
     @Nested
-    @DisplayName("Layer dependency rules")
+    @DisplayName("Layer Dependency Rules")
     class LayerDependencyRules {
 
         @Test
-        @DisplayName("domain does not depend on entrypoint/application/infrastructure")
+        @DisplayName("domain should not depend on other layers")
         void domain_should_not_depend_on_other_layers() {
             noClasses()
                 .that().resideInAPackage("..domain..")
@@ -39,30 +39,30 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("application does not depend on entrypoint")
-        void application_should_not_depend_on_entrypoint() {
+        @DisplayName("application should not depend on entrypoint or infrastructure")
+        void application_should_only_depend_on_domain() {
             noClasses()
                 .that().resideInAPackage("..application..")
                 .should().dependOnClassesThat()
-                .resideInAnyPackage("..entrypoint..")
+                .resideInAnyPackage("..entrypoint..", "..infrastructure..")
                 .allowEmptyShould(true)
                 .check(importedClasses);
         }
 
         @Test
-        @DisplayName("entrypoint does not depend on infrastructure")
-        void entrypoint_should_not_depend_on_infrastructure() {
+        @DisplayName("entrypoint should not depend on domain or infrastructure")
+        void entrypoint_should_only_depend_on_application() {
             noClasses()
                 .that().resideInAPackage("..entrypoint..")
                 .should().dependOnClassesThat()
-                .resideInAnyPackage("..infrastructure..")
+                .resideInAnyPackage("..domain..", "..infrastructure..")
                 .allowEmptyShould(true)
                 .check(importedClasses);
         }
 
         @Test
-        @DisplayName("infrastructure does not depend on entrypoint/application")
-        void infrastructure_should_not_depend_on_upper_layers() {
+        @DisplayName("infrastructure should not depend on entrypoint or application")
+        void infrastructure_should_only_depend_on_domain() {
             noClasses()
                 .that().resideInAPackage("..infrastructure..")
                 .should().dependOnClassesThat()
@@ -73,11 +73,11 @@ class LayerDependencyTest {
     }
 
     @Nested
-    @DisplayName("Class location rules")
+    @DisplayName("Class Location Rules")
     class ClassLocationRules {
 
         @Test
-        @DisplayName("@RestController classes should be in entrypoint")
+        @DisplayName("@RestController should reside in entrypoint package")
         void rest_controllers_should_reside_in_entrypoint() {
             classes()
                 .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
@@ -87,22 +87,22 @@ class LayerDependencyTest {
         }
 
         @Test
-        @DisplayName("@Entity classes should be in domain")
-        void entities_should_reside_in_domain() {
+        @DisplayName("@Entity should reside in infrastructure package")
+        void entities_should_reside_in_infrastructure() {
             classes()
                 .that().areAnnotatedWith("jakarta.persistence.Entity")
-                .should().resideInAPackage("..domain..")
+                .should().resideInAPackage("..infrastructure..")
                 .allowEmptyShould(true)
                 .check(importedClasses);
         }
     }
 
     @Nested
-    @DisplayName("Domain cycle rules")
+    @DisplayName("Slice Rules")
     class DomainSliceRules {
 
         @Test
-        @DisplayName("no cyclic dependencies between domains")
+        @DisplayName("slices should be free of cycles")
         void no_circular_dependencies_between_domains() {
             slices()
                 .matching("com.zimdugo.(*)..")

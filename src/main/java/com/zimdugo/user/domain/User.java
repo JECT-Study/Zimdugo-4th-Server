@@ -1,78 +1,47 @@
 package com.zimdugo.user.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
+import lombok.Getter;
 
-@Entity
-@Table(name = "users")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(length = 100)
     private String email;
-
-    @Column(nullable = false, length = 50)
     private String nickname;
-
-    @Column(length = 255)
     private String profileImageUrl;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
     private UserStatus status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
     private UserRole role;
-
-    @Column(nullable = false)
     private LocalDateTime createdAt;
-
-    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     public User(String email, String nickname, String profileImageUrl, UserStatus status) {
+        this(null, email, nickname, profileImageUrl, status, UserRole.USER, null, null);
+    }
+
+    public User(String email, String nickname, String profileImageUrl, UserStatus status, UserRole role) {
+        this(null, email, nickname, profileImageUrl, status, role, null, null);
+    }
+
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    public User(
+        Long id,
+        String email,
+        String nickname,
+        String profileImageUrl,
+        UserStatus status,
+        UserRole role,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
+    ) {
+        this.id = id;
         this.email = email;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.status = status;
-        this.role = UserRole.USER;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-        if (this.role == null) {
-            this.role = UserRole.USER;
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-        if (this.role == null) {
-            this.role = UserRole.USER;
-        }
+        this.role = role != null ? role : UserRole.USER;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public void updateProfile(String nickname, String profileImageUrl) {

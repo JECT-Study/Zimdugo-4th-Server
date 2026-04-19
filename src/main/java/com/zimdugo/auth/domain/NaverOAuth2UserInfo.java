@@ -1,6 +1,6 @@
 package com.zimdugo.auth.domain;
 
-import com.zimdugo.user.domain.AuthProvider;
+import com.zimdugo.identity.domain.AuthProvider;
 
 import java.util.Map;
 
