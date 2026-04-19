@@ -1,12 +1,12 @@
 package com.zimdugo.locker.infrastructure;
 
-import com.zimdugo.locker.infrastructure.persistence.Locker;
+import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface LockerRepository extends JpaRepository<Locker, Long> {
+public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
 
     @Query(value = """
         WITH target AS (
