@@ -1,45 +1,46 @@
 package com.zimdugo.user.application;
 
 import com.zimdugo.user.domain.SocialAccount;
-import com.zimdugo.user.domain.SocialAccountReader;
 import com.zimdugo.user.domain.User;
-import com.zimdugo.user.domain.UserReader;
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
-import java.util.List;
+import com.zimdugo.user.infrastructure.SocialAccountJpaRepository;
+import com.zimdugo.user.infrastructure.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserQueryService {
 
-    private final UserReader userReader;
-    private final SocialAccountReader socialAccountReader;
+    private final UserJpaRepository userJpaRepository;
+    private final SocialAccountJpaRepository socialAccountJpaRepository;
 
     public UserProfileResponse getProfile(Long userId) {
         User user = findById(userId);
 
-        List<SocialAccount> socialAccounts = socialAccountReader.findAllByUserId(userId);
+        List<SocialAccount> socialAccounts =
+                socialAccountJpaRepository.findAllByUserId(userId);
 
         List<String> providers = socialAccounts.stream()
-            .map(sa -> sa.getProvider().name().toLowerCase())
-            .toList();
+                .map(sa -> sa.getProvider().name().toLowerCase())
+                .toList();
 
         return new UserProfileResponse(
-            user.getId(),
-            user.getEmail(),
-            user.getNickname(),
-            user.getProfileImageUrl(),
-            user.getStatus().name(),
-            providers
+                user.getId(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getProfileImageUrl(),
+                user.getStatus().name(),
+                providers
         );
     }
 
+    // AuthController에서 재발급 시 User 조회용
     public User findById(Long userId) {
-        return userReader.findById(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        return userJpaRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("user not found. id=" + userId));
     }
 }

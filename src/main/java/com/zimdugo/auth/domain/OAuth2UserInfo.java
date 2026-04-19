@@ -1,6 +1,6 @@
 package com.zimdugo.auth.domain;
 
-import com.zimdugo.identity.domain.AuthProvider;
+import com.zimdugo.user.domain.AuthProvider;
 
 public interface OAuth2UserInfo {
 

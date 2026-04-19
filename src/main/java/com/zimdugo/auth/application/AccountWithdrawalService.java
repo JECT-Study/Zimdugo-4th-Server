@@ -4,10 +4,10 @@ import com.zimdugo.auth.domain.RefreshTokenRepository;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.application.UserQueryService;
-import com.zimdugo.user.domain.SocialAccountStore;
 import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserStatus;
-import com.zimdugo.user.domain.UserStore;
+import com.zimdugo.user.infrastructure.SocialAccountJpaRepository;
+import com.zimdugo.user.infrastructure.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,8 +20,8 @@ public class AccountWithdrawalService {
     private final AccessTokenValidationService accessTokenValidationService;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserQueryService userQueryService;
-    private final UserStore userStore;
-    private final SocialAccountStore socialAccountStore;
+    private final UserJpaRepository userJpaRepository;
+    private final SocialAccountJpaRepository socialAccountJpaRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
     public void withdraw(String accessToken) {
@@ -39,9 +39,9 @@ public class AccountWithdrawalService {
         }
 
         user.changeStatus(UserStatus.DELETED);
-        userStore.store(user);
+        userJpaRepository.save(user);
 
-        socialAccountStore.deleteAllByUserId(userId);
+        socialAccountJpaRepository.deleteAllByUserId(userId);
         refreshTokenRepository.deleteAllByUserId(userId);
     }
 }
