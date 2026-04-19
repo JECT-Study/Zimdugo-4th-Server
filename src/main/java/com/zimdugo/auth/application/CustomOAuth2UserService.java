@@ -3,14 +3,12 @@ package com.zimdugo.auth.application;
 import com.zimdugo.auth.domain.OAuth2UserInfo;
 import com.zimdugo.auth.domain.OAuth2UserInfoFactory;
 import com.zimdugo.user.domain.SocialAccount;
+import com.zimdugo.user.domain.SocialAccountReader;
+import com.zimdugo.user.domain.SocialAccountStore;
 import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
-import com.zimdugo.user.infrastructure.SocialAccountJpaRepository;
-import com.zimdugo.user.infrastructure.UserJpaRepository;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.zimdugo.user.domain.UserStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -23,13 +21,18 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-    private final UserJpaRepository userJpaRepository;
-    private final SocialAccountJpaRepository socialAccountJpaRepository;
+    private final UserStore userStore;
+    private final SocialAccountReader socialAccountReader;
+    private final SocialAccountStore socialAccountStore;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -45,33 +48,42 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
         attributes.put("userId", user.getId());
-        attributes.put("email", user.getEmail());
+        attributes.put("email", user.getEmail());      // null 가능
         attributes.put("nickname", user.getNickname());
         attributes.put("role", user.getRoleOrDefault().name());
 
-        String nameAttributeKey = resolveNameAttributeKey(user);
+        String nameAttributeKey = resolveNameAttributeKey(user, userInfo);
 
         return new DefaultOAuth2User(
-            List.of(new SimpleGrantedAuthority(toAuthority(user.getRoleOrDefault()))),
-            attributes,
-            nameAttributeKey
+                List.of(new SimpleGrantedAuthority(toAuthority(user.getRoleOrDefault()))),
+                attributes,
+                nameAttributeKey
         );
     }
 
     private void validateRequiredFields(OAuth2UserInfo userInfo, String registrationId) {
         if (userInfo.getProviderUserId() == null || userInfo.getProviderUserId().isBlank()) {
             throw new OAuth2AuthenticationException(
-                new OAuth2Error("invalid_user_info"),
-                registrationId + " 사용자 식별자(providerUserId)를 가져오지 못했습니다."
+                    new OAuth2Error("invalid_user_info"),
+                    registrationId + " 사용자 식별값(providerUserId)을 가져오지 못했습니다."
             );
         }
     }
 
     private User findOrCreateUser(OAuth2UserInfo userInfo) {
-        return socialAccountJpaRepository
+        return socialAccountReader
             .findByProviderAndProviderUserId(userInfo.getProvider(), userInfo.getProviderUserId())
-            .map(SocialAccount::getUser)
+            .map(socialAccount -> syncAndGetUser(socialAccount, userInfo))
             .orElseGet(() -> createNewUser(userInfo));
+    }
+
+    private User syncAndGetUser(SocialAccount socialAccount, OAuth2UserInfo userInfo) {
+        socialAccount.updateProviderProfile(
+            normalize(userInfo.getEmail()),
+            normalize(userInfo.getProfileImageUrl())
+        );
+        SocialAccount saved = socialAccountStore.store(socialAccount);
+        return saved.getUser();
     }
 
     private User createNewUser(OAuth2UserInfo userInfo) {
@@ -79,17 +91,24 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String nickname = resolveNickname(userInfo);
         String profileImageUrl = normalize(userInfo.getProfileImageUrl());
 
-        User user = new User(email, nickname, profileImageUrl, UserStatus.ACTIVE);
-        User savedUser = userJpaRepository.save(user);
+        User user = new User(
+                email,               // 카카오는 null일 수 있음
+                nickname,
+                profileImageUrl,
+                UserStatus.ACTIVE
+        );
+
+        User savedUser = userStore.store(user);
 
         SocialAccount socialAccount = new SocialAccount(
-            savedUser,
-            userInfo.getProvider(),
-            userInfo.getProviderUserId(),
-            email,
-            profileImageUrl
+                savedUser,
+                userInfo.getProvider(),
+                userInfo.getProviderUserId(),
+                email,               // null 가능
+                profileImageUrl
         );
-        socialAccountJpaRepository.save(socialAccount);
+
+        socialAccountStore.store(socialAccount);
 
         return savedUser;
     }
@@ -116,7 +135,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         return trimmed.isBlank() ? null : trimmed;
     }
 
-    private String resolveNameAttributeKey(User user) {
+    private String resolveNameAttributeKey(User user, OAuth2UserInfo userInfo) {
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
             return "email";
         }

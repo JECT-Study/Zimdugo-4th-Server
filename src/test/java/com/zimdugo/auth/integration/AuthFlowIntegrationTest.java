@@ -12,10 +12,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.zimdugo.auth.application.JwtTokenProvider;
 import com.zimdugo.auth.domain.AuthTokens;
 import com.zimdugo.auth.domain.RefreshTokenRepository;
-import com.zimdugo.user.domain.AuthProvider;
+import com.zimdugo.identity.domain.AuthProvider;
 import com.zimdugo.user.domain.SocialAccount;
+import com.zimdugo.user.domain.SocialAccountStore;
 import com.zimdugo.user.domain.User;
+import com.zimdugo.user.domain.UserReader;
 import com.zimdugo.user.domain.UserStatus;
+import com.zimdugo.user.domain.UserStore;
 import com.zimdugo.user.infrastructure.SocialAccountJpaRepository;
 import com.zimdugo.user.infrastructure.UserJpaRepository;
 import jakarta.servlet.http.Cookie;
@@ -79,15 +82,20 @@ class AuthFlowIntegrationTest {
     private SocialAccountJpaRepository socialAccountJpaRepository;
 
     @Autowired
+    private UserStore userStore;
+
+    @Autowired
+    private UserReader userReader;
+
+    @Autowired
+    private SocialAccountStore socialAccountStore;
+
+    @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
     @BeforeEach
     void setUp() {
-        stringRedisTemplate.getConnectionFactory()
-            .getConnection()
-            .serverCommands()
-            .flushAll();
-
+        stringRedisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
         socialAccountJpaRepository.deleteAll();
         userJpaRepository.deleteAll();
     }
@@ -95,23 +103,27 @@ class AuthFlowIntegrationTest {
     @Test
     @DisplayName("refresh with valid RT returns new access token")
     void refresh_withValidRefreshToken_returnsNewAccessToken() throws Exception {
-        User savedUser = userJpaRepository.save(
+        User savedUser = userStore.store(
             new User("test@zimdugo.com", "test", null, UserStatus.ACTIVE)
         );
+        Long userId = savedUser.getId();
+        assertThat(userId).isNotNull();
 
         AuthTokens tokens = jwtTokenProvider.generateTokens(
-            savedUser.getId(),
+            userId,
             "test@zimdugo.com",
             "USER",
             "test-sid"
         );
 
         refreshTokenRepository.save(
-            savedUser.getId(),
+            userId,
             tokens.sid(),
             tokens.refreshToken(),
             Duration.ofDays(30)
         );
+
+        assertThat(refreshTokenRepository.matches(userId, tokens.sid(), tokens.refreshToken())).isTrue();
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(csrf())
@@ -122,33 +134,70 @@ class AuthFlowIntegrationTest {
     }
 
     @Test
-    @DisplayName("logout invalidates only current session")
-    void logout_invalidatesOnlyCurrentSession() throws Exception {
-        User savedUser = userJpaRepository.save(
-            new User("multi@zimdugo.com", "multi", null, UserStatus.ACTIVE)
+    @DisplayName("logout returns 200 and expires cookie")
+    void logout_returns200AndExpiresCookie() throws Exception {
+        User savedUser = userStore.store(
+            new User("logout@zimdugo.com", "logout-user", null, UserStatus.ACTIVE)
+        );
+        Long userId = savedUser.getId();
+        assertThat(userId).isNotNull();
+
+        AuthTokens tokens = jwtTokenProvider.generateTokens(
+            userId,
+            "logout@zimdugo.com",
+            "USER",
+            "logout-sid"
         );
 
+        refreshTokenRepository.save(
+            userId,
+            tokens.sid(),
+            tokens.refreshToken(),
+            Duration.ofDays(30)
+        );
+
+        assertThat(refreshTokenRepository.matches(userId, tokens.sid(), tokens.refreshToken())).isTrue();
+
+        mockMvc.perform(post("/api/auth/logout")
+                .with(csrf())
+                .header("Authorization", "Bearer " + tokens.accessToken()))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(header().exists("Set-Cookie"));
+
+        assertThat(refreshTokenRepository.matches(userId, tokens.sid(), tokens.refreshToken())).isFalse();
+    }
+
+    @Test
+    @DisplayName("logout invalidates only current session token")
+    void logout_invalidatesOnlyCurrentSessionToken() throws Exception {
+        User savedUser = userStore.store(
+            new User("multi@zimdugo.com", "multi-session", null, UserStatus.ACTIVE)
+        );
+        Long userId = savedUser.getId();
+        assertThat(userId).isNotNull();
+
         AuthTokens session1 = jwtTokenProvider.generateTokens(
-            savedUser.getId(),
+            userId,
             "multi@zimdugo.com",
             "USER",
             "sid-1"
         );
         AuthTokens session2 = jwtTokenProvider.generateTokens(
-            savedUser.getId(),
+            userId,
             "multi@zimdugo.com",
             "USER",
             "sid-2"
         );
 
         refreshTokenRepository.save(
-            savedUser.getId(),
+            userId,
             session1.sid(),
             session1.refreshToken(),
             Duration.ofDays(30)
         );
         refreshTokenRepository.save(
-            savedUser.getId(),
+            userId,
             session2.sid(),
             session2.refreshToken(),
             Duration.ofDays(30)
@@ -157,34 +206,45 @@ class AuthFlowIntegrationTest {
         mockMvc.perform(post("/api/auth/logout")
                 .with(csrf())
                 .header("Authorization", "Bearer " + session1.accessToken()))
-            .andExpect(status().isOk())
-            .andExpect(header().exists("Set-Cookie"));
+            .andExpect(status().isOk());
 
-        assertThat(refreshTokenRepository.matches(savedUser.getId(), session1.sid(), session1.refreshToken()))
-            .isFalse();
-        assertThat(refreshTokenRepository.matches(savedUser.getId(), session2.sid(), session2.refreshToken()))
-            .isTrue();
+        assertThat(refreshTokenRepository.matches(userId, session1.sid(), session1.refreshToken())).isFalse();
+        assertThat(refreshTokenRepository.matches(userId, session2.sid(), session2.refreshToken())).isTrue();
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .cookie(new Cookie("refreshToken", session2.refreshToken())))
+            .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("withdraw sets user status to deleted and revokes refresh token")
-    void withdraw_deletesUserAndRefreshTokens() throws Exception {
-        User savedUser = userJpaRepository.save(
-            new User("withdraw@zimdugo.com", "withdraw", null, UserStatus.ACTIVE)
+    @DisplayName("withdraw sets user as deleted, removes social links, and revokes refresh token")
+    void withdraw_deletesSessionAndDeactivatesUser() throws Exception {
+        User savedUser = userStore.store(
+            new User("withdraw@zimdugo.com", "withdraw-user", null, UserStatus.ACTIVE)
         );
-        socialAccountJpaRepository.save(
-            new SocialAccount(savedUser, AuthProvider.KAKAO, "provider-user-id", null, null)
+        Long userId = savedUser.getId();
+        assertThat(userId).isNotNull();
+
+        socialAccountStore.store(
+            new SocialAccount(
+                savedUser,
+                AuthProvider.KAKAO,
+                "withdraw-provider-id",
+                null,
+                null
+            )
         );
 
         AuthTokens tokens = jwtTokenProvider.generateTokens(
-            savedUser.getId(),
+            userId,
             "withdraw@zimdugo.com",
             "USER",
             "withdraw-sid"
         );
 
         refreshTokenRepository.save(
-            savedUser.getId(),
+            userId,
             tokens.sid(),
             tokens.refreshToken(),
             Duration.ofDays(30)
@@ -193,12 +253,18 @@ class AuthFlowIntegrationTest {
         mockMvc.perform(post("/api/auth/withdraw")
                 .with(csrf())
                 .header("Authorization", "Bearer " + tokens.accessToken()))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(header().exists("Set-Cookie"));
 
-        User withdrawnUser = userJpaRepository.findById(savedUser.getId()).orElseThrow();
+        User withdrawnUser = userReader.findById(userId).orElseThrow();
         assertThat(withdrawnUser.getStatus()).isEqualTo(UserStatus.DELETED);
-        assertThat(socialAccountJpaRepository.findAllByUserId(savedUser.getId())).isEmpty();
-        assertThat(refreshTokenRepository.matches(savedUser.getId(), tokens.sid(), tokens.refreshToken())).isFalse();
+        assertThat(socialAccountJpaRepository.findAllByUserId(userId)).isEmpty();
+        assertThat(refreshTokenRepository.matches(userId, tokens.sid(), tokens.refreshToken())).isFalse();
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .cookie(new Cookie("refreshToken", tokens.refreshToken())))
+            .andExpect(status().is4xxClientError());
 
         mockMvc.perform(get("/api/v1/me")
                 .header("Authorization", "Bearer " + tokens.accessToken()))
