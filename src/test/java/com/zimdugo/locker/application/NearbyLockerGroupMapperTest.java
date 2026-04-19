@@ -16,11 +16,11 @@ class NearbyLockerGroupMapperTest {
     void sortsInsideAndOutsideByDistance() {
         List<List<NearbyLocker>> grouped = List.of(
             List.of(
-                locker(1L, "A", "주소A", 37.5, 127.0, 300.0),
-                locker(2L, "B", "주소A", 37.5, 127.0, 100.0)
+                new NearbyLocker(1L, "A", "주소A", 37.5, 127.0, 300.0),
+                new NearbyLocker(2L, "B", "주소A", 37.5, 127.0, 100.0)
             ),
             List.of(
-                locker(3L, "C", "주소C", 38.5, 128.0, 200.0)
+                new NearbyLocker(3L, "C", "주소C", 38.5, 128.0, 200.0)
             )
         );
 
@@ -31,16 +31,5 @@ class NearbyLockerGroupMapperTest {
         assertThat(result.get(0).lockers().get(0).distanceMeters()).isEqualTo(100L);
         assertThat(result.get(0).lockers().get(1).distanceMeters()).isEqualTo(300L);
         assertThat(result.get(1).distanceMeters()).isEqualTo(200L);
-    }
-
-    private NearbyLocker locker(
-        Long id,
-        String name,
-        String roadAddress,
-        double latitude,
-        double longitude,
-        double distanceMeters
-    ) {
-        return new NearbyLocker(id, name, roadAddress, latitude, longitude, distanceMeters);
     }
 }

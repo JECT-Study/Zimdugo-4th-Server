@@ -15,8 +15,8 @@ class NearbyLockerGrouperTest {
     @DisplayName("동일 좌표는 하나의 그룹으로 묶는다")
     void groupsBySameCoordinate() {
         List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
-            locker(1L, "강남A", "서울 A", 37.5, 127.0, 10.0),
-            locker(2L, "강남B", "서울 B", 37.5, 127.0, 10.0)
+            new NearbyLocker(1L, "강남A", "서울 A", 37.5, 127.0, 10.0),
+            new NearbyLocker(2L, "강남B", "서울 B", 37.5, 127.0, 10.0)
         ));
 
         assertThat(result).hasSize(1);
@@ -27,8 +27,8 @@ class NearbyLockerGrouperTest {
     @DisplayName("동일 도로명 주소는 하나의 그룹으로 묶는다")
     void groupsBySameRoadAddress() {
         List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
-            locker(1L, "강남A", "서울 테헤란로 1", 37.5, 127.0, 10.0),
-            locker(2L, "강남B", "서울 테헤란로 1", 38.0, 128.0, 10.0)
+            new NearbyLocker(1L, "강남A", "서울 테헤란로 1", 37.5, 127.0, 10.0),
+            new NearbyLocker(2L, "강남B", "서울 테헤란로 1", 38.0, 128.0, 10.0)
         ));
 
         assertThat(result).hasSize(1);
@@ -39,9 +39,9 @@ class NearbyLockerGrouperTest {
     @DisplayName("연결된 조건은 하나의 그룹이 된다")
     void groupsTransitively() {
         List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
-            locker(1L, "A", "주소1", 37.5, 127.0, 10.0),
-            locker(2L, "B", "주소2", 37.5, 127.0, 11.0),
-            locker(3L, "C", "주소2", 38.5, 128.0, 12.0)
+            new NearbyLocker(1L, "A", "주소1", 37.5, 127.0, 10.0),
+            new NearbyLocker(2L, "B", "주소2", 37.5, 127.0, 11.0),
+            new NearbyLocker(3L, "C", "주소2", 38.5, 128.0, 12.0)
         ));
 
         assertThat(result).hasSize(1);
@@ -52,22 +52,11 @@ class NearbyLockerGrouperTest {
     @DisplayName("좌표 미세 오차는 정규화 후 같은 그룹으로 묶는다")
     void groupsByRoundedCoordinate() {
         List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
-            locker(1L, "A", "주소1", 37.50000041, 127.00000041, 10.0),
-            locker(2L, "B", "주소2", 37.50000044, 127.00000044, 20.0)
+            new NearbyLocker(1L, "A", "주소1", 37.50000041, 127.00000041, 10.0),
+            new NearbyLocker(2L, "B", "주소2", 37.50000044, 127.00000044, 20.0)
         ));
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst()).hasSize(2);
-    }
-
-    private NearbyLocker locker(
-        Long id,
-        String name,
-        String roadAddress,
-        double latitude,
-        double longitude,
-        double distanceMeters
-    ) {
-        return new NearbyLocker(id, name, roadAddress, latitude, longitude, distanceMeters);
     }
 }

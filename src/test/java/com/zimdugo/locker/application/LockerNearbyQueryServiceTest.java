@@ -43,7 +43,9 @@ class LockerNearbyQueryServiceTest {
     @Test
     @DisplayName("조회 -> 그룹화 -> 응답 매핑 순서로 오케스트레이션 한다")
     void orchestratesReaderGrouperAndMapper() {
-        List<NearbyLocker> nearbyLockers = List.of(locker(1L, "강남A", "서울 A", 37.5, 127.0, 20.0));
+        List<NearbyLocker> nearbyLockers = List.of(
+            new NearbyLocker(1L, "강남A", "서울 A", 37.5, 127.0, 20.0)
+        );
         List<List<NearbyLocker>> grouped = List.of(nearbyLockers);
         List<NearbyLockerGroupResponse> mapped = List.of(
             NearbyLockerGroupResponse.of(37.5, 127.0, "서울 A", 20L, List.of())
@@ -59,16 +61,5 @@ class LockerNearbyQueryServiceTest {
         verify(nearbyLockerReader).findNearby(37.5, 127.0, 1000);
         verify(nearbyLockerGrouper).groupByCoordinateOrRoadAddress(nearbyLockers);
         verify(nearbyLockerGroupMapper).toGroupResponses(grouped);
-    }
-
-    private NearbyLocker locker(
-        Long id,
-        String name,
-        String roadAddress,
-        double latitude,
-        double longitude,
-        double distanceMeters
-    ) {
-        return new NearbyLocker(id, name, roadAddress, latitude, longitude, distanceMeters);
     }
 }
