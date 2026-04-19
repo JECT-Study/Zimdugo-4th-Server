@@ -2,8 +2,8 @@ package com.zimdugo.user.entrypoint;
 
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.user.application.UserQueryService;
 import com.zimdugo.user.application.UserProfileResponse;
+import com.zimdugo.user.application.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

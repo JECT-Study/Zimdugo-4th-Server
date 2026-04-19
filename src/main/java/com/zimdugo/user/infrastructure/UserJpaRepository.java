@@ -1,10 +1,10 @@
 package com.zimdugo.user.infrastructure;
 
-import com.zimdugo.user.infrastructure.persistence.UserJpaEntity;
+import com.zimdugo.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
-    Optional<UserJpaEntity> findByEmail(String email);
+public interface UserJpaRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
 }
