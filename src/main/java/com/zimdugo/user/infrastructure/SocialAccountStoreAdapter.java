@@ -2,7 +2,7 @@ package com.zimdugo.user.infrastructure;
 
 import com.zimdugo.user.domain.SocialAccount;
 import com.zimdugo.user.domain.SocialAccountStore;
-import com.zimdugo.user.infrastructure.persistence.User;
+import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ public class SocialAccountStoreAdapter implements SocialAccountStore {
     @Override
     public SocialAccount store(SocialAccount socialAccount) {
         Long userId = socialAccount.getUser().getId();
-        User userEntity = userRepository.findById(userId)
+        UserEntity userEntity = userRepository.findById(userId)
             .orElseThrow(() -> new NoSuchElementException("user not found. id=" + userId));
         return SocialAccountEntityMapper.toDomain(
             socialAccountRepository.save(SocialAccountEntityMapper.toEntity(socialAccount, userEntity))

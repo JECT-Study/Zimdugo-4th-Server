@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,7 +51,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @SuppressWarnings("checkstyle:ParameterNumber")
-    public User(
+    public UserEntity(
         Long id,
         String email,
         String nickname,

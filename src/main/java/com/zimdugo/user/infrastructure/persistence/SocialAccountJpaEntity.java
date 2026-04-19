@@ -39,7 +39,7 @@ public class SocialAccountJpaEntity {
 
     @JoinColumn(name = "user_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private User user;
+    private UserEntity user;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -60,7 +60,7 @@ public class SocialAccountJpaEntity {
     @SuppressWarnings("checkstyle:ParameterNumber")
     public SocialAccountJpaEntity(
         Long id,
-        User user,
+        UserEntity user,
         AuthProvider provider,
         String providerUserId,
         String providerEmail,

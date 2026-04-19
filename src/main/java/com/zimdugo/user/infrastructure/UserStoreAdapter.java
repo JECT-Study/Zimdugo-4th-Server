@@ -13,8 +13,8 @@ public class UserStoreAdapter implements UserStore {
 
     @Override
     public User store(User user) {
-        com.zimdugo.user.infrastructure.persistence.User saved =
-            userRepository.save(UserEntityMapper.toEntity(user));
-        return UserEntityMapper.toDomain(saved);
+        return UserEntityMapper.toDomain(
+            userRepository.save(UserEntityMapper.toEntity(user))
+        );
     }
 }
