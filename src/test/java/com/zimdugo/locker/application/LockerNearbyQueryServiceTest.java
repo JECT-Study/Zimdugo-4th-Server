@@ -4,7 +4,6 @@ import com.zimdugo.locker.domain.NearbyLocker;
 import com.zimdugo.locker.domain.NearbyLockerReader;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,47 +20,55 @@ class LockerNearbyQueryServiceTest {
     @Mock
     private NearbyLockerReader nearbyLockerReader;
 
+    @Mock
+    private NearbyLockerGrouper nearbyLockerGrouper;
+
+    @Mock
+    private NearbyLockerGroupMapper nearbyLockerGroupMapper;
+
     @InjectMocks
     private LockerNearbyQueryService lockerNearbyQueryService;
 
-    @Nested
-    @DisplayName("가까운 보관함 조회")
-    class GetNearbyLockers {
+    @Test
+    @DisplayName("조회 결과가 없으면 빈 리스트를 반환한다")
+    void noResultReturnsEmpty() {
+        given(nearbyLockerReader.findNearby(37.5, 127.0, 1000)).willReturn(List.of());
 
-        @Test
-        @DisplayName("조회 결과를 response dto로 변환한다")
-        void resultToResponse() {
-            given(nearbyLockerReader.findNearby(37.5, 127.0, 1000))
-                .willReturn(List.of(
-                    new NearbyLocker(
-                        1L,
-                        "강남역 보관함",
-                        "서울특별시 강남구 테헤란로 123",
-                        37.4983,
-                        127.0272,
-                        53.4
-                    )
-                ));
+        List<NearbyLockerGroupResponse> result = lockerNearbyQueryService.getNearbyLockerGroups(37.5, 127.0, 1000);
 
-            List<NearbyLockerResponse> result = lockerNearbyQueryService.getNearbyLockers(37.5, 127.0, 1000);
+        assertThat(result).isEmpty();
+        verify(nearbyLockerReader).findNearby(37.5, 127.0, 1000);
+    }
 
-            assertThat(result).hasSize(1);
-            assertThat(result.getFirst().id()).isEqualTo(1L);
-            assertThat(result.getFirst().name()).isEqualTo("강남역 보관함");
-            assertThat(result.getFirst().distanceMeters()).isEqualTo(53L);
-            verify(nearbyLockerReader).findNearby(37.5, 127.0, 1000);
-        }
+    @Test
+    @DisplayName("조회 -> 그룹화 -> 응답 매핑 순서로 오케스트레이션 한다")
+    void orchestratesReaderGrouperAndMapper() {
+        List<NearbyLocker> nearbyLockers = List.of(locker(1L, "강남A", "서울 A", 37.5, 127.0, 20.0));
+        List<List<NearbyLocker>> grouped = List.of(nearbyLockers);
+        List<NearbyLockerGroupResponse> mapped = List.of(
+            NearbyLockerGroupResponse.of(37.5, 127.0, "서울 A", 20L, List.of())
+        );
 
-        @Test
-        @DisplayName("조회 결과가 없으면 빈 리스트를 반환한다")
-        void noResultEmptyList() {
-            given(nearbyLockerReader.findNearby(37.5, 127.0, 1000))
-                .willReturn(List.of());
+        given(nearbyLockerReader.findNearby(37.5, 127.0, 1000)).willReturn(nearbyLockers);
+        given(nearbyLockerGrouper.groupByCoordinateOrRoadAddress(nearbyLockers)).willReturn(grouped);
+        given(nearbyLockerGroupMapper.toGroupResponses(grouped)).willReturn(mapped);
 
-            List<NearbyLockerResponse> result = lockerNearbyQueryService.getNearbyLockers(37.5, 127.0, 1000);
+        List<NearbyLockerGroupResponse> result = lockerNearbyQueryService.getNearbyLockerGroups(37.5, 127.0, 1000);
 
-            assertThat(result).isEmpty();
-            verify(nearbyLockerReader).findNearby(37.5, 127.0, 1000);
-        }
+        assertThat(result).isEqualTo(mapped);
+        verify(nearbyLockerReader).findNearby(37.5, 127.0, 1000);
+        verify(nearbyLockerGrouper).groupByCoordinateOrRoadAddress(nearbyLockers);
+        verify(nearbyLockerGroupMapper).toGroupResponses(grouped);
+    }
+
+    private NearbyLocker locker(
+        Long id,
+        String name,
+        String roadAddress,
+        double latitude,
+        double longitude,
+        double distanceMeters
+    ) {
+        return new NearbyLocker(id, name, roadAddress, latitude, longitude, distanceMeters);
     }
 }
