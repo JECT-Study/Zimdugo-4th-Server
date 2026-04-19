@@ -3,7 +3,7 @@ package com.zimdugo.locker.entrypoint;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.locker.application.LockerNearbyQueryService;
-import com.zimdugo.locker.application.NearbyLockerResponse;
+import com.zimdugo.locker.application.NearbyLockerGroupResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +20,10 @@ public class LockerController implements LockerApi {
     private final LockerNearbyQueryService lockerNearbyQueryService;
 
     @Override
-    public ResponseEntity<RestResponse<List<NearbyLockerResponse>>> getNearbyLockers(
+    public ResponseEntity<RestResponse<List<NearbyLockerGroupResponse>>> getNearbyLockerGroups(
         double latitude, double longitude, int radiusMeters
     ) {
-        List<NearbyLockerResponse> response = lockerNearbyQueryService.getNearbyLockers(
+        List<NearbyLockerGroupResponse> response = lockerNearbyQueryService.getNearbyLockerGroups(
             latitude, longitude, radiusMeters
         );
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, response));

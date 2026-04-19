@@ -1,7 +1,7 @@
 package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.core.response.RestResponse;
-import com.zimdugo.locker.application.NearbyLockerResponse;
+import com.zimdugo.locker.application.NearbyLockerGroupResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +23,7 @@ public interface LockerApi {
 
     @Operation(
         summary = "주변 보관함 목록 조회",
-        description = "현재 좌표 기준 반경 내 보관함 목록을 거리 오름차순으로 조회한다."
+        description = "현재 좌표 기준 반경 내 보관함을 거리순으로 조회하며, 동일 좌표/도로명 주소는 그룹으로 묶어 반환한다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -31,7 +31,7 @@ public interface LockerApi {
     })
     @SecurityRequirements
     @GetMapping("/lockers/nearby")
-    ResponseEntity<RestResponse<List<NearbyLockerResponse>>> getNearbyLockers(
+    ResponseEntity<RestResponse<List<NearbyLockerGroupResponse>>> getNearbyLockerGroups(
         @RequestParam("lat")
         @Parameter(description = "사용자 위도", example = "37.498095")
         @Schema(minimum = "-90", maximum = "90")
