@@ -1,7 +1,7 @@
 package com.zimdugo.user.infrastructure;
 
 import com.zimdugo.user.domain.SocialAccount;
-import com.zimdugo.user.infrastructure.persistence.SocialAccountJpaEntity;
+import com.zimdugo.user.infrastructure.persistence.SocialAccountEntity;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 
 final class SocialAccountEntityMapper {
@@ -9,7 +9,7 @@ final class SocialAccountEntityMapper {
     private SocialAccountEntityMapper() {
     }
 
-    static SocialAccount toDomain(SocialAccountJpaEntity entity) {
+    static SocialAccount toDomain(SocialAccountEntity entity) {
         return new SocialAccount(
             entity.getId(),
             UserEntityMapper.toDomain(entity.getUser()),
@@ -21,8 +21,8 @@ final class SocialAccountEntityMapper {
         );
     }
 
-    static SocialAccountJpaEntity toEntity(SocialAccount socialAccount, UserEntity userEntity) {
-        return new SocialAccountJpaEntity(
+    static SocialAccountEntity toEntity(SocialAccount socialAccount, UserEntity userEntity) {
+        return new SocialAccountEntity(
             socialAccount.getId(),
             userEntity,
             socialAccount.getProvider(),

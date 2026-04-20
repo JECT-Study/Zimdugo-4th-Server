@@ -1,9 +1,10 @@
 package com.zimdugo.user.infrastructure;
 
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.domain.SocialAccount;
 import com.zimdugo.user.domain.SocialAccountStore;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
-import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +19,7 @@ public class SocialAccountStoreAdapter implements SocialAccountStore {
     public SocialAccount store(SocialAccount socialAccount) {
         Long userId = socialAccount.getUser().getId();
         UserEntity userEntity = userRepository.findById(userId)
-            .orElseThrow(() -> new NoSuchElementException("user not found. id=" + userId));
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         return SocialAccountEntityMapper.toDomain(
             socialAccountRepository.save(SocialAccountEntityMapper.toEntity(socialAccount, userEntity))
         );

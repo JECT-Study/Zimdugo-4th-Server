@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SocialAccountJpaEntity {
+public class SocialAccountEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,7 +58,7 @@ public class SocialAccountJpaEntity {
     private LocalDateTime linkedAt;
 
     @SuppressWarnings("checkstyle:ParameterNumber")
-    public SocialAccountJpaEntity(
+    public SocialAccountEntity(
         Long id,
         UserEntity user,
         AuthProvider provider,
