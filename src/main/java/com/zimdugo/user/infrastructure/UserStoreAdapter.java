@@ -2,7 +2,7 @@ package com.zimdugo.user.infrastructure;
 
 import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserStore;
-import com.zimdugo.user.infrastructure.persistence.UserJpaEntity;
+import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserStoreAdapter implements UserStore {
 
-    private final UserJpaRepository userJpaRepository;
+    private final UserRepository userRepository;
 
     @Override
     public User store(User user) {
-        UserJpaEntity saved = userJpaRepository.save(UserEntityMapper.toEntity(user));
+        UserEntity saved = userRepository.save(UserEntityMapper.toEntity(user));
         return UserEntityMapper.toDomain(saved);
     }
 }

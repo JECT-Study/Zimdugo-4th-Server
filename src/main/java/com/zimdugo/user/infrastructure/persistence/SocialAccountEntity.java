@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SocialAccountJpaEntity {
+public class SocialAccountEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +39,7 @@ public class SocialAccountJpaEntity {
 
     @JoinColumn(name = "user_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private UserJpaEntity user;
+    private UserEntity user;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -58,9 +58,9 @@ public class SocialAccountJpaEntity {
     private LocalDateTime linkedAt;
 
     @SuppressWarnings("checkstyle:ParameterNumber")
-    public SocialAccountJpaEntity(
+    public SocialAccountEntity(
         Long id,
-        UserJpaEntity user,
+        UserEntity user,
         AuthProvider provider,
         String providerUserId,
         String providerEmail,

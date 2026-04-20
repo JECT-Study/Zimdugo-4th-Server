@@ -3,6 +3,8 @@ package com.zimdugo.auth.entrypoint;
 import com.zimdugo.auth.application.AccountWithdrawalService;
 import com.zimdugo.auth.application.AuthCommandService;
 import com.zimdugo.auth.application.AuthRefreshResult;
+import com.zimdugo.core.response.RestResponse;
+import com.zimdugo.core.response.SuccessCode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,7 +34,7 @@ public class AuthController {
     private final AccountWithdrawalService accountWithdrawalService;
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(
+    public ResponseEntity<RestResponse<Map<String, Object>>> refresh(
         @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshTokenCookie,
         @RequestHeader(name = REFRESH_TOKEN_HEADER_NAME, required = false) String refreshTokenHeader,
         HttpServletResponse response
@@ -46,11 +48,11 @@ public class AuthController {
             createRefreshTokenCookie(result.refreshToken()).toString()
         );
 
-        return ResponseEntity.ok(createRefreshResponse(result));
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, createRefreshResponse(result)));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(
+    public ResponseEntity<RestResponse<Void>> logout(
         @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshTokenCookie,
         @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
         HttpServletResponse response
@@ -58,17 +60,17 @@ public class AuthController {
         authCommandService.logout(refreshTokenCookie, extractAccessToken(authorization));
 
         response.setHeader(HttpHeaders.SET_COOKIE, createLogoutCookie().toString());
-        return ResponseEntity.ok(Map.of("message", "logout success"));
+        return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<?> withdraw(
+    public ResponseEntity<RestResponse<Void>> withdraw(
         @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
         HttpServletResponse response
     ) {
         accountWithdrawalService.withdraw(extractAccessToken(authorization));
         response.setHeader(HttpHeaders.SET_COOKIE, createLogoutCookie().toString());
-        return ResponseEntity.ok(Map.of("message", "withdraw success"));
+        return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
     }
 
     private Map<String, Object> createRefreshResponse(AuthRefreshResult result) {
