@@ -2,7 +2,6 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.locker.application.LockerReportCreateCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -76,14 +75,6 @@ public record LockerReportCreateRequest(
 ) {
 
     private static final String DEFAULT_LOCKER_TYPE = "UNKNOWN";
-
-    @AssertTrue
-    public boolean isExistingLockerIdValid() {
-        if (!"ADD_TO_EXISTING".equalsIgnoreCase(duplicateHandlingType)) {
-            return true;
-        }
-        return existingLockerId != null;
-    }
 
     public String lockerTypeOrDefault() {
         if (lockerType == null || lockerType.isBlank()) {

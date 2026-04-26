@@ -42,7 +42,7 @@ public record LockerReportCreateCommand(
         double longitude
     ) {
         return new LockerReportCreateCommand(
-            parseDuplicateHandlingType(duplicateHandlingType),
+            parseDuplicateHandlingType(duplicateHandlingType, existingLockerId),
             existingLockerId,
             name,
             roadAddress,
@@ -60,14 +60,27 @@ public record LockerReportCreateCommand(
         );
     }
 
-    private static DuplicateHandlingType parseDuplicateHandlingType(String value) {
+    private static DuplicateHandlingType parseDuplicateHandlingType(String value, Long existingLockerId) {
         if (value == null || value.isBlank()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST);
         }
 
         try {
-            return DuplicateHandlingType.valueOf(value.toUpperCase(Locale.ROOT));
+            DuplicateHandlingType duplicateHandlingType = DuplicateHandlingType.valueOf(
+                value.toUpperCase(Locale.ROOT)
+            );
+            validateExistingLockerId(duplicateHandlingType, existingLockerId);
+            return duplicateHandlingType;
         } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+    }
+
+    private static void validateExistingLockerId(
+        DuplicateHandlingType duplicateHandlingType,
+        Long existingLockerId
+    ) {
+        if (duplicateHandlingType == DuplicateHandlingType.ADD_TO_EXISTING && existingLockerId == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST);
         }
     }
