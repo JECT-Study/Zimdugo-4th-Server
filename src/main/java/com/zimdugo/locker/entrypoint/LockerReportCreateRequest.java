@@ -1,6 +1,6 @@
 package com.zimdugo.locker.entrypoint;
 
-import com.zimdugo.locker.domain.DuplicateHandlingType;
+import com.zimdugo.locker.application.LockerReportCreateCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
@@ -11,8 +11,8 @@ import jakarta.validation.constraints.Size;
 
 public record LockerReportCreateRequest(
     @Schema(example = "CREATE_NEW", allowableValues = {"CREATE_NEW", "ADD_TO_EXISTING"})
-    @NotNull
-    DuplicateHandlingType duplicateHandlingType,
+    @NotBlank
+    String duplicateHandlingType,
 
     @Schema(description = "ADD_TO_EXISTING 선택 시 필수", example = "1")
     Long existingLockerId,
@@ -79,7 +79,7 @@ public record LockerReportCreateRequest(
 
     @AssertTrue
     public boolean isExistingLockerIdValid() {
-        if (duplicateHandlingType != DuplicateHandlingType.ADD_TO_EXISTING) {
+        if (!"ADD_TO_EXISTING".equalsIgnoreCase(duplicateHandlingType)) {
             return true;
         }
         return existingLockerId != null;
@@ -90,5 +90,25 @@ public record LockerReportCreateRequest(
             return DEFAULT_LOCKER_TYPE;
         }
         return lockerType;
+    }
+
+    public LockerReportCreateCommand toCommand() {
+        return LockerReportCreateCommand.of(
+            duplicateHandlingType,
+            existingLockerId,
+            name,
+            roadAddress,
+            detailLocation,
+            buildingName,
+            floor,
+            indoorOutdoorType,
+            lockerTypeOrDefault(),
+            sizeInfo,
+            priceInfo,
+            operatingHours,
+            imageUrl,
+            latitude,
+            longitude
+        );
     }
 }
