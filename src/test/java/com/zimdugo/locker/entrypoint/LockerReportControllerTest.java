@@ -14,12 +14,12 @@ import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoCon
 import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -60,14 +60,14 @@ class LockerReportControllerTest {
     private OAuth2CallbackUrlCaptureFilter oAuth2CallbackUrlCaptureFilter;
 
     @Test
-    @DisplayName("Returns success when an authenticated user creates a locker report")
+    @DisplayName("인증된 사용자가 제보를 등록하면 성공 응답을 반환한다")
     void createLockerReport_withAuthenticatedUser_returnsOk() throws Exception {
         given(lockerReportCommandService.create(eq(1L), any()))
             .willReturn(new LockerReportCreateResult(
                 100L,
                 10L,
-                "Hongdae Exit 2 Test Locker",
-                "160 Yanghwa-ro, Mapo-gu, Seoul",
+                "홍대입구역 2번 출구 테스트 보관함",
+                "서울 마포구 양화로 160",
                 37.556,
                 126.923,
                 "COMPLETED"
@@ -86,7 +86,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("Returns 401 when authentication is missing")
+    @DisplayName("인증 정보가 없으면 401을 반환한다")
     void createLockerReport_withoutAuthentication_returnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .contentType("application/json")
@@ -97,7 +97,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("Returns validation error when name is blank")
+    @DisplayName("이름이 비어 있으면 validation error를 반환한다")
     void createLockerReport_withoutName_returnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
@@ -107,9 +107,9 @@ class LockerReportControllerTest {
                       "duplicateHandlingType": "CREATE_NEW",
                       "existingLockerId": null,
                       "name": "",
-                      "roadAddress": "160 Yanghwa-ro, Mapo-gu, Seoul",
+                      "roadAddress": "서울 마포구 양화로 160",
                       "detailLocation": null,
-                      "buildingName": "Hongdae Station",
+                      "buildingName": "홍대입구역",
                       "floor": null,
                       "indoorOutdoorType": null,
                       "lockerType": null,
@@ -128,7 +128,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("Returns bad request when existingLockerId is missing for ADD_TO_EXISTING")
+    @DisplayName("기존 장소 추가인데 existingLockerId가 없으면 bad request를 반환한다")
     void createLockerReport_addToExistingWithoutLockerId_returnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
@@ -137,10 +137,10 @@ class LockerReportControllerTest {
                     {
                       "duplicateHandlingType": "ADD_TO_EXISTING",
                       "existingLockerId": null,
-                      "name": "Hongdae Exit 2 Test Locker",
-                      "roadAddress": "160 Yanghwa-ro, Mapo-gu, Seoul",
+                      "name": "홍대입구역 2번 출구 테스트 보관함",
+                      "roadAddress": "서울 마포구 양화로 160",
                       "detailLocation": null,
-                      "buildingName": "Hongdae Station",
+                      "buildingName": "홍대입구역",
                       "floor": null,
                       "indoorOutdoorType": null,
                       "lockerType": null,
@@ -158,7 +158,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("Returns validation error when roadAddress is blank")
+    @DisplayName("도로명 주소가 비어 있으면 validation error를 반환한다")
     void createLockerReport_withoutRoadAddress_returnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
@@ -167,10 +167,10 @@ class LockerReportControllerTest {
                     {
                       "duplicateHandlingType": "CREATE_NEW",
                       "existingLockerId": null,
-                      "name": "Hongdae Exit 2 Test Locker",
+                      "name": "홍대입구역 2번 출구 테스트 보관함",
                       "roadAddress": "",
                       "detailLocation": null,
-                      "buildingName": "Hongdae Station",
+                      "buildingName": "홍대입구역",
                       "floor": null,
                       "indoorOutdoorType": null,
                       "lockerType": null,
@@ -193,10 +193,10 @@ class LockerReportControllerTest {
             {
               "duplicateHandlingType": "CREATE_NEW",
               "existingLockerId": null,
-              "name": "Hongdae Exit 2 Test Locker",
-              "roadAddress": "160 Yanghwa-ro, Mapo-gu, Seoul",
+              "name": "홍대입구역 2번 출구 테스트 보관함",
+              "roadAddress": "서울 마포구 양화로 160",
               "detailLocation": null,
-              "buildingName": "Hongdae Station",
+              "buildingName": "홍대입구역",
               "floor": null,
               "indoorOutdoorType": null,
               "lockerType": null,

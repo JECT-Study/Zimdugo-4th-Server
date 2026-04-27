@@ -25,8 +25,8 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class LockerReportCommandServiceTest {
 
-    private static final String LOCKER_NAME = "Hongdae Exit 2 Test Locker";
-    private static final String ROAD_ADDRESS = "160 Yanghwa-ro, Mapo-gu, Seoul";
+    private static final String LOCKER_NAME = "홍대입구역 보관함";
+    private static final String ROAD_ADDRESS = "서울 마포구 양화로 160";
 
     @Mock
     private LockerStore lockerStore;
@@ -38,11 +38,11 @@ class LockerReportCommandServiceTest {
     private LockerReportCommandService lockerReportCommandService;
 
     @Nested
-    @DisplayName("Locker report creation")
+    @DisplayName("보관함 제보 등록")
     class Create {
 
         @Test
-        @DisplayName("Creates a locker and stores the report for CREATE_NEW")
+        @DisplayName("신규 제보면 보관함을 생성하고 제보 이력을 저장한다")
         void createNewLockerAndReport() {
             given(lockerStore.create(LOCKER_NAME, ROAD_ADDRESS, 37.556, 126.923))
                 .willReturn(testLocker());
@@ -58,7 +58,7 @@ class LockerReportCommandServiceTest {
         }
 
         @Test
-        @DisplayName("Stores the report on an existing locker for ADD_TO_EXISTING")
+        @DisplayName("기존 장소 추가면 기존 보관함에 제보 이력을 저장한다")
         void addReportToExistingLocker() {
             given(lockerStore.getById(10L)).willReturn(testLocker());
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
@@ -92,7 +92,7 @@ class LockerReportCommandServiceTest {
             LOCKER_NAME,
             ROAD_ADDRESS,
             null,
-            "Hongdae Station",
+            "홍대입구역",
             null,
             null,
             "UNKNOWN",
@@ -112,7 +112,7 @@ class LockerReportCommandServiceTest {
             LOCKER_NAME,
             ROAD_ADDRESS,
             null,
-            "Hongdae Station",
+            "홍대입구역",
             null,
             null,
             "UNKNOWN",

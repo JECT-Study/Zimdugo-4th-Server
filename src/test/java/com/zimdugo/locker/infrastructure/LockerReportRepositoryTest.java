@@ -35,7 +35,7 @@ class LockerReportRepositoryTest {
             locker,
             user,
             DuplicateHandlingType.CREATE_NEW,
-            "Hongdae Exit 2 Test Locker",
+            "홍대입구역 보관함",
             null,
             null,
             null,
@@ -84,13 +84,13 @@ class LockerReportRepositoryTest {
     private LockerEntity saveLocker() {
         entityManager.createNativeQuery("""
             INSERT INTO lockers (name, road_address, latitude, longitude)
-            VALUES ('Hongdae Exit 2 Test Locker', '160 Yanghwa-ro, Mapo-gu, Seoul', 37.556, 126.923)
+            VALUES ('홍대입구역 보관함', '서울 마포구 양화로 160', 37.556, 126.923)
             """).executeUpdate();
 
         Long lockerId = ((Number) entityManager.createNativeQuery("""
             SELECT id
             FROM lockers
-            WHERE name = 'Hongdae Exit 2 Test Locker'
+            WHERE name = '홍대입구역 보관함'
             """).getSingleResult()).longValue();
 
         return entityManager.getReference(LockerEntity.class, lockerId);
