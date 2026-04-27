@@ -23,7 +23,7 @@ public class LockerEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(length = 255)
+    @Column(nullable = false, length = 255)
     private String roadAddress;
 
     @Column(nullable = false)
@@ -32,7 +32,7 @@ public class LockerEntity {
     @Column(nullable = false)
     private double longitude;
 
-    public Locker(String name, String roadAddress, double latitude, double longitude) {
+    public LockerEntity(String name, String roadAddress, double latitude, double longitude) {
         this.name = name;
         this.roadAddress = roadAddress;
         this.latitude = latitude;

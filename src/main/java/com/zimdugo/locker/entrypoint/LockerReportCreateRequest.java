@@ -22,6 +22,7 @@ public record LockerReportCreateRequest(
     String name,
 
     @Schema(description = "도로명 주소. 주소 변환 실패 시 비워둘 수 있다.", example = "서울 마포구 양화로 160")
+    @NotBlank
     @Size(max = 255)
     String roadAddress,
 

@@ -2,7 +2,7 @@ package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.domain.DuplicateHandlingType;
 import com.zimdugo.locker.domain.LockerReportStatus;
-import com.zimdugo.locker.infrastructure.persistence.Locker;
+import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerReport;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
@@ -29,13 +29,13 @@ class LockerReportRepositoryTest {
     @DisplayName("선택 입력값이 없어도 제보 원본 정보를 저장한다")
     void saveReportWithOptionalFieldsNull() {
         UserEntity user = saveUser();
-        Locker locker = saveLocker();
+        LockerEntity locker = saveLocker();
 
         LockerReport report = lockerReportRepository.save(new LockerReport(
             locker,
             user,
             DuplicateHandlingType.CREATE_NEW,
-            "홍대입구역 보관함",
+            "Hongdae Exit 2 Test Locker",
             null,
             null,
             null,
@@ -81,18 +81,18 @@ class LockerReportRepositoryTest {
         return user;
     }
 
-    private Locker saveLocker() {
+    private LockerEntity saveLocker() {
         entityManager.createNativeQuery("""
             INSERT INTO lockers (name, road_address, latitude, longitude)
-            VALUES ('홍대입구역 보관함', '서울 마포구 양화로 160', 37.556, 126.923)
+            VALUES ('Hongdae Exit 2 Test Locker', '160 Yanghwa-ro, Mapo-gu, Seoul', 37.556, 126.923)
             """).executeUpdate();
 
         Long lockerId = ((Number) entityManager.createNativeQuery("""
             SELECT id
             FROM lockers
-            WHERE name = '홍대입구역 보관함'
+            WHERE name = 'Hongdae Exit 2 Test Locker'
             """).getSingleResult()).longValue();
 
-        return entityManager.getReference(Locker.class, lockerId);
+        return entityManager.getReference(LockerEntity.class, lockerId);
     }
 }

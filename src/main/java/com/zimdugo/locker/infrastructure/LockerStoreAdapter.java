@@ -4,7 +4,7 @@ import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.LockerStore;
 import com.zimdugo.locker.domain.ReportLocker;
-import com.zimdugo.locker.infrastructure.persistence.Locker;
+import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +16,9 @@ public class LockerStoreAdapter implements LockerStore {
 
     @Override
     public ReportLocker create(String name, String roadAddress, double latitude, double longitude) {
-        Locker locker = lockerRepository.save(new Locker(name, roadAddress, latitude, longitude));
+        LockerEntity locker = lockerRepository.save(
+            new LockerEntity(name, roadAddress, latitude, longitude)
+        );
         return toDomain(locker);
     }
 
@@ -27,7 +29,7 @@ public class LockerStoreAdapter implements LockerStore {
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
     }
 
-    private ReportLocker toDomain(Locker locker) {
+    private ReportLocker toDomain(LockerEntity locker) {
         return new ReportLocker(
             locker.getId(),
             locker.getName(),

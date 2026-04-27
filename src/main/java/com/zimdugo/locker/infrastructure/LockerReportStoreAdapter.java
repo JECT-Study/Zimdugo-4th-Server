@@ -5,7 +5,7 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.SavedLockerReport;
-import com.zimdugo.locker.infrastructure.persistence.Locker;
+import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerReport;
 import com.zimdugo.user.infrastructure.UserRepository;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
@@ -22,7 +22,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
 
     @Override
     public SavedLockerReport create(LockerReportCreateInfo createInfo) {
-        Locker locker = lockerRepository.findById(createInfo.lockerId())
+        LockerEntity locker = lockerRepository.findById(createInfo.lockerId())
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
         UserEntity user = userRepository.findById(createInfo.userId())
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

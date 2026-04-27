@@ -40,7 +40,7 @@ public class LockerReport {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "locker_id", nullable = false)
-    private Locker locker;
+    private LockerEntity locker;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -101,7 +101,7 @@ public class LockerReport {
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     public LockerReport(
-        Locker locker,
+        LockerEntity locker,
         UserEntity user,
         DuplicateHandlingType duplicateHandlingType,
         String name,

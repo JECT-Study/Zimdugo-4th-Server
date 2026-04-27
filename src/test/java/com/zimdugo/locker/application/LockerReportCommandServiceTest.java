@@ -25,6 +25,9 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class LockerReportCommandServiceTest {
 
+    private static final String LOCKER_NAME = "Hongdae Exit 2 Test Locker";
+    private static final String ROAD_ADDRESS = "160 Yanghwa-ro, Mapo-gu, Seoul";
+
     @Mock
     private LockerStore lockerStore;
 
@@ -39,9 +42,9 @@ class LockerReportCommandServiceTest {
     class Create {
 
         @Test
-        @DisplayName("신규 제보이면 보관함을 생성하고 제보 이력을 저장한다")
+        @DisplayName("신규 제보면 보관함을 생성하고 제보 이력을 저장한다")
         void createNewLockerAndReport() {
-            given(lockerStore.create("홍대입구역 보관함", null, 37.556, 126.923))
+            given(lockerStore.create(LOCKER_NAME, ROAD_ADDRESS, 37.556, 126.923))
                 .willReturn(testLocker());
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
                 .willReturn(testReport());
@@ -50,12 +53,12 @@ class LockerReportCommandServiceTest {
 
             assertThat(result.reportId()).isEqualTo(100L);
             assertThat(result.lockerId()).isEqualTo(10L);
-            verify(lockerStore).create("홍대입구역 보관함", null, 37.556, 126.923);
+            verify(lockerStore).create(LOCKER_NAME, ROAD_ADDRESS, 37.556, 126.923);
             verify(lockerReportStore).create(any(LockerReportCreateInfo.class));
         }
 
         @Test
-        @DisplayName("기존 장소 추가이면 기존 보관함에 제보 이력을 저장한다")
+        @DisplayName("기존 장소 추가면 기존 보관함에 제보 이력을 저장한다")
         void addReportToExistingLocker() {
             given(lockerStore.getById(10L)).willReturn(testLocker());
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
@@ -70,12 +73,12 @@ class LockerReportCommandServiceTest {
             assertThat(captor.getValue().lockerId()).isEqualTo(10L);
             assertThat(captor.getValue().duplicateHandlingType())
                 .isEqualTo(DuplicateHandlingType.ADD_TO_EXISTING);
+            assertThat(captor.getValue().roadAddress()).isEqualTo(ROAD_ADDRESS);
         }
-
     }
 
     private ReportLocker testLocker() {
-        return new ReportLocker(10L, "홍대입구역 보관함", null, 37.556, 126.923);
+        return new ReportLocker(10L, LOCKER_NAME, ROAD_ADDRESS, 37.556, 126.923);
     }
 
     private SavedLockerReport testReport() {
@@ -86,10 +89,10 @@ class LockerReportCommandServiceTest {
         return LockerReportCreateCommand.of(
             "CREATE_NEW",
             null,
-            "홍대입구역 보관함",
+            LOCKER_NAME,
+            ROAD_ADDRESS,
             null,
-            null,
-            "홍대입구역",
+            "Hongdae Station",
             null,
             null,
             "UNKNOWN",
@@ -106,10 +109,10 @@ class LockerReportCommandServiceTest {
         return LockerReportCreateCommand.of(
             "ADD_TO_EXISTING",
             10L,
-            "홍대입구역 보관함",
+            LOCKER_NAME,
+            ROAD_ADDRESS,
             null,
-            null,
-            "홍대입구역",
+            "Hongdae Station",
             null,
             null,
             "UNKNOWN",

@@ -67,7 +67,7 @@ class LockerReportControllerTest {
                 100L,
                 10L,
                 "Hongdae Exit 2 Test Locker",
-                null,
+                "160 Yanghwa-ro, Mapo-gu, Seoul",
                 37.556,
                 126.923,
                 "COMPLETED"
@@ -107,7 +107,7 @@ class LockerReportControllerTest {
                       "duplicateHandlingType": "CREATE_NEW",
                       "existingLockerId": null,
                       "name": "",
-                      "roadAddress": null,
+                      "roadAddress": "160 Yanghwa-ro, Mapo-gu, Seoul",
                       "detailLocation": null,
                       "buildingName": "Hongdae Station",
                       "floor": null,
@@ -138,7 +138,7 @@ class LockerReportControllerTest {
                       "duplicateHandlingType": "ADD_TO_EXISTING",
                       "existingLockerId": null,
                       "name": "Hongdae Exit 2 Test Locker",
-                      "roadAddress": null,
+                      "roadAddress": "160 Yanghwa-ro, Mapo-gu, Seoul",
                       "detailLocation": null,
                       "buildingName": "Hongdae Station",
                       "floor": null,
@@ -157,13 +157,44 @@ class LockerReportControllerTest {
             .andExpect(jsonPath("$.message").value("common.bad_request"));
     }
 
+    @Test
+    @DisplayName("?꾨줈紐?二쇱냼媛 ?꾨씫?섎㈃ 400怨?validation error瑜?諛섑솚?쒕떎")
+    void createLockerReport_withoutRoadAddress_returnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/locker-reports")
+                .principal(authenticatedUser())
+                .contentType("application/json")
+                .content("""
+                    {
+                      "duplicateHandlingType": "CREATE_NEW",
+                      "existingLockerId": null,
+                      "name": "Hongdae Exit 2 Test Locker",
+                      "roadAddress": "",
+                      "detailLocation": null,
+                      "buildingName": "Hongdae Station",
+                      "floor": null,
+                      "indoorOutdoorType": null,
+                      "lockerType": null,
+                      "sizeInfo": null,
+                      "priceInfo": null,
+                      "operatingHours": null,
+                      "imageUrl": null,
+                      "latitude": 37.556,
+                      "longitude": 126.923
+                    }
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("C400"))
+            .andExpect(jsonPath("$.validationErrors[0].field").value("roadAddress"))
+            .andExpect(jsonPath("$.validationErrors[0].message").value("validation.not_blank"));
+    }
+
     private String validCreateNewRequestJson() {
         return """
             {
               "duplicateHandlingType": "CREATE_NEW",
               "existingLockerId": null,
               "name": "Hongdae Exit 2 Test Locker",
-              "roadAddress": null,
+              "roadAddress": "160 Yanghwa-ro, Mapo-gu, Seoul",
               "detailLocation": null,
               "buildingName": "Hongdae Station",
               "floor": null,
