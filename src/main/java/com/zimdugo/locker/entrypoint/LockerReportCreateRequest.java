@@ -13,62 +13,65 @@ public record LockerReportCreateRequest(
     @NotBlank
     String duplicateHandlingType,
 
-    @Schema(description = "ADD_TO_EXISTING 선택 시 필수", example = "1")
+    @Schema(description = "Existing locker id required for ADD_TO_EXISTING", example = "1")
     Long existingLockerId,
 
-    @Schema(description = "보관함 이름", example = "홍대입구역 보관함")
+    @Schema(description = "Locker display name", example = "Hongdae Exit 2 Test Locker")
     @NotBlank
     @Size(max = 100)
     String name,
 
-    @Schema(description = "도로명 주소. 주소 변환 실패 시 비워둘 수 있다.", example = "서울 마포구 양화로 160")
+    @Schema(
+        description = "Road address. If reverse geocoding fails, the user should enter it manually.",
+        example = "160 Yanghwa-ro, Mapo-gu, Seoul"
+    )
     @NotBlank
     @Size(max = 255)
     String roadAddress,
 
-    @Schema(description = "상세 위치", example = "2번 출구 안쪽")
+    @Schema(description = "Detailed location description", example = "Inside exit 2")
     @Size(max = 255)
     String detailLocation,
 
-    @Schema(description = "건물명", example = "홍대입구역")
+    @Schema(description = "Building name", example = "Hongdae Station")
     @Size(max = 100)
     String buildingName,
 
-    @Schema(description = "층수", example = "B1")
+    @Schema(description = "Floor information", example = "B1")
     @Size(max = 30)
     String floor,
 
-    @Schema(description = "실내/실외 여부", example = "INDOOR")
+    @Schema(description = "Indoor or outdoor type", example = "INDOOR")
     @Size(max = 20)
     String indoorOutdoorType,
 
-    @Schema(description = "보관함 유형. 값이 없으면 UNKNOWN으로 처리한다.", example = "UNKNOWN")
+    @Schema(description = "Locker type. Defaults to UNKNOWN when omitted.", example = "UNKNOWN")
     @Size(max = 20)
     String lockerType,
 
-    @Schema(description = "규격 정보", example = "S,M,L")
+    @Schema(description = "Size information", example = "S,M,L")
     @Size(max = 100)
     String sizeInfo,
 
-    @Schema(description = "가격 정보", example = "1000~3000원")
+    @Schema(description = "Price information", example = "1000~3000 KRW")
     @Size(max = 100)
     String priceInfo,
 
-    @Schema(description = "운영시간", example = "05:00~24:00")
+    @Schema(description = "Operating hours", example = "05:00~24:00")
     @Size(max = 100)
     String operatingHours,
 
-    @Schema(description = "이미지 URL", example = "https://cdn.example.com/locker/1.jpg")
+    @Schema(description = "Image URL", example = "https://cdn.example.com/locker/1.jpg")
     @Size(max = 500)
     String imageUrl,
 
-    @Schema(description = "위도", example = "37.556")
+    @Schema(description = "Latitude", example = "37.556")
     @NotNull
     @DecimalMin(value = "-90.0")
     @DecimalMax(value = "90.0")
     Double latitude,
 
-    @Schema(description = "경도", example = "126.923")
+    @Schema(description = "Longitude", example = "126.923")
     @NotNull
     @DecimalMin(value = "-180.0")
     @DecimalMax(value = "180.0")

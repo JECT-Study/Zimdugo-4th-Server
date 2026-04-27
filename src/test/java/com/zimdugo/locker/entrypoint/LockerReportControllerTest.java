@@ -14,12 +14,12 @@ import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoCon
 import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -60,7 +60,7 @@ class LockerReportControllerTest {
     private OAuth2CallbackUrlCaptureFilter oAuth2CallbackUrlCaptureFilter;
 
     @Test
-    @DisplayName("인증된 사용자 요청이면 제보 등록 응답을 반환한다")
+    @DisplayName("Returns success when an authenticated user creates a locker report")
     void createLockerReport_withAuthenticatedUser_returnsOk() throws Exception {
         given(lockerReportCommandService.create(eq(1L), any()))
             .willReturn(new LockerReportCreateResult(
@@ -86,7 +86,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("인증 정보가 없으면 401을 반환한다")
+    @DisplayName("Returns 401 when authentication is missing")
     void createLockerReport_withoutAuthentication_returnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .contentType("application/json")
@@ -97,7 +97,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("필수값이 누락되면 400과 validation error를 반환한다")
+    @DisplayName("Returns validation error when name is blank")
     void createLockerReport_withoutName_returnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
@@ -128,7 +128,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("기존 장소 추가인데 보관함 ID가 없으면 400을 반환한다")
+    @DisplayName("Returns bad request when existingLockerId is missing for ADD_TO_EXISTING")
     void createLockerReport_addToExistingWithoutLockerId_returnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
@@ -158,7 +158,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("?꾨줈紐?二쇱냼媛 ?꾨씫?섎㈃ 400怨?validation error瑜?諛섑솚?쒕떎")
+    @DisplayName("Returns validation error when roadAddress is blank")
     void createLockerReport_withoutRoadAddress_returnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())

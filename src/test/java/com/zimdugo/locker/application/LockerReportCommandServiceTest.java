@@ -38,11 +38,11 @@ class LockerReportCommandServiceTest {
     private LockerReportCommandService lockerReportCommandService;
 
     @Nested
-    @DisplayName("보관함 제보 등록")
+    @DisplayName("Locker report creation")
     class Create {
 
         @Test
-        @DisplayName("신규 제보면 보관함을 생성하고 제보 이력을 저장한다")
+        @DisplayName("Creates a locker and stores the report for CREATE_NEW")
         void createNewLockerAndReport() {
             given(lockerStore.create(LOCKER_NAME, ROAD_ADDRESS, 37.556, 126.923))
                 .willReturn(testLocker());
@@ -58,7 +58,7 @@ class LockerReportCommandServiceTest {
         }
 
         @Test
-        @DisplayName("기존 장소 추가면 기존 보관함에 제보 이력을 저장한다")
+        @DisplayName("Stores the report on an existing locker for ADD_TO_EXISTING")
         void addReportToExistingLocker() {
             given(lockerStore.getById(10L)).willReturn(testLocker());
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
