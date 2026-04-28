@@ -47,6 +47,7 @@ public class SecurityConfig {
                 "/api/auth/refresh",
                 "/api/auth/logout",
                 "/api/auth/withdraw",
+                "/api/v1/locker-reports",
                 "/instances"
             ))
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
