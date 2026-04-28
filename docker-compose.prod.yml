@@ -1,0 +1,22 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: zimdugo-redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+
+  app:
+    image: ghcr.io/${GHCR_OWNER}/${GHCR_REPO}:latest
+    container_name: zimdugo-be
+    restart: always
+    depends_on:
+      - redis
+    ports:
+      - "127.0.0.1:8080:8080"
+    env_file:
+      - .env
+
+volumes:
+  redis-data:
