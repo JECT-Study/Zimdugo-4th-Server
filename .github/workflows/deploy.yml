@@ -74,7 +74,9 @@ jobs:
             repo_lower="$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')"
             grep -q '^GHCR_OWNER=' .env || echo "GHCR_OWNER=${owner_lower}" >> .env
             grep -q '^GHCR_REPO=' .env || echo "GHCR_REPO=${repo_lower}" >> .env
+
             echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             sudo docker compose -f docker-compose.prod.yml pull
             sudo docker compose -f docker-compose.prod.yml up -d
             sudo docker image prune -f
+
