@@ -8,7 +8,7 @@ services:
       - redis-data:/data
 
   app:
-    image: ghcr.io/${GHCR_OWNER}/${GHCR_REPO}:latest
+    image: ghcr.io/${GHCR_OWNER}/${GHCR_REPO}:${IMAGE_TAG:-latest}
     container_name: zimdugo-be
     restart: always
     depends_on:
