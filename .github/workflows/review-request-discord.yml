@@ -28,6 +28,11 @@ jobs:
 
             const pr = context.payload.pull_request;
             const reviewer = context.payload.requested_reviewer;
+            const reviewerLogin = reviewer?.login?.toLowerCase() ?? '';
+            if (reviewerLogin.includes('coderabbit')) {
+              core.info('CodeRabbit 리뷰 요청은 디스코드 알림에서 제외합니다.');
+              return;
+            }
             const mapping = {
               'buddle031': '944930352047226931',
               'mike7643': '469791913050898443'
