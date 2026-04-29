@@ -6,6 +6,7 @@ public record NearbyLocker(
     String roadAddress,
     double latitude,
     double longitude,
-    double distanceMeters
+    double distanceMeters,
+    Integer clusterId
 ) {
 }
