@@ -43,12 +43,7 @@ public class SecurityConfig {
     }
 
     private void configureBasicSecurity(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.ignoringRequestMatchers(
-                "/api/auth/refresh",
-                "/api/auth/logout",
-                "/api/auth/withdraw",
-                "/instances"
-            ))
+        http.csrf(AbstractHttpConfigurer::disable)
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex
@@ -59,20 +54,7 @@ public class SecurityConfig {
 
     private void configureAuthorization(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-            .requestMatchers(
-                "/login/**",
-                "/oauth2/**",
-                "/api/auth/refresh",
-                "/api/auth/logout",
-                "/api/v1/lockers/nearby",
-                "/instances",
-                "/swagger-ui",
-                "/swagger-ui.html",
-                "/swagger-ui/**",
-                "/v3/api-docs",
-                "/v3/api-docs/**"
-            ).permitAll()
-            .anyRequest().authenticated()
+            .anyRequest().permitAll()
         );
     }
 
