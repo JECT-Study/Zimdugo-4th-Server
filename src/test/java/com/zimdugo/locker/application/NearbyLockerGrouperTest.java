@@ -15,8 +15,8 @@ class NearbyLockerGrouperTest {
     @DisplayName("동일 좌표는 하나의 그룹으로 묶는다")
     void groupsBySameCoordinate() {
         List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
-            new NearbyLocker(1L, "강남A", "서울 A", 37.5, 127.0, 10.0),
-            new NearbyLocker(2L, "강남B", "서울 B", 37.5, 127.0, 10.0)
+            new NearbyLocker(1L, "강남A", "서울 A", 37.5, 127.0, 10.0, 1),
+            new NearbyLocker(2L, "강남B", "서울 B", 37.5, 127.0, 10.0, 2)
         ));
 
         assertThat(result).hasSize(1);
@@ -27,8 +27,8 @@ class NearbyLockerGrouperTest {
     @DisplayName("동일 도로명 주소는 하나의 그룹으로 묶는다")
     void groupsBySameRoadAddress() {
         List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
-            new NearbyLocker(1L, "강남A", "서울 테헤란로 1", 37.5, 127.0, 10.0),
-            new NearbyLocker(2L, "강남B", "서울 테헤란로 1", 38.0, 128.0, 10.0)
+            new NearbyLocker(1L, "강남A", "서울 테헤란로 1", 37.5, 127.0, 10.0, 1),
+            new NearbyLocker(2L, "강남B", "서울 테헤란로 1", 38.0, 128.0, 10.0, 2)
         ));
 
         assertThat(result).hasSize(1);
@@ -39,9 +39,9 @@ class NearbyLockerGrouperTest {
     @DisplayName("연결된 조건은 하나의 그룹이 된다")
     void groupsTransitively() {
         List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
-            new NearbyLocker(1L, "A", "주소1", 37.5, 127.0, 10.0),
-            new NearbyLocker(2L, "B", "주소2", 37.5, 127.0, 11.0),
-            new NearbyLocker(3L, "C", "주소2", 38.5, 128.0, 12.0)
+            new NearbyLocker(1L, "A", "주소1", 37.5, 127.0, 10.0, 1),
+            new NearbyLocker(2L, "B", "주소2", 37.5, 127.0, 11.0, 2),
+            new NearbyLocker(3L, "C", "주소2", 38.5, 128.0, 12.0, 3)
         ));
 
         assertThat(result).hasSize(1);
@@ -52,11 +52,34 @@ class NearbyLockerGrouperTest {
     @DisplayName("좌표 미세 오차는 정규화 후 같은 그룹으로 묶는다")
     void groupsByRoundedCoordinate() {
         List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
-            new NearbyLocker(1L, "A", "주소1", 37.50000041, 127.00000041, 10.0),
-            new NearbyLocker(2L, "B", "주소2", 37.50000044, 127.00000044, 20.0)
+            new NearbyLocker(1L, "A", "주소1", 37.50000041, 127.00000041, 10.0, 1),
+            new NearbyLocker(2L, "B", "주소2", 37.50000044, 127.00000044, 20.0, 2)
         ));
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("동일 클러스터 아이디는 하나의 그룹으로 묶는다")
+    void groupsByClusterId() {
+        List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
+            new NearbyLocker(1L, "A", "주소1", 37.500000, 127.000000, 10.0, 77),
+            new NearbyLocker(2L, "B", "주소2", 37.500090, 127.000000, 15.0, 77)
+        ));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("클러스터 아이디가 다르고 그룹 조건도 다르면 다른 그룹으로 유지한다")
+    void keepsSeparateGroupsWithoutClusterMatch() {
+        List<List<NearbyLocker>> result = nearbyLockerGrouper.groupByCoordinateOrRoadAddress(List.of(
+            new NearbyLocker(1L, "A", "주소1", 37.500000, 127.000000, 10.0, 1),
+            new NearbyLocker(2L, "B", "주소2", 37.500250, 127.000000, 35.0, 2)
+        ));
+
+        assertThat(result).hasSize(2);
     }
 }
