@@ -31,4 +31,11 @@ public class LockerEntity {
 
     @Column(nullable = false)
     private double longitude;
+
+    public LockerEntity(String name, String roadAddress, double latitude, double longitude) {
+        this.name = name;
+        this.roadAddress = roadAddress;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }
