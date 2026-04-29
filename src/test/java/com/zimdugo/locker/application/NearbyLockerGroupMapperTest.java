@@ -16,11 +16,11 @@ class NearbyLockerGroupMapperTest {
     void sortsInsideAndOutsideByDistance() {
         List<List<NearbyLocker>> grouped = List.of(
             List.of(
-                new NearbyLocker(1L, "A", "주소A", 37.5, 127.0, 300.0),
-                new NearbyLocker(2L, "B", "주소A", 37.5, 127.0, 100.0)
+                new NearbyLocker(1L, "A", "주소A", 37.5, 127.0, 300.0, 1),
+                new NearbyLocker(2L, "B", "주소A", 37.5, 127.0, 100.0, 1)
             ),
             List.of(
-                new NearbyLocker(3L, "C", "주소C", 38.5, 128.0, 200.0)
+                new NearbyLocker(3L, "C", "주소C", 38.5, 128.0, 200.0, 2)
             )
         );
 
@@ -31,5 +31,26 @@ class NearbyLockerGroupMapperTest {
         assertThat(result.get(0).lockers().get(0).distanceMeters()).isEqualTo(100L);
         assertThat(result.get(0).lockers().get(1).distanceMeters()).isEqualTo(300L);
         assertThat(result.get(1).distanceMeters()).isEqualTo(200L);
+    }
+
+    @Test
+    @DisplayName("정렬은 반올림된 거리 기준으로 수행한다")
+    void sortsByRoundedDistance() {
+        List<List<NearbyLocker>> grouped = List.of(
+            List.of(
+                new NearbyLocker(1L, "A", "주소A", 37.5, 127.0, 100.51, 1),
+                new NearbyLocker(2L, "B", "주소A", 37.5, 127.0, 100.40, 1)
+            ),
+            List.of(
+                new NearbyLocker(3L, "C", "주소C", 38.5, 128.0, 99.60, 2)
+            )
+        );
+
+        List<NearbyLockerGroupResponse> result = nearbyLockerGroupMapper.toGroupResponses(grouped);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).distanceMeters()).isEqualTo(100L);
+        assertThat(result.get(0).lockers().get(0).id()).isEqualTo(2L);
+        assertThat(result.get(0).lockers().get(1).id()).isEqualTo(1L);
     }
 }
