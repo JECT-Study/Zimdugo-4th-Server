@@ -3,7 +3,7 @@ package com.zimdugo.locker.infrastructure;
 import com.zimdugo.locker.domain.DuplicateHandlingType;
 import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
-import com.zimdugo.locker.infrastructure.persistence.LockerReport;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
@@ -31,7 +31,7 @@ class LockerReportRepositoryTest {
         UserEntity user = saveUser();
         LockerEntity locker = saveLocker();
 
-        LockerReport report = lockerReportRepository.save(new LockerReport(
+        LockerReportEntity report = lockerReportRepository.save(new LockerReportEntity(
             locker,
             user,
             DuplicateHandlingType.CREATE_NEW,
@@ -53,7 +53,7 @@ class LockerReportRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        LockerReport savedReport = lockerReportRepository.findById(report.getId()).orElseThrow();
+        LockerReportEntity savedReport = lockerReportRepository.findById(report.getId()).orElseThrow();
 
         assertThat(savedReport.getLocker().getId()).isEqualTo(locker.getId());
         assertThat(savedReport.getUser().getId()).isEqualTo(user.getId());

@@ -32,7 +32,7 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LockerReport {
+public class LockerReportEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -100,7 +100,7 @@ public class LockerReport {
     private LocalDateTime updatedAt;
 
     @SuppressWarnings("checkstyle:ParameterNumber")
-    public LockerReport(
+    public LockerReportEntity(
         LockerEntity locker,
         UserEntity user,
         DuplicateHandlingType duplicateHandlingType,

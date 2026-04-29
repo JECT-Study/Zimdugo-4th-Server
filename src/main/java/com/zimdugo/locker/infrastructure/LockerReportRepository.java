@@ -1,7 +1,7 @@
 package com.zimdugo.locker.infrastructure;
 
-import com.zimdugo.locker.infrastructure.persistence.LockerReport;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface LockerReportRepository extends JpaRepository<LockerReport, Long> {
+public interface LockerReportRepository extends JpaRepository<LockerReportEntity, Long> {
 }

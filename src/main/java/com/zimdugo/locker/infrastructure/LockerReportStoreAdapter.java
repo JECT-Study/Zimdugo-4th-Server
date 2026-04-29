@@ -6,7 +6,7 @@ import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.SavedLockerReport;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
-import com.zimdugo.locker.infrastructure.persistence.LockerReport;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import com.zimdugo.user.infrastructure.UserRepository;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
         UserEntity user = userRepository.findById(createInfo.userId())
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        LockerReport report = lockerReportRepository.save(new LockerReport(
+        LockerReportEntity report = lockerReportRepository.save(new LockerReportEntity(
             locker,
             user,
             createInfo.duplicateHandlingType(),
