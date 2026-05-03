@@ -16,11 +16,11 @@ class NearbyLockerGroupMapperTest {
     void sortsInsideAndOutsideByDistance() {
         List<List<NearbyLocker>> grouped = List.of(
             List.of(
-                new NearbyLocker(1L, "A", "주소A", 37.5, 127.0, 300.0),
-                new NearbyLocker(2L, "B", "주소A", 37.5, 127.0, 100.0)
+                new NearbyLocker(1L, "A", "주소A", 37.5, 127.0, 300.0, 1),
+                new NearbyLocker(2L, "B", "주소A", 37.5, 127.0, 100.0, 1)
             ),
             List.of(
-                new NearbyLocker(3L, "C", "주소C", 38.5, 128.0, 200.0)
+                new NearbyLocker(3L, "C", "주소C", 38.5, 128.0, 200.0, 2)
             )
         );
 

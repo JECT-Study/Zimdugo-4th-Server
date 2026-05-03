@@ -27,7 +27,8 @@ public class NearbyLockerReaderAdapter implements NearbyLockerReader {
             projection.getRoadAddress(),
             projection.getLatitude(),
             projection.getLongitude(),
-            projection.getDistanceMeters()
+            projection.getDistanceMeters(),
+            projection.getClusterId()
         );
     }
 }

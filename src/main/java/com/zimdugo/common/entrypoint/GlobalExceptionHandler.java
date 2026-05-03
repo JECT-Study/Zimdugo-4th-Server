@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExternalApiException.class)
     public ResponseEntity<RestResponse<Void>> handleExternalApiException(ExternalApiException e) {
         ErrorCode errorCode = e.getErrorCode();
-        log.error("ExternalApiException 발생: code={}, message={}", errorCode.code(), e.getMessage(), e);
+        log.error("ExternalApiException occurred: code={}, message={}", errorCode.code(), e.getMessage(), e);
         return ResponseEntity.status(errorCode.httpStatus())
             .body(RestResponse.error(errorCode));
     }
@@ -30,14 +30,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<RestResponse<Void>> handleCustomException(CustomException e) {
         ErrorCode errorCode = e.getErrorCode();
-        log.warn("CustomException 발생: code={}, message={}", errorCode.code(), e.getMessage());
+        log.warn("CustomException occurred: code={}, message={}", errorCode.code(), e.getMessage());
         return ResponseEntity.status(errorCode.httpStatus())
             .body(RestResponse.error(errorCode));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<RestResponse<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.warn("IllegalArgumentException 발생: {}", e.getMessage());
+        log.warn("IllegalArgumentException occurred: {}", e.getMessage());
         return ResponseEntity.status(ErrorCode.BAD_REQUEST.httpStatus())
             .body(RestResponse.error(ErrorCode.BAD_REQUEST));
     }
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
             ))
             .toList();
 
-        log.warn("ConstraintViolationException 발생: {}", e.getMessage());
+        log.warn("ConstraintViolationException occurred: {}", e.getMessage());
         return ResponseEntity.status(ErrorCode.BAD_REQUEST.httpStatus())
             .body(RestResponse.error(
                 ErrorCode.BAD_REQUEST,
@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<RestResponse<Void>> handleMissingServletRequestParameterException(
         MissingServletRequestParameterException e
     ) {
-        log.warn("MissingServletRequestParameterException 諛쒖깮: {}", e.getMessage());
+        log.warn("MissingServletRequestParameterException occurred: {}", e.getMessage());
         return ResponseEntity.status(ErrorCode.BAD_REQUEST.httpStatus())
             .body(RestResponse.error(ErrorCode.BAD_REQUEST));
     }
@@ -74,7 +74,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<RestResponse<Void>> handleHttpMessageNotReadableException(
         HttpMessageNotReadableException e
     ) {
-        log.warn("HttpMessageNotReadableException 발생: {}", e.getMessage());
+        log.warn("HttpMessageNotReadableException occurred: {}", e.getMessage());
         return ResponseEntity.status(ErrorCode.BAD_REQUEST.httpStatus())
             .body(RestResponse.error(ErrorCode.BAD_REQUEST));
     }
@@ -101,7 +101,7 @@ public class GlobalExceptionHandler {
             ))
             .forEach(validationErrors::add);
 
-        log.warn("MethodArgumentNotValidException 발생");
+        log.warn("MethodArgumentNotValidException occurred");
         return ResponseEntity.status(ErrorCode.BAD_REQUEST.httpStatus())
             .body(RestResponse.error(
                 ErrorCode.BAD_REQUEST,

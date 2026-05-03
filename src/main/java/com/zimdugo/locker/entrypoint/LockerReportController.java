@@ -29,8 +29,8 @@ public class LockerReportController implements LockerReportApi {
     @Override
     public ResponseEntity<RestResponse<LockerReportDuplicateResponse>> findDuplicateLockerCandidates(
         Authentication authentication,
-        double latitude,
-        double longitude
+        Double latitude,
+        Double longitude
     ) {
         extractUserId(authentication);
         LockerReportDuplicateResponse response = lockerReportDuplicateQueryService.findDuplicates(

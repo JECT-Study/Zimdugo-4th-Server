@@ -22,7 +22,7 @@ public interface LockerReportApi {
 
     @Operation(
         summary = "보관함 제보 중복 후보 조회",
-        description = "제보 등록 전 지정한 좌표 기준 30m 내 기존 보관함 후보를 조회한다."
+        description = "제보 등록 전 지정한 좌표 기준 30m 내 기존 보관함 후보를 조회합니다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -35,16 +35,18 @@ public interface LockerReportApi {
         @RequestParam("lat")
         @Parameter(description = "위도", example = "37.556")
         @DecimalMin(value = "-90.0")
-        @DecimalMax(value = "90.0") double latitude,
+        @DecimalMax(value = "90.0")
+        Double latitude,
         @RequestParam("lng")
         @Parameter(description = "경도", example = "126.923")
         @DecimalMin(value = "-180.0")
-        @DecimalMax(value = "180.0") double longitude
+        @DecimalMax(value = "180.0")
+        Double longitude
     );
 
     @Operation(
         summary = "신규 보관함 제보 등록",
-        description = "로그인 사용자의 보관함 제보를 등록한다."
+        description = "로그인 사용자의 보관함 제보를 등록합니다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "등록 성공"),

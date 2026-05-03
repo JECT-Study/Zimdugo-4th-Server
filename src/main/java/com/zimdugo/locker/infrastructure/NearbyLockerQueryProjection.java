@@ -7,4 +7,5 @@ public interface NearbyLockerQueryProjection {
     double getLatitude();
     double getLongitude();
     double getDistanceMeters();
+    Integer getClusterId();
 }

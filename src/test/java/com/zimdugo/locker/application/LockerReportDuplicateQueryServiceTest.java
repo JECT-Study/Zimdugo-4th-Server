@@ -24,7 +24,7 @@ class LockerReportDuplicateQueryServiceTest {
     private LockerReportDuplicateQueryService lockerReportDuplicateQueryService;
 
     @Test
-    @DisplayName("반경 내 보관함이 없으면 중복 후보 없음 응답을 반환한다")
+    @DisplayName("반경 내 보관함이 없으면 중복 후보 없는 응답을 반환한다")
     void findDuplicatesWithoutNearbyLockersReturnsEmptyCandidates() {
         given(nearbyLockerReader.findNearby(37.556, 126.923, 30)).willReturn(List.of());
 
@@ -40,8 +40,8 @@ class LockerReportDuplicateQueryServiceTest {
     @DisplayName("중복 후보는 가까운 거리순으로 반환한다")
     void findDuplicatesReturnsCandidatesByDistance() {
         given(nearbyLockerReader.findNearby(37.556, 126.923, 30)).willReturn(List.of(
-            new NearbyLocker(1L, "보관함 A", "서울 A", 37.556, 126.923, 20.0),
-            new NearbyLocker(2L, "보관함 B", "서울 B", 37.557, 126.924, 8.4)
+            new NearbyLocker(1L, "보관함 A", "서울 A", 37.556, 126.923, 20.0, null),
+            new NearbyLocker(2L, "보관함 B", "서울 B", 37.557, 126.924, 8.4, null)
         ));
 
         LockerReportDuplicateResponse result = lockerReportDuplicateQueryService.findDuplicates(37.556, 126.923, 30);
@@ -72,6 +72,6 @@ class LockerReportDuplicateQueryServiceTest {
     }
 
     private NearbyLocker nearbyLocker(Long id, double distanceMeters) {
-        return new NearbyLocker(id, "보관함 " + id, "서울", 37.556, 126.923, distanceMeters);
+        return new NearbyLocker(id, "보관함 " + id, "서울", 37.556, 126.923, distanceMeters, null);
     }
 }

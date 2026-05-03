@@ -41,10 +41,10 @@ class LockerNearbyQueryServiceTest {
     }
 
     @Test
-    @DisplayName("조회 -> 그룹화 -> 응답 매핑 순서로 오케스트레이션 한다")
+    @DisplayName("조회, 그룹화, 응답 매핑을 순서대로 위임한다")
     void orchestratesReaderGrouperAndMapper() {
         List<NearbyLocker> nearbyLockers = List.of(
-            new NearbyLocker(1L, "강남A", "서울 A", 37.5, 127.0, 20.0)
+            new NearbyLocker(1L, "강남A", "서울 A", 37.5, 127.0, 20.0, null)
         );
         List<List<NearbyLocker>> grouped = List.of(nearbyLockers);
         List<NearbyLockerGroupResponse> mapped = List.of(
