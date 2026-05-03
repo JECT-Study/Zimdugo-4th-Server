@@ -5,6 +5,9 @@ import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
 import com.zimdugo.common.config.SecurityConfig;
 import com.zimdugo.locker.application.LockerReportCommandService;
 import com.zimdugo.locker.application.LockerReportCreateResult;
+import com.zimdugo.locker.application.LockerReportDuplicateCandidateResponse;
+import com.zimdugo.locker.application.LockerReportDuplicateQueryService;
+import com.zimdugo.locker.application.LockerReportDuplicateResponse;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,10 +58,71 @@ class LockerReportControllerTest {
     private LockerReportCommandService lockerReportCommandService;
 
     @MockitoBean
+    private LockerReportDuplicateQueryService lockerReportDuplicateQueryService;
+
+    @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockitoBean
     private OAuth2CallbackUrlCaptureFilter oAuth2CallbackUrlCaptureFilter;
+
+    @Test
+    @DisplayName("중복 후보 조회 요청이 성공하면 반경 내 기존 보관함을 반환한다")
+    void findDuplicateLockerCandidatesReturnsOk() throws Exception {
+        given(lockerReportDuplicateQueryService.findDuplicates(37.556, 126.923, 30))
+            .willReturn(LockerReportDuplicateResponse.of(30, List.of(
+                new LockerReportDuplicateCandidateResponse(
+                    12L,
+                    "홍대입구역 보관함",
+                    "서울 마포구 양화로 160",
+                    37.556,
+                    126.923,
+                    8.4
+                )
+            )));
+
+        mockMvc.perform(get("/api/v1/locker-reports/duplicates")
+                .principal(authenticatedUser())
+                .param("lat", "37.556")
+                .param("lng", "126.923"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value("S200"))
+            .andExpect(jsonPath("$.data.hasDuplicates").value(true))
+            .andExpect(jsonPath("$.data.radiusMeters").value(30))
+            .andExpect(jsonPath("$.data.candidates[0].lockerId").value(12))
+            .andExpect(jsonPath("$.data.candidates[0].distanceMeters").value(8.4));
+    }
+
+    @Test
+    @DisplayName("인증 정보 없이 중복 후보를 조회하면 401을 반환한다")
+    void findDuplicateLockerCandidatesWithoutAuthenticationReturnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/locker-reports/duplicates")
+                .param("lat", "37.556")
+                .param("lng", "126.923"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("A4011"))
+            .andExpect(jsonPath("$.message").value("auth.authenticated_user_not_found"));
+    }
+
+    @Test
+    @DisplayName("위도 없이 중복 후보를 조회하면 bad request를 반환한다")
+    void findDuplicateLockerCandidatesWithoutLatitudeReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/locker-reports/duplicates")
+                .param("lng", "126.923"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("잘못된 JSON으로 제보를 등록하면 bad request를 반환한다")
+    void createLockerReportWithMalformedJsonReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/locker-reports")
+                .principal(authenticatedUser())
+                .contentType("application/json")
+                .content("{duplicateHandlingType:\"CREATE_NEW\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("C400"))
+            .andExpect(jsonPath("$.message").value("common.bad_request"));
+    }
 
     @Test
     @DisplayName("인증된 사용자가 제보를 등록하면 성공 응답을 반환한다")
