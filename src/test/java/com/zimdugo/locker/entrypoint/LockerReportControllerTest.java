@@ -113,6 +113,17 @@ class LockerReportControllerTest {
     }
 
     @Test
+    @DisplayName("위도를 숫자로 보내지 않으면 bad request를 반환한다")
+    void findDuplicateLockerCandidatesWithInvalidLatitudeReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/locker-reports/duplicates")
+                .param("lat", "abc")
+                .param("lng", "126.923"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("C400"))
+            .andExpect(jsonPath("$.message").value("common.bad_request"));
+    }
+
+    @Test
     @DisplayName("잘못된 JSON으로 제보를 등록하면 bad request를 반환한다")
     void createLockerReportWithMalformedJsonReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
@@ -131,7 +142,7 @@ class LockerReportControllerTest {
             .willReturn(new LockerReportCreateResult(
                 100L,
                 10L,
-                "홍대입구역 2번 출구 테스트 보관함",
+                "홍대입구역 2번출구 테스트 보관함",
                 "서울 마포구 양화로 160",
                 37.556,
                 126.923,
@@ -202,7 +213,7 @@ class LockerReportControllerTest {
                     {
                       "duplicateHandlingType": "ADD_TO_EXISTING",
                       "existingLockerId": null,
-                      "name": "홍대입구역 2번 출구 테스트 보관함",
+                      "name": "홍대입구역 2번출구 테스트 보관함",
                       "roadAddress": "서울 마포구 양화로 160",
                       "detailLocation": null,
                       "buildingName": "홍대입구역",
@@ -232,7 +243,7 @@ class LockerReportControllerTest {
                     {
                       "duplicateHandlingType": "CREATE_NEW",
                       "existingLockerId": null,
-                      "name": "홍대입구역 2번 출구 테스트 보관함",
+                      "name": "홍대입구역 2번출구 테스트 보관함",
                       "roadAddress": "",
                       "detailLocation": null,
                       "buildingName": "홍대입구역",
@@ -258,7 +269,7 @@ class LockerReportControllerTest {
             {
               "duplicateHandlingType": "CREATE_NEW",
               "existingLockerId": null,
-              "name": "홍대입구역 2번 출구 테스트 보관함",
+              "name": "홍대입구역 2번출구 테스트 보관함",
               "roadAddress": "서울 마포구 양화로 160",
               "detailLocation": null,
               "buildingName": "홍대입구역",
