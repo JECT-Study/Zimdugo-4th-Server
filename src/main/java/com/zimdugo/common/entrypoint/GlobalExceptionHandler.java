@@ -9,9 +9,12 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RestControllerAdvice
@@ -57,6 +60,33 @@ public class GlobalExceptionHandler {
                 ErrorCode.BAD_REQUEST,
                 validationErrors
             ));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<RestResponse<Void>> handleMissingServletRequestParameterException(
+        MissingServletRequestParameterException e
+    ) {
+        log.warn("MissingServletRequestParameterException 발생: {}", e.getMessage());
+        return ResponseEntity.status(ErrorCode.BAD_REQUEST.httpStatus())
+            .body(RestResponse.error(ErrorCode.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<RestResponse<Void>> handleHttpMessageNotReadableException(
+        HttpMessageNotReadableException e
+    ) {
+        log.warn("HttpMessageNotReadableException 발생: {}", e.getMessage());
+        return ResponseEntity.status(ErrorCode.BAD_REQUEST.httpStatus())
+            .body(RestResponse.error(ErrorCode.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<RestResponse<Void>> handleMethodArgumentTypeMismatchException(
+        MethodArgumentTypeMismatchException e
+    ) {
+        log.warn("MethodArgumentTypeMismatchException 발생: {}", e.getMessage());
+        return ResponseEntity.status(ErrorCode.BAD_REQUEST.httpStatus())
+            .body(RestResponse.error(ErrorCode.BAD_REQUEST));
     }
 
     @ExceptionHandler(Exception.class)
