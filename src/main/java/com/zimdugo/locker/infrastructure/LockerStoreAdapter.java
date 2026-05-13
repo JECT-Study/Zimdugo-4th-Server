@@ -24,7 +24,7 @@ public class LockerStoreAdapter implements LockerStore {
 
     @Override
     public ReportLocker getById(Long id) {
-        return lockerRepository.findById(id)
+        return lockerRepository.findByIdAndDeletedFalse(id)
             .map(this::toDomain)
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
     }

@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
 
+    java.util.Optional<LockerEntity> findByIdAndDeletedFalse(Long id);
+
     @Query(value = """
         -- 조회 기준 좌표
         WITH target AS (
@@ -24,6 +26,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             FROM lockers l
             CROSS JOIN target
             WHERE ST_DWithin(l.location, target.point, :radiusMeters)
+              AND l.deleted = false
         )
         SELECT
             nearby.id AS id,
