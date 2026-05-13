@@ -22,6 +22,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
 
     private final UserLockerFavoriteRepository userLockerFavoriteRepository;
     private final LockerReportRepository lockerReportRepository;
+    private final FavoriteLockerProperties favoriteLockerProperties;
 
     @Override
     public FavoriteLockerPage findByUserId(Long userId, int page, int size, Double latitude, Double longitude) {
@@ -30,6 +31,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
                 userId,
                 PageRequest.of(page, size)
             );
+        Coordinate origin = resolveOrigin(latitude, longitude);
         Map<Long, LocalDateTime> lastCompletedVoteAtByLockerId =
             getLastCompletedVoteAtByLockerId(favorites.getContent());
 
@@ -39,7 +41,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
             favorites.getSize(),
             favorites.hasNext(),
             favorites.getContent().stream()
-                .map(favorite -> toFavoriteLocker(favorite, latitude, longitude, lastCompletedVoteAtByLockerId))
+                .map(favorite -> toFavoriteLocker(favorite, origin, lastCompletedVoteAtByLockerId))
                 .toList()
         );
     }
@@ -51,8 +53,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
 
     private FavoriteLocker toFavoriteLocker(
         UserLockerFavoriteEntity favorite,
-        Double latitude,
-        Double longitude,
+        Coordinate origin,
         Map<Long, LocalDateTime> lastCompletedVoteAtByLockerId
     ) {
         Long lockerId = favorite.getLocker().getId();
@@ -65,8 +66,8 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
             favorite.getCreatedAt(),
             lastCompletedVoteAtByLockerId.get(lockerId),
             calculateDistanceMeters(
-                latitude,
-                longitude,
+                origin.latitude(),
+                origin.longitude(),
                 favorite.getLocker().getLatitude(),
                 favorite.getLocker().getLongitude()
             )
@@ -89,16 +90,23 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
             ));
     }
 
+    private Coordinate resolveOrigin(Double latitude, Double longitude) {
+        if (latitude != null && longitude != null) {
+            return new Coordinate(latitude, longitude);
+        }
+
+        return new Coordinate(
+            favoriteLockerProperties.defaultOrigin().latitude(),
+            favoriteLockerProperties.defaultOrigin().longitude()
+        );
+    }
+
     private Long calculateDistanceMeters(
-        Double latitude,
-        Double longitude,
+        double latitude,
+        double longitude,
         double lockerLatitude,
         double lockerLongitude
     ) {
-        if (latitude == null || longitude == null) {
-            return null;
-        }
-
         double latitudeDelta = Math.toRadians(lockerLatitude - latitude);
         double longitudeDelta = Math.toRadians(lockerLongitude - longitude);
         double startLatitude = Math.toRadians(latitude);
@@ -109,5 +117,11 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
             * Math.sin(longitudeDelta / 2) * Math.sin(longitudeDelta / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return Math.round(EARTH_RADIUS_METERS * c);
+    }
+
+    private record Coordinate(
+        double latitude,
+        double longitude
+    ) {
     }
 }
