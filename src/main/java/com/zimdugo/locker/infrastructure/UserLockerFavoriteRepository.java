@@ -30,5 +30,7 @@ public interface UserLockerFavoriteRepository extends JpaRepository<UserLockerFa
 
     long countByUserIdAndLockerDeletedFalse(Long userId);
 
-    java.util.Optional<UserLockerFavoriteEntity> findTopByUserIdOrderByDisplayOrderDesc(Long userId);
+    java.util.Optional<UserLockerFavoriteEntity> findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDesc(
+        Long userId
+    );
 }

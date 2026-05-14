@@ -113,6 +113,16 @@ class LockerFavoriteControllerTest {
     }
 
     @Test
+    @DisplayName("숫자가 아닌 인증 이름이면 401을 반환한다")
+    void getMyFavoriteLockersWithNonNumericAuthenticationNameReturnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/me/favorite-lockers")
+                .principal(authenticationWithName("user-name")))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("A4011"))
+            .andExpect(jsonPath("$.message").value("auth.authenticated_user_not_found"));
+    }
+
+    @Test
     @DisplayName("특정 보관함의 즐겨찾기 상태를 조회한다")
     void getFavoriteLockerStatusReturnsOk() throws Exception {
         given(favoriteLockerQueryService.getFavoriteStatus(1L, 10L))
@@ -137,6 +147,15 @@ class LockerFavoriteControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.lockerId").value(99))
             .andExpect(jsonPath("$.data.favorite").value(false));
+    }
+
+    @Test
+    @DisplayName("0 이하 lockerId로 상태 조회하면 400을 반환한다")
+    void getFavoriteLockerStatusWithNonPositiveLockerIdReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/me/favorite-lockers/{lockerId}/status", 0L)
+                .principal(authenticatedUser()))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("C400"));
     }
 
     @Test
@@ -181,6 +200,21 @@ class LockerFavoriteControllerTest {
     }
 
     @Test
+    @DisplayName("음수 lockerId가 포함된 순서 변경 요청은 400을 반환한다")
+    void reorderFavoriteLockersWithNegativeLockerIdReturnsBadRequest() throws Exception {
+        mockMvc.perform(patch("/api/v1/me/favorite-lockers/order")
+                .principal(authenticatedUser())
+                .contentType("application/json")
+                .content("""
+                    {
+                      "lockerIds": [20, -1, 30]
+                    }
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("C400"));
+    }
+
+    @Test
     @DisplayName("보관함을 즐겨찾기로 등록한다")
     void addFavoriteLockerReturnsOk() throws Exception {
         mockMvc.perform(post("/api/v1/me/favorite-lockers/{lockerId}", 10L)
@@ -189,6 +223,15 @@ class LockerFavoriteControllerTest {
             .andExpect(jsonPath("$.code").value("S200"));
 
         verify(favoriteLockerCommandService).add(1L, 10L);
+    }
+
+    @Test
+    @DisplayName("0 이하 lockerId로 즐겨찾기 등록하면 400을 반환한다")
+    void addFavoriteLockerWithNonPositiveLockerIdReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/me/favorite-lockers/{lockerId}", 0L)
+                .principal(authenticatedUser()))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("C400"));
     }
 
     @Test
@@ -202,9 +245,22 @@ class LockerFavoriteControllerTest {
         verify(favoriteLockerCommandService).remove(1L, 10L);
     }
 
+    @Test
+    @DisplayName("0 이하 lockerId로 즐겨찾기 해제하면 400을 반환한다")
+    void removeFavoriteLockerWithNonPositiveLockerIdReturnsBadRequest() throws Exception {
+        mockMvc.perform(delete("/api/v1/me/favorite-lockers/{lockerId}", 0L)
+                .principal(authenticatedUser()))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("C400"));
+    }
+
     private UsernamePasswordAuthenticationToken authenticatedUser() {
+        return authenticationWithName("1");
+    }
+
+    private UsernamePasswordAuthenticationToken authenticationWithName(String name) {
         return new UsernamePasswordAuthenticationToken(
-            "1",
+            name,
             null,
             List.of(new SimpleGrantedAuthority("ROLE_USER"))
         );

@@ -13,6 +13,7 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -72,6 +73,7 @@ public interface LockerFavoriteApi {
         Authentication authentication,
         @PathVariable("lockerId")
         @Parameter(description = "보관함 ID", example = "10")
+        @Positive
         Long lockerId
     );
 
@@ -104,6 +106,7 @@ public interface LockerFavoriteApi {
         Authentication authentication,
         @PathVariable("lockerId")
         @Parameter(description = "보관함 ID", example = "10")
+        @Positive
         Long lockerId
     );
 
@@ -120,6 +123,7 @@ public interface LockerFavoriteApi {
         Authentication authentication,
         @PathVariable("lockerId")
         @Parameter(description = "보관함 ID", example = "10")
+        @Positive
         Long lockerId
     );
 }

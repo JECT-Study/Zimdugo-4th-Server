@@ -86,6 +86,10 @@ public class LockerFavoriteController implements LockerFavoriteApi {
             throw new BusinessException(ErrorCode.AUTHENTICATED_USER_NOT_FOUND);
         }
 
-        return Long.valueOf(authentication.getName());
+        try {
+            return Long.valueOf(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorCode.AUTHENTICATED_USER_NOT_FOUND);
+        }
     }
 }

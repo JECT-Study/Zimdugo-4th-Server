@@ -78,7 +78,7 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
     }
 
     private int nextDisplayOrder(Long userId) {
-        return userLockerFavoriteRepository.findTopByUserIdOrderByDisplayOrderDesc(userId)
+        return userLockerFavoriteRepository.findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDesc(userId)
             .map(UserLockerFavoriteEntity::getDisplayOrder)
             .map(order -> order + 1)
             .orElse(0);

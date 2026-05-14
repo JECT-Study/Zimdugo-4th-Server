@@ -146,6 +146,27 @@ class UserLockerFavoriteRepositoryTest {
             .containsExactly("정상 보관함");
     }
 
+    @Test
+    @DisplayName("삭제된 보관함은 최대 displayOrder 조회에서 제외한다")
+    void findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDescExcludesDeletedLocker() {
+        UserEntity user = saveUser("display-order-user@example.com", "display-order-user");
+        LockerEntity activeLocker = saveLocker("정상 보관함");
+        LockerEntity deletedLocker = saveLocker("삭제된 보관함");
+
+        saveFavorite(user, activeLocker, 1);
+        saveFavorite(user, deletedLocker, 5);
+        deletedLocker.markDeleted();
+        entityManager.flush();
+        entityManager.clear();
+
+        UserLockerFavoriteEntity result =
+            userLockerFavoriteRepository.findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDesc(user.getId())
+                .orElseThrow();
+
+        assertThat(result.getLocker().getName()).isEqualTo("정상 보관함");
+        assertThat(result.getDisplayOrder()).isEqualTo(1);
+    }
+
     private UserLockerFavoriteEntity saveFavorite(UserEntity user, LockerEntity locker, int displayOrder) {
         UserLockerFavoriteEntity favorite = new UserLockerFavoriteEntity(user, locker, displayOrder);
         entityManager.persist(favorite);
