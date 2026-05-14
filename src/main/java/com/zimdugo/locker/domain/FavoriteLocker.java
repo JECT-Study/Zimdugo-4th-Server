@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record FavoriteLocker(
     Long lockerId,
-    String name,
+    String poiName,
     String roadAddress,
     double latitude,
     double longitude,

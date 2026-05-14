@@ -39,7 +39,7 @@ public class FavoriteLockerQueryService {
     private FavoriteLockerItemResponse toItemResponse(FavoriteLocker favorite) {
         return new FavoriteLockerItemResponse(
             favorite.lockerId(),
-            favorite.name(),
+            favorite.poiName(),
             favorite.roadAddress(),
             favorite.latitude(),
             favorite.longitude(),
