@@ -29,6 +29,9 @@ class FavoriteLockerReaderAdapterTest {
     @Mock
     private LockerReportRepository lockerReportRepository;
 
+    @Mock
+    private LockerRepository lockerRepository;
+
     @Test
     @DisplayName("현재 위치가 없으면 기본 위치로 거리를 계산하고 최신 완료 제보 시각을 반영한다")
     void findByUserIdUsesConfiguredDefaultOriginAndLatestCompletedVoteAt() {
@@ -37,6 +40,7 @@ class FavoriteLockerReaderAdapterTest {
         FavoriteLockerReaderAdapter adapter = new FavoriteLockerReaderAdapter(
             userLockerFavoriteRepository,
             lockerReportRepository,
+            lockerRepository,
             new FavoriteLockerProperties(
                 new FavoriteLockerProperties.DefaultOrigin(defaultLatitude, defaultLongitude)
             )
@@ -52,12 +56,13 @@ class FavoriteLockerReaderAdapterTest {
             .willReturn(new PageImpl<>(List.of(favorite), PageRequest.of(0, 20), 1));
         given(lockerReportRepository.findLatestCompletedVoteAtByLockerIdIn(List.of(10L)))
             .willReturn(List.of(latestUpdateProjection(10L, lastCompletedVoteAt)));
+        given(lockerRepository.findDistancesByLockerIds(defaultLatitude, defaultLongitude, List.of(10L)))
+            .willReturn(List.of(distanceProjection(10L, 14_352L)));
 
         FavoriteLockerPage result = adapter.findByUserId(1L, 0, 20, null, null);
 
         assertThat(result.favorites()).hasSize(1);
-        assertThat(result.favorites().get(0).distanceMeters())
-            .isEqualTo(calculateDistanceMeters(defaultLatitude, defaultLongitude, 37.556, 126.923));
+        assertThat(result.favorites().get(0).distanceMeters()).isEqualTo(14_352L);
         assertThat(result.favorites().get(0).lastCompletedVoteAt()).isEqualTo(lastCompletedVoteAt);
     }
 
@@ -99,22 +104,20 @@ class FavoriteLockerReaderAdapterTest {
         };
     }
 
-    private long calculateDistanceMeters(
-        double originLatitude,
-        double originLongitude,
-        double lockerLatitude,
-        double lockerLongitude
+    private LockerDistanceProjection distanceProjection(
+        Long lockerId,
+        Long distanceMeters
     ) {
-        double earthRadiusMeters = 6_371_000;
-        double latitudeDelta = Math.toRadians(lockerLatitude - originLatitude);
-        double longitudeDelta = Math.toRadians(lockerLongitude - originLongitude);
-        double startLatitude = Math.toRadians(originLatitude);
-        double endLatitude = Math.toRadians(lockerLatitude);
+        return new LockerDistanceProjection() {
+            @Override
+            public Long getLockerId() {
+                return lockerId;
+            }
 
-        double a = Math.sin(latitudeDelta / 2) * Math.sin(latitudeDelta / 2)
-            + Math.cos(startLatitude) * Math.cos(endLatitude)
-            * Math.sin(longitudeDelta / 2) * Math.sin(longitudeDelta / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return Math.round(earthRadiusMeters * c);
+            @Override
+            public Long getDistanceMeters() {
+                return distanceMeters;
+            }
+        };
     }
 }

@@ -18,10 +18,9 @@ import static java.util.stream.Collectors.toMap;
 @RequiredArgsConstructor
 public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
 
-    private static final double EARTH_RADIUS_METERS = 6_371_000;
-
     private final UserLockerFavoriteRepository userLockerFavoriteRepository;
     private final LockerReportRepository lockerReportRepository;
+    private final LockerRepository lockerRepository;
     private final FavoriteLockerProperties favoriteLockerProperties;
 
     @Override
@@ -34,6 +33,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
         Coordinate origin = resolveOrigin(latitude, longitude);
         Map<Long, LocalDateTime> lastCompletedVoteAtByLockerId =
             getLastCompletedVoteAtByLockerId(favorites.getContent());
+        Map<Long, Long> distanceMetersByLockerId = getDistanceMetersByLockerId(favorites.getContent(), origin);
 
         return new FavoriteLockerPage(
             favorites.getTotalElements(),
@@ -41,7 +41,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
             favorites.getSize(),
             favorites.hasNext(),
             favorites.getContent().stream()
-                .map(favorite -> toFavoriteLocker(favorite, origin, lastCompletedVoteAtByLockerId))
+                .map(favorite -> toFavoriteLocker(favorite, lastCompletedVoteAtByLockerId, distanceMetersByLockerId))
                 .toList()
         );
     }
@@ -53,8 +53,8 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
 
     private FavoriteLocker toFavoriteLocker(
         UserLockerFavoriteEntity favorite,
-        Coordinate origin,
-        Map<Long, LocalDateTime> lastCompletedVoteAtByLockerId
+        Map<Long, LocalDateTime> lastCompletedVoteAtByLockerId,
+        Map<Long, Long> distanceMetersByLockerId
     ) {
         Long lockerId = favorite.getLocker().getId();
         return new FavoriteLocker(
@@ -65,12 +65,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
             favorite.getLocker().getLongitude(),
             favorite.getCreatedAt(),
             lastCompletedVoteAtByLockerId.get(lockerId),
-            calculateDistanceMeters(
-                origin.latitude(),
-                origin.longitude(),
-                favorite.getLocker().getLatitude(),
-                favorite.getLocker().getLongitude()
-            )
+            distanceMetersByLockerId.get(lockerId)
         );
     }
 
@@ -90,6 +85,22 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
             ));
     }
 
+    private Map<Long, Long> getDistanceMetersByLockerId(List<UserLockerFavoriteEntity> favorites, Coordinate origin) {
+        List<Long> lockerIds = favorites.stream()
+            .map(favorite -> favorite.getLocker().getId())
+            .toList();
+
+        if (lockerIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return lockerRepository.findDistancesByLockerIds(origin.latitude(), origin.longitude(), lockerIds).stream()
+            .collect(toMap(
+                LockerDistanceProjection::getLockerId,
+                LockerDistanceProjection::getDistanceMeters
+            ));
+    }
+
     private Coordinate resolveOrigin(Double latitude, Double longitude) {
         if (latitude != null && longitude != null) {
             return new Coordinate(latitude, longitude);
@@ -99,24 +110,6 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
             favoriteLockerProperties.defaultOrigin().latitude(),
             favoriteLockerProperties.defaultOrigin().longitude()
         );
-    }
-
-    private Long calculateDistanceMeters(
-        double latitude,
-        double longitude,
-        double lockerLatitude,
-        double lockerLongitude
-    ) {
-        double latitudeDelta = Math.toRadians(lockerLatitude - latitude);
-        double longitudeDelta = Math.toRadians(lockerLongitude - longitude);
-        double startLatitude = Math.toRadians(latitude);
-        double endLatitude = Math.toRadians(lockerLatitude);
-
-        double a = Math.sin(latitudeDelta / 2) * Math.sin(latitudeDelta / 2)
-            + Math.cos(startLatitude) * Math.cos(endLatitude)
-            * Math.sin(longitudeDelta / 2) * Math.sin(longitudeDelta / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return Math.round(EARTH_RADIUS_METERS * c);
     }
 
     private record Coordinate(
