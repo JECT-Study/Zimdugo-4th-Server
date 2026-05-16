@@ -1,6 +1,9 @@
 package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.infrastructure.persistence.UserLockerFavoriteEntity;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -18,19 +21,19 @@ public interface UserLockerFavoriteRepository extends JpaRepository<UserLockerFa
 
     void deleteByUserIdAndLockerId(Long userId, Long lockerId);
 
-    java.util.List<UserLockerFavoriteEntity> findByUserIdAndLockerIdIn(
+    List<UserLockerFavoriteEntity> findByUserIdAndLockerIdIn(
         Long userId,
-        java.util.Collection<Long> lockerIds
+        Collection<Long> lockerIds
     );
 
-    java.util.List<UserLockerFavoriteEntity> findByUserIdAndLockerDeletedFalseAndLockerIdIn(
+    List<UserLockerFavoriteEntity> findByUserIdAndLockerDeletedFalseAndLockerIdIn(
         Long userId,
-        java.util.Collection<Long> lockerIds
+        Collection<Long> lockerIds
     );
 
     long countByUserIdAndLockerDeletedFalse(Long userId);
 
-    java.util.Optional<UserLockerFavoriteEntity> findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDesc(
+    Optional<UserLockerFavoriteEntity> findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDesc(
         Long userId
     );
 }

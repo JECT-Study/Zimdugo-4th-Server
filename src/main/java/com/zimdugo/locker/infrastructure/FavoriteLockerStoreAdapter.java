@@ -27,7 +27,7 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
         UserEntity user = userRepository.findById(userId)
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         LockerEntity locker = lockerRepository.findByIdAndDeletedFalse(lockerId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
         int displayOrder = nextDisplayOrder(userId);
 
         try {
@@ -50,16 +50,16 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
     public void reorder(Long userId, List<Long> lockerIds) {
         long favoriteCount = userLockerFavoriteRepository.countByUserIdAndLockerDeletedFalse(userId);
         if (favoriteCount != lockerIds.size()) {
-            throw new IllegalArgumentException("Favorite locker order request must include all favorites.");
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
         }
 
         List<UserLockerFavoriteEntity> favorites =
             userLockerFavoriteRepository.findByUserIdAndLockerDeletedFalseAndLockerIdIn(
-            userId,
-            lockerIds
-        );
+                userId,
+                lockerIds
+            );
         if (favorites.size() != lockerIds.size()) {
-            throw new IllegalArgumentException("Favorite locker order request contains unknown locker ids.");
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
         }
 
         Map<Long, UserLockerFavoriteEntity> favoriteByLockerId = new HashMap<>();
@@ -71,7 +71,7 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
             Long lockerId = lockerIds.get(index);
             UserLockerFavoriteEntity favorite = favoriteByLockerId.remove(lockerId);
             if (favorite == null) {
-                throw new IllegalArgumentException("Favorite locker order request contains duplicate locker ids.");
+                throw new BusinessException(ErrorCode.BAD_REQUEST);
             }
             favorite.updateDisplayOrder(index);
         }

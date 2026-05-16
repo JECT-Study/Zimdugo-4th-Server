@@ -25,6 +25,9 @@ public enum ErrorCode implements BaseCode {
     USER_ALREADY_WITHDRAWN("U4002", "user.already_withdrawn", HttpStatus.BAD_REQUEST),
 
 
+    LOCKER_NOT_FOUND("L4041", "locker.not_found", HttpStatus.NOT_FOUND),
+
+
     UNSUPPORTED_SOCIAL_LOGIN("A4005", "auth.unsupported_social_login", HttpStatus.BAD_REQUEST),
     AUTHENTICATED_USER_NOT_FOUND("A4011", "auth.authenticated_user_not_found", HttpStatus.UNAUTHORIZED);
 

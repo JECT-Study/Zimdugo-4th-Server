@@ -99,7 +99,7 @@ public interface LockerFavoriteApi {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "등록 성공"),
         @ApiResponse(responseCode = "401", description = "로그인 필요"),
-        @ApiResponse(responseCode = "404", description = "보관함 없음")
+        @ApiResponse(responseCode = "404", description = "보관함이 존재하지 않음")
     })
     @PostMapping("/me/favorite-lockers/{lockerId}")
     ResponseEntity<RestResponse<Void>> addFavoriteLocker(
@@ -112,7 +112,7 @@ public interface LockerFavoriteApi {
 
     @Operation(
         summary = "보관함 즐겨찾기 해제",
-        description = "로그인 사용자의 즐겨찾기 보관함에서 제외합니다."
+        description = "로그인 사용자의 즐겨찾기 보관함에서 제거합니다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "해제 성공"),
