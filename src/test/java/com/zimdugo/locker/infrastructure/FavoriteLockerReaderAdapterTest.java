@@ -45,7 +45,7 @@ class FavoriteLockerReaderAdapterTest {
         UserLockerFavoriteEntity favorite = favoriteLocker(10L, 37.556, 126.923);
         LocalDateTime lastCompletedVoteAt = LocalDateTime.of(2026, 5, 13, 19, 45);
 
-        given(userLockerFavoriteRepository.findByUserIdAndLockerDeletedFalseOrderByDisplayOrderAscCreatedAtDesc(
+        given(userLockerFavoriteRepository.findActiveFavoritesByUserId(
             1L,
             PageRequest.of(0, 20)
         ))

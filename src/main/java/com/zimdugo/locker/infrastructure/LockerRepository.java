@@ -2,13 +2,20 @@ package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
 
-    java.util.Optional<LockerEntity> findByIdAndDeletedFalse(Long id);
+    @Query("""
+        select l
+        from LockerEntity l
+        where l.id = :id
+          and l.deleted = false
+        """)
+    Optional<LockerEntity> findActiveById(@Param("id") Long id);
 
     @Query(value = """
         -- 조회 기준 좌표

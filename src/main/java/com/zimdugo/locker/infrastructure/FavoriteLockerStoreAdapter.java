@@ -26,7 +26,7 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
     public void add(Long userId, Long lockerId) {
         UserEntity user = userRepository.findById(userId)
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        LockerEntity locker = lockerRepository.findByIdAndDeletedFalse(lockerId)
+        LockerEntity locker = lockerRepository.findActiveById(lockerId)
             .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
         int displayOrder = nextDisplayOrder(userId);
 
@@ -34,7 +34,7 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
             userLockerFavoriteRepository.save(new UserLockerFavoriteEntity(user, locker, displayOrder));
         } catch (DataIntegrityViolationException e) {
             // Concurrent favorite requests may race on the unique constraint.
-            if (userLockerFavoriteRepository.existsByUserIdAndLockerIdAndLockerDeletedFalse(userId, lockerId)) {
+            if (userLockerFavoriteRepository.countActiveFavoritesByUserIdAndLockerId(userId, lockerId) > 0) {
                 return;
             }
             throw e;
@@ -48,19 +48,21 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
 
     @Override
     public void reorder(Long userId, List<Long> lockerIds) {
-        long favoriteCount = userLockerFavoriteRepository.countByUserIdAndLockerDeletedFalse(userId);
+        long favoriteCount = userLockerFavoriteRepository.countActiveFavoritesByUserId(userId);
         if (favoriteCount != lockerIds.size()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST);
         }
 
-        List<UserLockerFavoriteEntity> favorites =
-            userLockerFavoriteRepository.findByUserIdAndLockerDeletedFalseAndLockerIdIn(
-                userId,
-                lockerIds
-            );
-        if (favorites.size() != lockerIds.size()) {
+        long matchedFavoriteCount = userLockerFavoriteRepository.countActiveFavoritesByUserIdAndLockerIds(
+            userId,
+            lockerIds
+        );
+        if (matchedFavoriteCount != lockerIds.size()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST);
         }
+
+        List<UserLockerFavoriteEntity> favorites =
+            userLockerFavoriteRepository.findActiveFavoritesByUserIdAndLockerIds(userId, lockerIds);
 
         Map<Long, UserLockerFavoriteEntity> favoriteByLockerId = new HashMap<>();
         for (UserLockerFavoriteEntity favorite : favorites) {
@@ -78,9 +80,10 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
     }
 
     private int nextDisplayOrder(Long userId) {
-        return userLockerFavoriteRepository.findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDesc(userId)
-            .map(UserLockerFavoriteEntity::getDisplayOrder)
-            .map(order -> order + 1)
-            .orElse(0);
+        Integer maxDisplayOrder = userLockerFavoriteRepository.findMaxDisplayOrderAmongActiveFavoritesByUserId(userId);
+        if (maxDisplayOrder == null) {
+            return 0;
+        }
+        return maxDisplayOrder + 1;
     }
 }

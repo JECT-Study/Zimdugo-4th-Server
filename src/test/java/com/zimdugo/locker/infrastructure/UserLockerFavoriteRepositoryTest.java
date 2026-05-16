@@ -42,7 +42,7 @@ class UserLockerFavoriteRepositoryTest {
         entityManager.clear();
 
         Page<UserLockerFavoriteEntity> result =
-            userLockerFavoriteRepository.findByUserIdAndLockerDeletedFalseOrderByDisplayOrderAscCreatedAtDesc(
+            userLockerFavoriteRepository.findActiveFavoritesByUserId(
                 user.getId(),
                 PageRequest.of(0, 10)
             );
@@ -54,7 +54,7 @@ class UserLockerFavoriteRepositoryTest {
     }
 
     @Test
-    @DisplayName("삭제된 보관함은 즐겨찾기 목록 조회에서 제외한다")
+    @DisplayName("삭제된 보관함은 즐겨찾기 목록 조회에서 제외된다")
     void findByUserIdExcludesDeletedLockers() {
         UserEntity user = saveUser("deleted-locker-user@example.com", "deleted-locker-user");
         LockerEntity activeLocker = saveLocker("정상 보관함");
@@ -67,7 +67,7 @@ class UserLockerFavoriteRepositoryTest {
         entityManager.clear();
 
         Page<UserLockerFavoriteEntity> result =
-            userLockerFavoriteRepository.findByUserIdAndLockerDeletedFalseOrderByDisplayOrderAscCreatedAtDesc(
+            userLockerFavoriteRepository.findActiveFavoritesByUserId(
                 user.getId(),
                 PageRequest.of(0, 10)
             );
@@ -90,11 +90,11 @@ class UserLockerFavoriteRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(userLockerFavoriteRepository.existsByUserIdAndLockerIdAndLockerDeletedFalse(
+        assertThat(userLockerFavoriteRepository.countActiveFavoritesByUserIdAndLockerId(
             user.getId(),
             locker.getId()
         ))
-            .isFalse();
+            .isZero();
     }
 
     @Test
@@ -111,7 +111,7 @@ class UserLockerFavoriteRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        List<UserLockerFavoriteEntity> favorites = userLockerFavoriteRepository.findByUserIdAndLockerIdIn(
+        List<UserLockerFavoriteEntity> favorites = userLockerFavoriteRepository.findActiveFavoritesByUserIdAndLockerIds(
             user.getId(),
             List.of(firstLocker.getId(), thirdLocker.getId())
         );
@@ -122,7 +122,7 @@ class UserLockerFavoriteRepositoryTest {
     }
 
     @Test
-    @DisplayName("삭제된 보관함은 reorder 대상 조회와 개수에서 제외한다")
+    @DisplayName("삭제된 보관함은 reorder 대상 조회와 개수에서 제외된다")
     void activeFavoriteQueriesExcludeDeletedLockers() {
         UserEntity user = saveUser("reorder-user@example.com", "reorder-user");
         LockerEntity activeLocker = saveLocker("정상 보관함");
@@ -135,20 +135,20 @@ class UserLockerFavoriteRepositoryTest {
         entityManager.clear();
 
         List<UserLockerFavoriteEntity> favorites =
-            userLockerFavoriteRepository.findByUserIdAndLockerDeletedFalseAndLockerIdIn(
+            userLockerFavoriteRepository.findActiveFavoritesByUserIdAndLockerIds(
                 user.getId(),
                 List.of(activeLocker.getId(), deletedLocker.getId())
             );
 
-        assertThat(userLockerFavoriteRepository.countByUserIdAndLockerDeletedFalse(user.getId())).isEqualTo(1);
+        assertThat(userLockerFavoriteRepository.countActiveFavoritesByUserId(user.getId())).isEqualTo(1);
         assertThat(favorites)
             .extracting(favorite -> favorite.getLocker().getName())
             .containsExactly("정상 보관함");
     }
 
     @Test
-    @DisplayName("삭제된 보관함은 최대 displayOrder 조회에서 제외한다")
-    void findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDescExcludesDeletedLocker() {
+    @DisplayName("삭제된 보관함은 최대 displayOrder 조회에서 제외된다")
+    void findMaxDisplayOrderAmongActiveFavoritesByUserIdExcludesDeletedLocker() {
         UserEntity user = saveUser("display-order-user@example.com", "display-order-user");
         LockerEntity activeLocker = saveLocker("정상 보관함");
         LockerEntity deletedLocker = saveLocker("삭제된 보관함");
@@ -159,12 +159,9 @@ class UserLockerFavoriteRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        UserLockerFavoriteEntity result =
-            userLockerFavoriteRepository.findTopByUserIdAndLockerDeletedFalseOrderByDisplayOrderDesc(user.getId())
-                .orElseThrow();
+        Integer result = userLockerFavoriteRepository.findMaxDisplayOrderAmongActiveFavoritesByUserId(user.getId());
 
-        assertThat(result.getLocker().getName()).isEqualTo("정상 보관함");
-        assertThat(result.getDisplayOrder()).isEqualTo(1);
+        assertThat(result).isEqualTo(1);
     }
 
     private UserLockerFavoriteEntity saveFavorite(UserEntity user, LockerEntity locker, int displayOrder) {

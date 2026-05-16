@@ -27,7 +27,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
     @Override
     public FavoriteLockerPage findByUserId(Long userId, int page, int size, Double latitude, Double longitude) {
         Page<UserLockerFavoriteEntity> favorites =
-            userLockerFavoriteRepository.findByUserIdAndLockerDeletedFalseOrderByDisplayOrderAscCreatedAtDesc(
+            userLockerFavoriteRepository.findActiveFavoritesByUserId(
                 userId,
                 PageRequest.of(page, size)
             );
@@ -48,7 +48,7 @@ public class FavoriteLockerReaderAdapter implements FavoriteLockerReader {
 
     @Override
     public boolean existsByUserIdAndLockerId(Long userId, Long lockerId) {
-        return userLockerFavoriteRepository.existsByUserIdAndLockerIdAndLockerDeletedFalse(userId, lockerId);
+        return userLockerFavoriteRepository.countActiveFavoritesByUserIdAndLockerId(userId, lockerId) > 0;
     }
 
     private FavoriteLocker toFavoriteLocker(

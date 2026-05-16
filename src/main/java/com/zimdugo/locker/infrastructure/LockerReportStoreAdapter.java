@@ -22,7 +22,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
 
     @Override
     public SavedLockerReport create(LockerReportCreateInfo createInfo) {
-        LockerEntity locker = lockerRepository.findByIdAndDeletedFalse(createInfo.lockerId())
+        LockerEntity locker = lockerRepository.findActiveById(createInfo.lockerId())
             .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
         UserEntity user = userRepository.findById(createInfo.userId())
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
