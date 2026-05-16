@@ -1,12 +1,22 @@
 package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
+
+    @Query("""
+        select l
+        from LockerEntity l
+        where l.id = :id
+          and l.deleted = false
+        """)
+    Optional<LockerEntity> findActiveById(@Param("id") Long id);
 
     @Query(value = """
         -- 조회 기준 좌표
@@ -24,6 +34,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             FROM lockers l
             CROSS JOIN target
             WHERE ST_DWithin(l.location, target.point, :radiusMeters)
+              AND l.deleted = false
         )
         SELECT
             nearby.id AS id,
@@ -45,5 +56,23 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("latitude") double latitude,
         @Param("longitude") double longitude,
         @Param("radiusMeters") int radiusMeters
+    );
+
+    @Query(value = """
+        WITH target AS (
+            SELECT ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography AS point
+        )
+        SELECT
+            l.id AS lockerId,
+            ROUND(ST_Distance(l.location, target.point))::bigint AS distanceMeters
+        FROM lockers l
+        CROSS JOIN target
+        WHERE l.id IN (:lockerIds)
+          AND l.deleted = false
+        """, nativeQuery = true)
+    List<LockerDistanceProjection> findDistancesByLockerIds(
+        @Param("latitude") double latitude,
+        @Param("longitude") double longitude,
+        @Param("lockerIds") Collection<Long> lockerIds
     );
 }

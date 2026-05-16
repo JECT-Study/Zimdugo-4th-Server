@@ -32,10 +32,18 @@ public class LockerEntity {
     @Column(nullable = false)
     private double longitude;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean deleted;
+
     public LockerEntity(String name, String roadAddress, double latitude, double longitude) {
         this.name = name;
         this.roadAddress = roadAddress;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.deleted = false;
+    }
+
+    public void markDeleted() {
+        this.deleted = true;
     }
 }

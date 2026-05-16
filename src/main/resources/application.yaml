@@ -67,6 +67,12 @@ jwt:
   access-token-expiration-seconds: 900
   refresh-token-expiration-seconds: 2592000
 
+locker:
+  favorite:
+    default-origin:
+      latitude: ${LOCKER_FAVORITE_DEFAULT_LATITUDE:37.497942}
+      longitude: ${LOCKER_FAVORITE_DEFAULT_LONGITUDE:127.027621}
+
 springdoc:
   swagger-ui:
     display-request-duration: true

@@ -9,6 +9,7 @@ import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ class LockerReportRepositoryTest {
     @DisplayName("선택 입력값이 없어도 제보 원본 정보를 저장한다")
     void saveReportWithOptionalFieldsNull() {
         UserEntity user = saveUser();
-        LockerEntity locker = saveLocker();
+        LockerEntity locker = saveLocker("홍대입구역 보관함");
 
         LockerReportEntity report = lockerReportRepository.save(new LockerReportEntity(
             locker,
@@ -66,11 +67,74 @@ class LockerReportRepositoryTest {
         assertThat(savedReport.getUpdatedAt()).isNotNull();
     }
 
+    @Test
+    @DisplayName("보관함별 최신 완료 제보 시각을 조회한다")
+    void findLatestCompletedVoteAtByLockerIdInReturnsLatestUpdatedAt() {
+        UserEntity user = saveUser("vote-user@example.com", "vote-user");
+        LockerEntity targetLocker = saveLocker("대상 보관함");
+        LockerEntity otherLocker = saveLocker("다른 보관함");
+
+        LockerReportEntity olderReport = saveReport(user, targetLocker, "이전 제보");
+        LockerReportEntity latestReport = saveReport(user, targetLocker, "최신 제보");
+        LockerReportEntity otherReport = saveReport(user, otherLocker, "다른 제보");
+        entityManager.flush();
+
+        updateUpdatedAt(olderReport.getId(), LocalDateTime.of(2026, 5, 10, 10, 0));
+        updateUpdatedAt(latestReport.getId(), LocalDateTime.of(2026, 5, 13, 19, 30));
+        updateUpdatedAt(otherReport.getId(), LocalDateTime.of(2026, 5, 9, 9, 0));
+        entityManager.clear();
+
+        List<LockerReportLatestUpdateProjection> result =
+            lockerReportRepository.findLatestCompletedVoteAtByLockerIdIn(List.of(targetLocker.getId()));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getLockerId()).isEqualTo(targetLocker.getId());
+        assertThat(result.get(0).getLastCompletedVoteAt()).isEqualTo(LocalDateTime.of(2026, 5, 13, 19, 30));
+    }
+
+    private LockerReportEntity saveReport(UserEntity user, LockerEntity locker, String name) {
+        LockerReportEntity report = new LockerReportEntity(
+            locker,
+            user,
+            DuplicateHandlingType.CREATE_NEW,
+            name,
+            "서울 마포구 양화로 160",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            37.556,
+            126.923
+        );
+        entityManager.persist(report);
+        return report;
+    }
+
+    private void updateUpdatedAt(Long reportId, LocalDateTime updatedAt) {
+        entityManager.createNativeQuery("""
+            UPDATE locker_reports
+            SET updated_at = :updatedAt
+            WHERE id = :reportId
+            """)
+            .setParameter("updatedAt", updatedAt)
+            .setParameter("reportId", reportId)
+            .executeUpdate();
+    }
+
     private UserEntity saveUser() {
+        return saveUser("reporter@example.com", "reporter");
+    }
+
+    private UserEntity saveUser(String email, String nickname) {
         UserEntity user = new UserEntity(
             null,
-            "reporter@example.com",
-            "reporter",
+            email,
+            nickname,
             null,
             UserStatus.ACTIVE,
             UserRole.USER,
@@ -81,18 +145,14 @@ class LockerReportRepositoryTest {
         return user;
     }
 
-    private LockerEntity saveLocker() {
-        entityManager.createNativeQuery("""
-            INSERT INTO lockers (name, road_address, latitude, longitude)
-            VALUES ('홍대입구역 보관함', '서울 마포구 양화로 160', 37.556, 126.923)
-            """).executeUpdate();
-
-        Long lockerId = ((Number) entityManager.createNativeQuery("""
-            SELECT id
-            FROM lockers
-            WHERE name = '홍대입구역 보관함'
-            """).getSingleResult()).longValue();
-
-        return entityManager.getReference(LockerEntity.class, lockerId);
+    private LockerEntity saveLocker(String name) {
+        LockerEntity locker = new LockerEntity(
+            name,
+            "서울 마포구 양화로 160",
+            37.556,
+            126.923
+        );
+        entityManager.persist(locker);
+        return locker;
     }
 }
