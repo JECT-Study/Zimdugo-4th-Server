@@ -139,10 +139,7 @@ public record LockerReportCreateRequest(
     }
 
     private String reportName() {
-        if (additionalInfo == null || additionalInfo.isBlank()) {
-            return DEFAULT_REPORT_NAME;
-        }
-        return additionalInfo;
+        return DEFAULT_REPORT_NAME;
     }
 
     public LockerReportCreateCommand toCommand() {
