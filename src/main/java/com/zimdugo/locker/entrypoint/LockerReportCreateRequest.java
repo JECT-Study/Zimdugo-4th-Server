@@ -10,10 +10,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.StringJoiner;
+import java.util.Set;
 
 public record LockerReportCreateRequest(
-    @Schema(description = "보관함 위치 도로명주소", example = "서울 마포구 양화로 160")
+    @Schema(description = "도로명주소", example = "서울 마포구 양화로 160")
     @NotBlank
     @Size(max = 255)
     String roadAddress,
@@ -52,6 +52,7 @@ public record LockerReportCreateRequest(
     String lockerType,
 
     @Schema(description = "보관함 사이즈", example = "[\"SMALL\",\"MEDIUM\",\"LARGE\"]")
+    @Size(max = 3)
     List<String> sizeTypes,
 
     @Schema(description = "무료 여부", example = "false")
@@ -77,7 +78,7 @@ public record LockerReportCreateRequest(
     @Size(max = 500)
     String imageUrl,
 
-    @Schema(description = "위치정보 수집 및 이용동의", example = "true")
+    @Schema(description = "위치정보 수집 및 이용 동의", example = "true")
     @NotNull
     @AssertTrue
     Boolean locationConsentAgreed
@@ -127,46 +128,21 @@ public record LockerReportCreateRequest(
         return !startTime.isAfter(endTime);
     }
 
+    @AssertTrue(message = "validation.invalid_size_types")
+    public boolean isSizeTypesValid() {
+        if (sizeTypes == null || sizeTypes.isEmpty()) {
+            return true;
+        }
+
+        Set<String> allowedSizeTypes = Set.of("SMALL", "MEDIUM", "LARGE");
+        return sizeTypes.stream().allMatch(allowedSizeTypes::contains);
+    }
+
     private String reportName() {
         if (additionalInfo == null || additionalInfo.isBlank()) {
             return DEFAULT_REPORT_NAME;
         }
         return additionalInfo;
-    }
-
-    private String floorValue() {
-        if (Boolean.FALSE.equals(hasFloor)) {
-            return null;
-        }
-        return floorType + ":" + floorNumber;
-    }
-
-    private String sizeInfo() {
-        if (sizeTypes == null || sizeTypes.isEmpty()) {
-            return null;
-        }
-        return String.join(",", sizeTypes);
-    }
-
-    private String priceInfo() {
-        if (isFree == null) {
-            return null;
-        }
-        if (Boolean.TRUE.equals(isFree)) {
-            return "FREE";
-        }
-
-        StringJoiner joiner = new StringJoiner("~");
-        joiner.add(minPrice == null ? "" : minPrice.toString());
-        joiner.add(maxPrice == null ? "" : maxPrice.toString());
-        return joiner.toString();
-    }
-
-    private String operatingHours() {
-        if (startTime == null || endTime == null) {
-            return null;
-        }
-        return startTime + "~" + endTime;
     }
 
     public LockerReportCreateCommand toCommand() {

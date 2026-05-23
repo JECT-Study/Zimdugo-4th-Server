@@ -73,7 +73,7 @@ class LockerReportControllerTest {
             .willReturn(LockerReportDuplicateResponse.of(30, List.of(
                 new LockerReportDuplicateCandidateResponse(
                     12L,
-                    "홍대입구역 보관함",
+                    "신촌역 물품보관함",
                     "서울 마포구 양화로 160",
                     37.556,
                     126.923,
@@ -105,7 +105,7 @@ class LockerReportControllerTest {
     }
 
     @Test
-    @DisplayName("위도 없이 중복 후보를 조회하면 bad request를 반환한다")
+    @DisplayName("위도 정보 없이 중복 후보를 조회하면 bad request를 반환한다")
     void findDuplicateLockerCandidatesWithoutLatitudeReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/locker-reports/duplicates")
                 .param("lng", "126.923"))
@@ -129,7 +129,7 @@ class LockerReportControllerTest {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
                 .contentType("application/json")
-                .content("{duplicateHandlingType:\"CREATE_NEW\"}"))
+                .content("{roadAddress:\"서울 마포구 양화로 160\"}"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("C400"))
             .andExpect(jsonPath("$.message").value("common.bad_request"));
@@ -137,12 +137,12 @@ class LockerReportControllerTest {
 
     @Test
     @DisplayName("인증된 사용자가 제보를 등록하면 성공 응답을 반환한다")
-    void createLockerReport_withAuthenticatedUser_returnsOk() throws Exception {
+    void createLockerReportWithAuthenticatedUserReturnsOk() throws Exception {
         given(lockerReportCommandService.create(eq(1L), any()))
             .willReturn(new LockerReportCreateResult(
                 100L,
                 10L,
-                "홍대입구역 2번출구 테스트 보관함",
+                "신촌역 2번 출구 물품보관함",
                 "서울 마포구 양화로 160",
                 37.556,
                 126.923,
@@ -152,7 +152,7 @@ class LockerReportControllerTest {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
                 .contentType("application/json")
-                .content(validCreateNewRequestJson()))
+                .content(validCreateRequestJson()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value("S200"))
             .andExpect(jsonPath("$.message").value("common.ok"))
@@ -163,99 +163,73 @@ class LockerReportControllerTest {
 
     @Test
     @DisplayName("인증 정보가 없으면 401을 반환한다")
-    void createLockerReport_withoutAuthentication_returnsUnauthorized() throws Exception {
+    void createLockerReportWithoutAuthenticationReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .contentType("application/json")
-                .content(validCreateNewRequestJson()))
+                .content(validCreateRequestJson()))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.code").value("A4011"))
             .andExpect(jsonPath("$.message").value("auth.authenticated_user_not_found"));
     }
 
     @Test
-    @DisplayName("이름이 비어 있으면 validation error를 반환한다")
-    void createLockerReport_withoutName_returnsBadRequest() throws Exception {
+    @DisplayName("보관함 유형이 비어 있으면 validation error를 반환한다")
+    void createLockerReportWithoutLockerTypeReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
                 .contentType("application/json")
                 .content("""
                     {
-                      "duplicateHandlingType": "CREATE_NEW",
-                      "existingLockerId": null,
-                      "name": "",
                       "roadAddress": "서울 마포구 양화로 160",
-                      "detailLocation": null,
-                      "buildingName": "홍대입구역",
-                      "floor": null,
-                      "indoorOutdoorType": null,
-                      "lockerType": null,
-                      "sizeInfo": null,
-                      "priceInfo": null,
-                      "operatingHours": null,
-                      "imageUrl": null,
                       "latitude": 37.556,
-                      "longitude": 126.923
+                      "longitude": 126.923,
+                      "hasFloor": false,
+                      "floorType": null,
+                      "floorNumber": null,
+                      "indoorOutdoorType": "INDOOR",
+                      "lockerType": "",
+                      "sizeTypes": ["SMALL", "MEDIUM"],
+                      "isFree": true,
+                      "minPrice": null,
+                      "maxPrice": null,
+                      "startTime": null,
+                      "endTime": null,
+                      "additionalInfo": "신촌역 2번 출구 근처",
+                      "imageUrl": null,
+                      "locationConsentAgreed": true
                     }
                     """))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("C400"))
-            .andExpect(jsonPath("$.validationErrors[0].field").value("name"))
+            .andExpect(jsonPath("$.validationErrors[0].field").value("lockerType"))
             .andExpect(jsonPath("$.validationErrors[0].message").value("validation.not_blank"));
     }
 
     @Test
-    @DisplayName("기존 장소 추가인데 existingLockerId가 없으면 bad request를 반환한다")
-    void createLockerReport_addToExistingWithoutLockerId_returnsBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/locker-reports")
-                .principal(authenticatedUser())
-                .contentType("application/json")
-                .content("""
-                    {
-                      "duplicateHandlingType": "ADD_TO_EXISTING",
-                      "existingLockerId": null,
-                      "name": "홍대입구역 2번출구 테스트 보관함",
-                      "roadAddress": "서울 마포구 양화로 160",
-                      "detailLocation": null,
-                      "buildingName": "홍대입구역",
-                      "floor": null,
-                      "indoorOutdoorType": null,
-                      "lockerType": null,
-                      "sizeInfo": null,
-                      "priceInfo": null,
-                      "operatingHours": null,
-                      "imageUrl": null,
-                      "latitude": 37.556,
-                      "longitude": 126.923
-                    }
-                    """))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("C400"))
-            .andExpect(jsonPath("$.message").value("common.bad_request"));
-    }
-
-    @Test
     @DisplayName("도로명 주소가 비어 있으면 validation error를 반환한다")
-    void createLockerReport_withoutRoadAddress_returnsBadRequest() throws Exception {
+    void createLockerReportWithoutRoadAddressReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
                 .contentType("application/json")
                 .content("""
                     {
-                      "duplicateHandlingType": "CREATE_NEW",
-                      "existingLockerId": null,
-                      "name": "홍대입구역 2번출구 테스트 보관함",
                       "roadAddress": "",
-                      "detailLocation": null,
-                      "buildingName": "홍대입구역",
-                      "floor": null,
-                      "indoorOutdoorType": null,
-                      "lockerType": null,
-                      "sizeInfo": null,
-                      "priceInfo": null,
-                      "operatingHours": null,
-                      "imageUrl": null,
                       "latitude": 37.556,
-                      "longitude": 126.923
+                      "longitude": 126.923,
+                      "hasFloor": false,
+                      "floorType": null,
+                      "floorNumber": null,
+                      "indoorOutdoorType": "INDOOR",
+                      "lockerType": "SUBWAY_STATION",
+                      "sizeTypes": ["SMALL", "MEDIUM"],
+                      "isFree": true,
+                      "minPrice": null,
+                      "maxPrice": null,
+                      "startTime": null,
+                      "endTime": null,
+                      "additionalInfo": "신촌역 2번 출구 근처",
+                      "imageUrl": null,
+                      "locationConsentAgreed": true
                     }
                     """))
             .andExpect(status().isBadRequest())
@@ -264,24 +238,26 @@ class LockerReportControllerTest {
             .andExpect(jsonPath("$.validationErrors[0].message").value("validation.not_blank"));
     }
 
-    private String validCreateNewRequestJson() {
+    private String validCreateRequestJson() {
         return """
             {
-              "duplicateHandlingType": "CREATE_NEW",
-              "existingLockerId": null,
-              "name": "홍대입구역 2번출구 테스트 보관함",
               "roadAddress": "서울 마포구 양화로 160",
-              "detailLocation": null,
-              "buildingName": "홍대입구역",
-              "floor": null,
-              "indoorOutdoorType": null,
-              "lockerType": null,
-              "sizeInfo": null,
-              "priceInfo": null,
-              "operatingHours": null,
-              "imageUrl": null,
               "latitude": 37.556,
-              "longitude": 126.923
+              "longitude": 126.923,
+              "hasFloor": false,
+              "floorType": null,
+              "floorNumber": null,
+              "indoorOutdoorType": "INDOOR",
+              "lockerType": "SUBWAY_STATION",
+              "sizeTypes": ["SMALL", "MEDIUM"],
+              "isFree": true,
+              "minPrice": null,
+              "maxPrice": null,
+              "startTime": null,
+              "endTime": null,
+              "additionalInfo": "신촌역 2번 출구 근처",
+              "imageUrl": null,
+              "locationConsentAgreed": true
             }
             """;
     }
