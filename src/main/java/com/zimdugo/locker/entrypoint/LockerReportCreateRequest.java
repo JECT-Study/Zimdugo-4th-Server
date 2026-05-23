@@ -2,64 +2,21 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.locker.application.LockerReportCreateCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.StringJoiner;
 
 public record LockerReportCreateRequest(
-    @Schema(example = "CREATE_NEW", allowableValues = {"CREATE_NEW", "ADD_TO_EXISTING"})
+    @Schema(description = "보관함 위치 도로명주소", example = "서울 마포구 양화로 160")
     @NotBlank
-    String duplicateHandlingType,
-
-    @Schema(description = "ADD_TO_EXISTING 선택 시 필수", example = "1")
-    Long existingLockerId,
-
-    @Schema(description = "보관함 이름", example = "홍대입구역 보관함")
-    @NotBlank
-    @Size(max = 100)
-    String name,
-
-    @Schema(description = "도로명 주소. 주소 변환 실패 시 비워둘 수 있다.", example = "서울 마포구 양화로 160")
     @Size(max = 255)
     String roadAddress,
-
-    @Schema(description = "상세 위치", example = "2번 출구 안쪽")
-    @Size(max = 255)
-    String detailLocation,
-
-    @Schema(description = "건물명", example = "홍대입구역")
-    @Size(max = 100)
-    String buildingName,
-
-    @Schema(description = "층수", example = "B1")
-    @Size(max = 30)
-    String floor,
-
-    @Schema(description = "실내/실외 여부", example = "INDOOR")
-    @Size(max = 20)
-    String indoorOutdoorType,
-
-    @Schema(description = "보관함 유형. 값이 없으면 UNKNOWN으로 처리한다.", example = "UNKNOWN")
-    @Size(max = 20)
-    String lockerType,
-
-    @Schema(description = "규격 정보", example = "S,M,L")
-    @Size(max = 100)
-    String sizeInfo,
-
-    @Schema(description = "가격 정보", example = "1000~3000원")
-    @Size(max = 100)
-    String priceInfo,
-
-    @Schema(description = "운영시간", example = "05:00~24:00")
-    @Size(max = 100)
-    String operatingHours,
-
-    @Schema(description = "이미지 URL", example = "https://cdn.example.com/locker/1.jpg")
-    @Size(max = 500)
-    String imageUrl,
 
     @Schema(description = "위도", example = "37.556")
     @NotNull
@@ -71,35 +28,167 @@ public record LockerReportCreateRequest(
     @NotNull
     @DecimalMin(value = "-180.0")
     @DecimalMax(value = "180.0")
-    Double longitude
+    Double longitude,
+
+    @Schema(description = "층수 정보 존재 여부", example = "true")
+    @NotNull
+    Boolean hasFloor,
+
+    @Schema(description = "층수 유형", example = "UNDERGROUND")
+    @Size(max = 20)
+    String floorType,
+
+    @Schema(description = "층수 숫자", example = "2")
+    Integer floorNumber,
+
+    @Schema(description = "실내/실외", example = "INDOOR")
+    @NotBlank
+    @Size(max = 20)
+    String indoorOutdoorType,
+
+    @Schema(description = "보관함 유형", example = "SUBWAY_STATION")
+    @NotBlank
+    @Size(max = 20)
+    String lockerType,
+
+    @Schema(description = "보관함 사이즈", example = "[\"SMALL\",\"MEDIUM\",\"LARGE\"]")
+    List<String> sizeTypes,
+
+    @Schema(description = "무료 여부", example = "false")
+    Boolean isFree,
+
+    @Schema(description = "최소 가격", example = "1000")
+    Integer minPrice,
+
+    @Schema(description = "최대 가격", example = "3000")
+    Integer maxPrice,
+
+    @Schema(description = "운영 시작 시간", example = "09:00")
+    LocalTime startTime,
+
+    @Schema(description = "운영 종료 시간", example = "22:30")
+    LocalTime endTime,
+
+    @Schema(description = "보관함 추가 정보", example = "B2 화장실 옆")
+    @Size(max = 255)
+    String additionalInfo,
+
+    @Schema(description = "이미지 URL", example = "https://cdn.example.com/locker/1.jpg")
+    @Size(max = 500)
+    String imageUrl,
+
+    @Schema(description = "위치정보 수집 및 이용동의", example = "true")
+    @NotNull
+    @AssertTrue
+    Boolean locationConsentAgreed
 ) {
 
-    private static final String DEFAULT_LOCKER_TYPE = "UNKNOWN";
+    private static final String DEFAULT_REPORT_NAME = "물품보관함";
 
-    public String lockerTypeOrDefault() {
-        if (lockerType == null || lockerType.isBlank()) {
-            return DEFAULT_LOCKER_TYPE;
+    @AssertTrue(message = "validation.invalid_floor")
+    public boolean isFloorInputValid() {
+        if (Boolean.FALSE.equals(hasFloor)) {
+            return floorType == null && floorNumber == null;
         }
-        return lockerType;
+        if (Boolean.TRUE.equals(hasFloor)) {
+            return floorType != null && !floorType.isBlank() && floorNumber != null && floorNumber > 0;
+        }
+        return false;
+    }
+
+    @AssertTrue(message = "validation.invalid_price")
+    public boolean isPriceInputValid() {
+        if (isFree == null) {
+            return true;
+        }
+        if (Boolean.TRUE.equals(isFree)) {
+            return minPrice == null && maxPrice == null;
+        }
+        if (minPrice == null && maxPrice == null) {
+            return false;
+        }
+        if (minPrice != null && minPrice < 0) {
+            return false;
+        }
+        if (maxPrice != null && maxPrice < 0) {
+            return false;
+        }
+        return minPrice == null || maxPrice == null || minPrice <= maxPrice;
+    }
+
+    @AssertTrue(message = "validation.invalid_operating_hours")
+    public boolean isOperatingHoursValid() {
+        if (startTime == null && endTime == null) {
+            return true;
+        }
+        if (startTime == null || endTime == null) {
+            return false;
+        }
+        return !startTime.isAfter(endTime);
+    }
+
+    private String reportName() {
+        if (additionalInfo == null || additionalInfo.isBlank()) {
+            return DEFAULT_REPORT_NAME;
+        }
+        return additionalInfo;
+    }
+
+    private String floorValue() {
+        if (Boolean.FALSE.equals(hasFloor)) {
+            return null;
+        }
+        return floorType + ":" + floorNumber;
+    }
+
+    private String sizeInfo() {
+        if (sizeTypes == null || sizeTypes.isEmpty()) {
+            return null;
+        }
+        return String.join(",", sizeTypes);
+    }
+
+    private String priceInfo() {
+        if (isFree == null) {
+            return null;
+        }
+        if (Boolean.TRUE.equals(isFree)) {
+            return "FREE";
+        }
+
+        StringJoiner joiner = new StringJoiner("~");
+        joiner.add(minPrice == null ? "" : minPrice.toString());
+        joiner.add(maxPrice == null ? "" : maxPrice.toString());
+        return joiner.toString();
+    }
+
+    private String operatingHours() {
+        if (startTime == null || endTime == null) {
+            return null;
+        }
+        return startTime + "~" + endTime;
     }
 
     public LockerReportCreateCommand toCommand() {
-        return LockerReportCreateCommand.of(
-            duplicateHandlingType,
-            existingLockerId,
-            name,
+        return new LockerReportCreateCommand(
+            reportName(),
             roadAddress,
-            detailLocation,
-            buildingName,
-            floor,
-            indoorOutdoorType,
-            lockerTypeOrDefault(),
-            sizeInfo,
-            priceInfo,
-            operatingHours,
-            imageUrl,
             latitude,
-            longitude
+            longitude,
+            Boolean.TRUE.equals(hasFloor),
+            floorType,
+            floorNumber,
+            indoorOutdoorType,
+            lockerType,
+            sizeTypes,
+            isFree,
+            minPrice,
+            maxPrice,
+            startTime,
+            endTime,
+            additionalInfo,
+            imageUrl,
+            Boolean.TRUE.equals(locationConsentAgreed)
         );
     }
 }

@@ -1,87 +1,83 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.DuplicateHandlingType;
-import java.util.Locale;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.StringJoiner;
 
 public record LockerReportCreateCommand(
-    DuplicateHandlingType duplicateHandlingType,
-    Long existingLockerId,
-    String name,
+    String reportName,
     String roadAddress,
-    String detailLocation,
-    String buildingName,
-    String floor,
+    double latitude,
+    double longitude,
+    boolean hasFloor,
+    String floorType,
+    Integer floorNumber,
     String indoorOutdoorType,
     String lockerType,
-    String sizeInfo,
-    String priceInfo,
-    String operatingHours,
+    List<String> sizeTypes,
+    Boolean isFree,
+    Integer minPrice,
+    Integer maxPrice,
+    LocalTime startTime,
+    LocalTime endTime,
+    String additionalInfo,
     String imageUrl,
-    double latitude,
-    double longitude
+    boolean locationConsentAgreed
 ) {
 
-    @SuppressWarnings("checkstyle:ParameterNumber")
-    public static LockerReportCreateCommand of(
-        String duplicateHandlingType,
-        Long existingLockerId,
-        String name,
-        String roadAddress,
-        String detailLocation,
-        String buildingName,
-        String floor,
-        String indoorOutdoorType,
-        String lockerType,
-        String sizeInfo,
-        String priceInfo,
-        String operatingHours,
-        String imageUrl,
-        double latitude,
-        double longitude
-    ) {
-        return new LockerReportCreateCommand(
-            parseDuplicateHandlingType(duplicateHandlingType, existingLockerId),
-            existingLockerId,
-            name,
-            roadAddress,
-            detailLocation,
-            buildingName,
-            floor,
-            indoorOutdoorType,
-            lockerType,
-            sizeInfo,
-            priceInfo,
-            operatingHours,
-            imageUrl,
-            latitude,
-            longitude
-        );
+    public DuplicateHandlingType duplicateHandlingType() {
+        return DuplicateHandlingType.CREATE_NEW;
     }
 
-    private static DuplicateHandlingType parseDuplicateHandlingType(String value, Long existingLockerId) {
-        if (value == null || value.isBlank()) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST);
-        }
-
-        try {
-            DuplicateHandlingType duplicateHandlingType = DuplicateHandlingType.valueOf(
-                value.toUpperCase(Locale.ROOT)
-            );
-            validateExistingLockerId(duplicateHandlingType, existingLockerId);
-            return duplicateHandlingType;
-        } catch (IllegalArgumentException e) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST);
-        }
+    public Long existingLockerId() {
+        return null;
     }
 
-    private static void validateExistingLockerId(
-        DuplicateHandlingType duplicateHandlingType,
-        Long existingLockerId
-    ) {
-        if (duplicateHandlingType == DuplicateHandlingType.ADD_TO_EXISTING && existingLockerId == null) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST);
+    public String name() {
+        return reportName;
+    }
+
+    public String detailLocation() {
+        return null;
+    }
+
+    public String buildingName() {
+        return null;
+    }
+
+    public String floor() {
+        if (!hasFloor) {
+            return null;
         }
+        return floorType + ":" + floorNumber;
+    }
+
+    public String sizeInfo() {
+        if (sizeTypes == null || sizeTypes.isEmpty()) {
+            return null;
+        }
+        return String.join(",", sizeTypes);
+    }
+
+    public String priceInfo() {
+        if (isFree == null) {
+            return null;
+        }
+        if (Boolean.TRUE.equals(isFree)) {
+            return "FREE";
+        }
+
+        StringJoiner joiner = new StringJoiner("~");
+        joiner.add(minPrice == null ? "" : minPrice.toString());
+        joiner.add(maxPrice == null ? "" : maxPrice.toString());
+        return joiner.toString();
+    }
+
+    public String operatingHours() {
+        if (startTime == null || endTime == null) {
+            return null;
+        }
+        return startTime + "~" + endTime;
     }
 }
