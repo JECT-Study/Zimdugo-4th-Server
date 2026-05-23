@@ -71,9 +71,13 @@ public record LockerReportCreateCommand(
 
     public DuplicateHandlingType duplicateHandlingType() {
         if (additionalInfo != null && additionalInfo.startsWith(LEGACY_DUPLICATE_PREFIX)) {
-            String[] parts = additionalInfo.split(":", LEGACY_DUPLICATE_PART_COUNT);
-            if (parts.length >= 2) {
-                return DuplicateHandlingType.valueOf(parts[1]);
+            try {
+                String[] parts = additionalInfo.split(":", LEGACY_DUPLICATE_PART_COUNT);
+                if (parts.length >= 2) {
+                    return DuplicateHandlingType.valueOf(parts[1]);
+                }
+            } catch (IllegalArgumentException ignored) {
+                return DuplicateHandlingType.CREATE_NEW;
             }
         }
         return DuplicateHandlingType.CREATE_NEW;
@@ -81,9 +85,13 @@ public record LockerReportCreateCommand(
 
     public Long existingLockerId() {
         if (additionalInfo != null && additionalInfo.startsWith(LEGACY_DUPLICATE_PREFIX)) {
-            String[] parts = additionalInfo.split(":", LEGACY_DUPLICATE_PART_COUNT);
-            if (parts.length >= LEGACY_DUPLICATE_PART_COUNT && !parts[2].isBlank()) {
-                return Long.valueOf(parts[2]);
+            try {
+                String[] parts = additionalInfo.split(":", LEGACY_DUPLICATE_PART_COUNT);
+                if (parts.length >= LEGACY_DUPLICATE_PART_COUNT && !parts[2].isBlank()) {
+                    return Long.valueOf(parts[2]);
+                }
+            } catch (NumberFormatException ignored) {
+                return null;
             }
         }
         return null;
