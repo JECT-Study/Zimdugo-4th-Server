@@ -28,10 +28,10 @@ public class OAuth2CallbackUrlCookieManager {
     private static final String SAME_SITE_POLICY = "Lax";
     private static final String RELATIVE_PATH_DEFAULT = "/";
 
-    @Value("${auth.callback.frontend-base-url:http://localhost:3000}")
+    @Value("${auth.callback.frontend-base-url:https://zimdugo.com}")
     private String frontendBaseUrl;
 
-    @Value("${auth.callback.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    @Value("${auth.callback.allowed-origins:https://zimdugo.com,https://www.zimdugo.com,http://localhost:3000,http://localhost:5173}")
     private String allowedOriginsProperty;
 
     private Set<String> allowedOrigins;
