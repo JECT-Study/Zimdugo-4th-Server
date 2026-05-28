@@ -3,6 +3,8 @@ package com.zimdugo.locker.entrypoint;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.locker.application.LockerNearbyQueryService;
+import com.zimdugo.locker.application.LockerPinQueryService;
+import com.zimdugo.locker.application.LockerPinResponse;
 import com.zimdugo.locker.application.NearbyLockerGroupResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LockerController implements LockerApi {
 
     private final LockerNearbyQueryService lockerNearbyQueryService;
+    private final LockerPinQueryService lockerPinQueryService;
 
     @Override
     public ResponseEntity<RestResponse<List<NearbyLockerGroupResponse>>> getNearbyLockerGroups(
@@ -26,6 +29,16 @@ public class LockerController implements LockerApi {
         List<NearbyLockerGroupResponse> response = lockerNearbyQueryService.getNearbyLockerGroups(
             latitude, longitude, radiusMeters
         );
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, response));
+    }
+
+    @Override
+    public ResponseEntity<RestResponse<List<LockerPinResponse>>> getPins(
+        double latitude,
+        double longitude,
+        int radiusMeters
+    ) {
+        List<LockerPinResponse> response = lockerPinQueryService.getPins(latitude, longitude, radiusMeters);
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, response));
     }
 }
