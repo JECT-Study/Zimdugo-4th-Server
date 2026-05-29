@@ -3,7 +3,6 @@ package com.zimdugo.locker.domain;
 public record LockerReportCreateInfo(
     Long lockerId,
     Long userId,
-    DuplicateHandlingType duplicateHandlingType,
     String name,
     String roadAddress,
     String detailLocation,

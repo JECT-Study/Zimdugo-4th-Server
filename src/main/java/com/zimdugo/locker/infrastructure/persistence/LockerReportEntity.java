@@ -1,6 +1,5 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
-import com.zimdugo.locker.domain.DuplicateHandlingType;
 import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import jakarta.persistence.Column;
@@ -45,10 +44,6 @@ public class LockerReportEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    private DuplicateHandlingType duplicateHandlingType;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -103,7 +98,6 @@ public class LockerReportEntity {
     public LockerReportEntity(
         LockerEntity locker,
         UserEntity user,
-        DuplicateHandlingType duplicateHandlingType,
         String name,
         String roadAddress,
         String detailLocation,
@@ -120,7 +114,6 @@ public class LockerReportEntity {
     ) {
         this.locker = locker;
         this.user = user;
-        this.duplicateHandlingType = duplicateHandlingType;
         this.name = name;
         this.roadAddress = roadAddress;
         this.detailLocation = detailLocation;

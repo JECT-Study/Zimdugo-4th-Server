@@ -30,7 +30,6 @@ public class LockerReportStoreAdapter implements LockerReportStore {
         LockerReportEntity report = lockerReportRepository.save(new LockerReportEntity(
             locker,
             user,
-            createInfo.duplicateHandlingType(),
             createInfo.name(),
             createInfo.roadAddress(),
             createInfo.detailLocation(),

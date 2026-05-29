@@ -1,6 +1,5 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.locker.domain.DuplicateHandlingType;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.LockerStore;
@@ -19,7 +18,12 @@ public class LockerReportCommandService {
     private final LockerReportStore lockerReportStore;
 
     public LockerReportCreateResult create(Long userId, LockerReportCreateCommand command) {
-        ReportLocker locker = resolveLocker(command);
+        ReportLocker locker = lockerStore.create(
+            command.name(),
+            command.roadAddress(),
+            command.latitude(),
+            command.longitude()
+        );
         SavedLockerReport report = lockerReportStore.create(toCreateInfo(userId, locker.id(), command));
 
         return new LockerReportCreateResult(
@@ -33,18 +37,6 @@ public class LockerReportCommandService {
         );
     }
 
-    private ReportLocker resolveLocker(LockerReportCreateCommand command) {
-        if (command.duplicateHandlingType() == DuplicateHandlingType.CREATE_NEW) {
-            return lockerStore.create(
-                command.name(),
-                command.roadAddress(),
-                command.latitude(),
-                command.longitude()
-            );
-        }
-        return lockerStore.getById(command.existingLockerId());
-    }
-
     private LockerReportCreateInfo toCreateInfo(
         Long userId,
         Long lockerId,
@@ -53,7 +45,6 @@ public class LockerReportCommandService {
         return new LockerReportCreateInfo(
             lockerId,
             userId,
-            command.duplicateHandlingType(),
             command.name(),
             command.roadAddress(),
             command.detailLocation(),

@@ -1,6 +1,5 @@
 package com.zimdugo.locker.infrastructure;
 
-import com.zimdugo.locker.domain.DuplicateHandlingType;
 import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
@@ -34,7 +33,6 @@ class LockerReportRepositoryTest {
         LockerReportEntity report = lockerReportRepository.save(new LockerReportEntity(
             locker,
             user,
-            DuplicateHandlingType.CREATE_NEW,
             "홍대입구역 보관함",
             null,
             null,
