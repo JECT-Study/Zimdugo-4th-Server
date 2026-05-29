@@ -1,5 +1,6 @@
 package com.zimdugo.locker.application;
 
+import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.LockerStore;

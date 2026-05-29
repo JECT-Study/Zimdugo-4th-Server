@@ -1,4 +1,4 @@
-package com.zimdugo.locker.application;
+package com.zimdugo.locker.application.result.report;
 
 public record LockerReportCreateResult(
     Long reportId,
