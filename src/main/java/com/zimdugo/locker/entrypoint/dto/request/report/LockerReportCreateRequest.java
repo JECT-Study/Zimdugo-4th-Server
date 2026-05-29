@@ -1,4 +1,4 @@
-package com.zimdugo.locker.entrypoint;
+package com.zimdugo.locker.entrypoint.dto.request.report;
 
 import com.zimdugo.locker.application.LockerReportCreateCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
