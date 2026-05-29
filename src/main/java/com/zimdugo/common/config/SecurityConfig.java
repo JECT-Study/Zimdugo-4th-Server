@@ -1,6 +1,7 @@
 package com.zimdugo.common.config;
 
 import com.zimdugo.auth.application.CustomOAuth2UserService;
+import com.zimdugo.auth.application.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.zimdugo.auth.application.OAuth2FailureHandler;
 import com.zimdugo.auth.application.OAuth2SuccessHandler;
 import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
@@ -28,6 +29,7 @@ public class SecurityConfig {
     private static final long CORS_MAX_AGE_SECONDS = 3600L;
 
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -67,6 +69,7 @@ public class SecurityConfig {
 
     private void configureOauth2Login(HttpSecurity http) throws Exception {
         http.oauth2Login(oauth2 -> oauth2
+            .authorizationEndpoint(endpoint -> endpoint.authorizationRequestRepository(authorizationRequestRepository))
             .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
             .successHandler(oAuth2SuccessHandler)
             .failureHandler(oAuth2FailureHandler)
