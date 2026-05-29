@@ -9,39 +9,49 @@ import org.springframework.data.repository.query.Param;
 public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
 
     @Query(value = """
-        -- 조회 기준 좌표
         WITH target AS (
             SELECT ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography AS point
         ),
-        -- 반경 내 후보 추출하고 + 실제 거리 계산
         nearby AS (
             SELECT
                 l.id,
                 l.name,
                 l.road_address,
                 l.location,
+                l.place_id,
                 ST_Distance(l.location, target.point) AS distance_meters
             FROM lockers l
             CROSS JOIN target
             WHERE ST_DWithin(l.location, target.point, :radiusMeters)
+              AND l.place_id IS NOT NULL
         )
         SELECT
-            nearby.id AS id,
-            nearby.name AS name,
+            nearby.id AS lockerId,
+            nearby.name AS lockerName,
             nearby.road_address AS roadAddress,
-            ST_Y(nearby.location::geometry) AS latitude,
-            ST_X(nearby.location::geometry) AS longitude,
+            ST_Y(nearby.location::geometry) AS lockerLatitude,
+            ST_X(nearby.location::geometry) AS lockerLongitude,
             nearby.distance_meters AS distanceMeters,
-            -- 20m 이내 후보를 같은 클러스터로 묶는다.
-            ST_ClusterDBSCAN(
-                ST_Transform(nearby.location::geometry, 3857),
-                eps := 20,
-                minpoints := 1
-            ) OVER () AS clusterId
+            COALESCE(latest_report.locker_type, 'UNKNOWN') AS lockerType,
+            COALESCE(l.updated_at, latest_report.updated_at) AS updatedAt,
+            FALSE AS isFavorite,
+            p.id AS placeId,
+            p.name AS placeName
         FROM nearby
+        JOIN lockers l ON l.id = nearby.id
+        JOIN places p ON p.id = nearby.place_id
+        LEFT JOIN LATERAL (
+            SELECT
+                lr.locker_type,
+                lr.updated_at
+            FROM locker_reports lr
+            WHERE lr.locker_id = nearby.id
+            ORDER BY lr.updated_at DESC
+            LIMIT 1
+        ) latest_report ON TRUE
         ORDER BY distanceMeters ASC
         """, nativeQuery = true)
-    List<NearbyLockerQueryProjection> findNearby(
+    List<NearbyLockerPlaceQueryProjection> findNearbyLockers(
         @Param("latitude") double latitude,
         @Param("longitude") double longitude,
         @Param("radiusMeters") int radiusMeters

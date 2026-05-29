@@ -1,5 +1,7 @@
 package com.zimdugo.locker.domain;
 
+import java.time.LocalDateTime;
+
 public record NearbyLocker(
     Long id,
     String name,
@@ -7,6 +9,11 @@ public record NearbyLocker(
     double latitude,
     double longitude,
     double distanceMeters,
-    Integer clusterId
+    String lockerType,
+    LocalDateTime updatedAt,
+    Boolean isFavorite,
+    Long placeId,
+    String placeName,
+    int matchRank
 ) {
 }

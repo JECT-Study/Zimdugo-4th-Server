@@ -1,7 +1,7 @@
 package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.core.response.RestResponse;
-import com.zimdugo.locker.application.NearbyLockerGroupResponse;
+import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,7 +13,6 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,16 +21,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface LockerApi {
 
     @Operation(
-        summary = "주변 보관함 목록 조회",
-        description = "현재 좌표 기준 반경 내 보관함을 거리순으로 조회하며, 동일 좌표/도로명 주소는 그룹으로 묶어 반환한다."
+        summary = "지도 핀 조회",
+        description = "현재 좌표 기준 반경 내 핀 목록을 반환한다. 같은 장소의 보관함이 1개면 LOCKER, 2개 이상이면 PLACE 핀으로 반환한다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
         @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터")
     })
     @SecurityRequirements
-    @GetMapping("/lockers/nearby")
-    ResponseEntity<RestResponse<List<NearbyLockerGroupResponse>>> getNearbyLockerGroups(
+    @GetMapping("/lockers/pin")
+    ResponseEntity<RestResponse<LockerPinResponse>> getPins(
         @RequestParam("lat")
         @Parameter(description = "사용자 위도", example = "37.498095")
         @Schema(minimum = "-90", maximum = "90")
