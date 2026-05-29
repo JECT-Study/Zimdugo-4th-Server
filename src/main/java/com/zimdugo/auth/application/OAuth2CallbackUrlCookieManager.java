@@ -28,7 +28,7 @@ public class OAuth2CallbackUrlCookieManager {
     private static final String SAME_SITE_POLICY = "Lax";
     private static final String RELATIVE_PATH_DEFAULT = "/";
 
-    @Value("${auth.callback.frontend-base-url:https://zimdugo.com}")
+    @Value("${auth.callback.frontend-base-url:http://localhost:3000}")
     private String frontendBaseUrl;
 
     @Value("${auth.callback.allowed-origins:https://zimdugo.com,https://www.zimdugo.com,http://localhost:3000,http://localhost:5173}")

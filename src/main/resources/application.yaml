@@ -71,6 +71,11 @@ springdoc:
   swagger-ui:
     display-request-duration: true
 
+auth:
+  callback:
+    frontend-base-url: http://localhost:3000
+    allowed-origins: http://localhost:3000,http://localhost:5173
+
 ---
 spring:
   config:
@@ -108,6 +113,11 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
 
+auth:
+  callback:
+    frontend-base-url: http://localhost:3000
+    allowed-origins: http://localhost:3000,http://localhost:5173
+
 ---
 spring:
   config:
@@ -131,6 +141,11 @@ spring:
 
 server:
   forward-headers-strategy: framework
+
+auth:
+  callback:
+    frontend-base-url: https://zimdugo.com
+    allowed-origins: https://zimdugo.com,https://www.zimdugo.com
 
 management:
   endpoints:

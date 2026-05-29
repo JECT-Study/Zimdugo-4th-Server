@@ -1,5 +1,7 @@
 package com.zimdugo.auth.application;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zimdugo.common.config.JacksonConfig;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,11 +13,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class HttpCookieOAuth2AuthorizationRequestRepositoryTest {
 
+    private static final String SIGNING_KEY = "test-signing-key";
+
+    private final ObjectMapper objectMapper = new JacksonConfig().objectMapper();
     private final HttpCookieOAuth2AuthorizationRequestRepository repository =
-        new HttpCookieOAuth2AuthorizationRequestRepository();
+        new HttpCookieOAuth2AuthorizationRequestRepository(objectMapper, SIGNING_KEY);
 
     @Test
-    @DisplayName("OAuth2 authorization request를 쿠키에 저장하고 다시 불러온다")
+    @DisplayName("OAuth2 authorization request를 서명된 쿠키에 저장하고 다시 불러온다")
     void savesAndLoadsAuthorizationRequestFromCookie() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -25,6 +30,7 @@ class HttpCookieOAuth2AuthorizationRequestRepositoryTest {
             .redirectUri("https://api.zimdugo.com/login/oauth2/code/kakao")
             .state("state-value")
             .authorizationRequestUri("https://kauth.kakao.com/oauth/authorize?client_id=client-id")
+            .attributes(attrs -> attrs.put("registration_id", "kakao"))
             .build();
 
         repository.saveAuthorizationRequest(authorizationRequest, request, response);
@@ -40,6 +46,18 @@ class HttpCookieOAuth2AuthorizationRequestRepositoryTest {
         assertThat(loaded).isNotNull();
         assertThat(loaded.getState()).isEqualTo("state-value");
         assertThat(loaded.getRedirectUri()).isEqualTo("https://api.zimdugo.com/login/oauth2/code/kakao");
+        assertThat(loaded.getAttributes()).containsEntry("registration_id", "kakao");
+    }
+
+    @Test
+    @DisplayName("서명이 변조된 쿠키는 무시한다")
+    void returnsNullWhenCookieSignatureIsTampered() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(new Cookie("oauth2_auth_request", "tampered.payload"));
+
+        OAuth2AuthorizationRequest loaded = repository.loadAuthorizationRequest(request);
+
+        assertThat(loaded).isNull();
     }
 
     @Test
@@ -53,6 +71,7 @@ class HttpCookieOAuth2AuthorizationRequestRepositoryTest {
             .redirectUri("https://api.zimdugo.com/login/oauth2/code/google")
             .state("state-value")
             .authorizationRequestUri("https://accounts.google.com/o/oauth2/v2/auth?client_id=client-id")
+            .attributes(attrs -> attrs.put("registration_id", "google"))
             .build();
 
         repository.saveAuthorizationRequest(authorizationRequest, request, response);
