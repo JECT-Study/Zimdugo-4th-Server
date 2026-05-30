@@ -12,6 +12,7 @@ import java.util.Base64;
 import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -19,6 +20,7 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class HttpCookieOAuth2AuthorizationRequestRepository
     implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
@@ -27,6 +29,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
     private static final int AUTH_REQUEST_COOKIE_MAX_AGE_SECONDS = 300;
     private static final String SAME_SITE_POLICY = "Lax";
     private static final String HMAC_ALGORITHM = "HmacSHA256";
+
     private final ObjectMapper objectMapper;
     private final byte[] signingKey;
 
@@ -92,15 +95,17 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 
     private String serialize(OAuth2AuthorizationRequest authorizationRequest) {
         AuthorizationRequestCookiePayload payload = AuthorizationRequestCookiePayload.from(authorizationRequest);
+
         try {
             String json = objectMapper.writeValueAsString(payload);
             String encodedPayload = Base64.getUrlEncoder()
                 .withoutPadding()
                 .encodeToString(json.getBytes(StandardCharsets.UTF_8));
             String signature = sign(encodedPayload);
+
             return encodedPayload + "." + signature;
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to serialize OAuth2AuthorizationRequest", e);
+            throw new IllegalStateException("OAuth2 인가 요청 쿠키 직렬화에 실패했습니다.", e);
         }
     }
 
@@ -111,6 +116,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 
         String[] parts = value.split("\\.", 2);
         if (parts.length != 2) {
+            log.warn("OAuth2 인가 요청 쿠키 형식이 올바르지 않습니다.");
             return null;
         }
 
@@ -118,15 +124,23 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
         String signature = parts[1];
 
         if (!isValidSignature(encodedPayload, signature)) {
+            log.warn("OAuth2 인가 요청 쿠키 서명 검증에 실패했습니다. 쿠키가 변조되었거나 서명 키가 일치하지 않을 수 있습니다.");
             return null;
         }
 
         try {
             byte[] jsonBytes = Base64.getUrlDecoder().decode(encodedPayload);
-            AuthorizationRequestCookiePayload payload = objectMapper.readValue(jsonBytes,
-                AuthorizationRequestCookiePayload.class);
+            AuthorizationRequestCookiePayload payload = objectMapper.readValue(
+                jsonBytes,
+                AuthorizationRequestCookiePayload.class
+            );
+
             return payload.toAuthorizationRequest();
-        } catch (IllegalArgumentException | IOException e) {
+        } catch (IllegalArgumentException e) {
+            log.warn("OAuth2 인가 요청 쿠키 payload Base64 디코딩에 실패했습니다.", e);
+            return null;
+        } catch (IOException e) {
+            log.warn("OAuth2 인가 요청 쿠키 payload JSON 역직렬화에 실패했습니다.", e);
             return null;
         }
     }
@@ -144,9 +158,10 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             mac.init(new SecretKeySpec(signingKey, HMAC_ALGORITHM));
             byte[] signature = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+
             return Base64.getUrlEncoder().withoutPadding().encodeToString(signature);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to sign OAuth2 authorization request cookie", e);
+            throw new IllegalStateException("OAuth2 인가 요청 쿠키 서명 생성에 실패했습니다.", e);
         }
     }
 
