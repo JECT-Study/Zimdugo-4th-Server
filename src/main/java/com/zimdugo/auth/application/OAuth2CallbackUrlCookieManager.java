@@ -31,7 +31,7 @@ public class OAuth2CallbackUrlCookieManager {
     @Value("${auth.callback.frontend-base-url:http://localhost:3000}")
     private String frontendBaseUrl;
 
-    @Value("${auth.callback.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    @Value("${auth.callback.allowed-origins:https://zimdugo.com,https://www.zimdugo.com,http://localhost:3000,http://localhost:5173}")
     private String allowedOriginsProperty;
 
     private Set<String> allowedOrigins;
