@@ -78,10 +78,7 @@ jobs:
             repo_lower="$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')"
             grep -q '^GHCR_OWNER=' .env || echo "GHCR_OWNER=${owner_lower}" >> .env
             grep -q '^GHCR_REPO=' .env || echo "GHCR_REPO=${repo_lower}" >> .env
-            if ! grep -q '^ELASTICSEARCH_URIS=' .env; then
-              echo "ELASTICSEARCH_URIS is missing in /opt/zimdugo/.env"
-              exit 1
-            fi
+            grep -q '^ELASTICSEARCH_URIS=' .env || echo "ELASTICSEARCH_URIS=http://elasticsearch:9200" >> .env
             if grep -q '^IMAGE_TAG=' .env; then
               sudo sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${{ github.sha }}|" .env
             else
@@ -90,7 +87,20 @@ jobs:
 
             echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             sudo docker compose -f docker-compose.prod.yml pull
-            sudo docker compose -f docker-compose.prod.yml up -d
+            sudo docker compose -f docker-compose.prod.yml up -d redis elasticsearch
+            for i in {1..60}; do
+              if curl -s http://127.0.0.1:9200 >/dev/null; then
+                echo "Elasticsearch is ready"
+                break
+              fi
+              if [ "$i" -eq 60 ]; then
+                echo "Elasticsearch startup failed. Dumping elasticsearch logs..."
+                sudo docker compose -f docker-compose.prod.yml logs elasticsearch --tail=200
+                exit 1
+              fi
+              sleep 2
+            done
+            sudo docker compose -f docker-compose.prod.yml up -d app
             for i in {1..30}; do
               status_code="$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/actuator/health || true)"
               if [ "$status_code" = "200" ] || [ "$status_code" = "401" ]; then
