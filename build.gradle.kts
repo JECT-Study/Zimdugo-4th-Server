@@ -46,6 +46,7 @@ dependencies {
     // Data
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
 
     // Validation
     implementation("org.springframework.boot:spring-boot-starter-validation")
