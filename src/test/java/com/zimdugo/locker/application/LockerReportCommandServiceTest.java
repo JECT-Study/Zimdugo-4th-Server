@@ -1,5 +1,10 @@
 package com.zimdugo.locker.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
@@ -15,15 +20,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-
 @ExtendWith(MockitoExtension.class)
 class LockerReportCommandServiceTest {
 
-    private static final String LOCKER_NAME = "홍대입구역 보관함";
+    private static final String LOCKER_NAME = "물품보관함";
     private static final String ROAD_ADDRESS = "서울 마포구 양화로 160";
 
     @Mock
@@ -84,7 +84,6 @@ class LockerReportCommandServiceTest {
 
     private LockerReportCreateCommand createCommand() {
         return new LockerReportCreateCommand(
-            LOCKER_NAME,
             ROAD_ADDRESS,
             37.556,
             126.923,
@@ -107,7 +106,6 @@ class LockerReportCommandServiceTest {
 
     private LockerReportCreateCommand createNewCommand() {
         return new LockerReportCreateCommand(
-            LOCKER_NAME,
             ROAD_ADDRESS,
             37.556,
             126.923,

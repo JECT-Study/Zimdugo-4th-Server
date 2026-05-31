@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 public record LockerReportCreateCommand(
-    String reportName,
     String roadAddress,
     double latitude,
     double longitude,
@@ -24,8 +23,10 @@ public record LockerReportCreateCommand(
     String imageUrl,
     boolean locationConsentAgreed
 ) {
+    private static final String DEFAULT_REPORT_NAME = "물품보관함";
+
     public String name() {
-        return reportName;
+        return DEFAULT_REPORT_NAME;
     }
 
     public String detailLocation() {

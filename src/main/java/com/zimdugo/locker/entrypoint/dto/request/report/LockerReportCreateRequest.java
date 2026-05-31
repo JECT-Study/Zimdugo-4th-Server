@@ -83,9 +83,6 @@ public record LockerReportCreateRequest(
     @AssertTrue
     Boolean locationConsentAgreed
 ) {
-
-    private static final String DEFAULT_REPORT_NAME = "물품보관함";
-
     @AssertTrue(message = "validation.invalid_floor")
     public boolean isFloorInputValid() {
         if (Boolean.FALSE.equals(hasFloor)) {
@@ -138,13 +135,8 @@ public record LockerReportCreateRequest(
         return sizeTypes.stream().allMatch(allowedSizeTypes::contains);
     }
 
-    private String reportName() {
-        return DEFAULT_REPORT_NAME;
-    }
-
     public LockerReportCreateCommand toCommand() {
         return new LockerReportCreateCommand(
-            reportName(),
             roadAddress,
             latitude,
             longitude,
