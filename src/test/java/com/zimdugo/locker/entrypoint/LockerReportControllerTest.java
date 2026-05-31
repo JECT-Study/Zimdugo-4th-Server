@@ -1,11 +1,21 @@
 package com.zimdugo.locker.entrypoint;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
 import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
 import com.zimdugo.common.config.SecurityConfig;
+import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.LockerReportCommandService;
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +32,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(
     controllers = LockerReportController.class,
@@ -80,12 +82,12 @@ class LockerReportControllerTest {
         given(lockerReportCommandService.create(eq(1L), any()))
             .willReturn(new LockerReportCreateResult(
                 100L,
-                10L,
-                "신촌역 2번 출구 물품보관함",
+                null,
+                "물품보관함",
                 "서울 마포구 양화로 160",
                 37.556,
                 126.923,
-                "COMPLETED"
+                "SUBMITTED"
             ));
 
         mockMvc.perform(post("/api/v1/locker-reports")
@@ -96,8 +98,8 @@ class LockerReportControllerTest {
             .andExpect(jsonPath("$.code").value("S200"))
             .andExpect(jsonPath("$.message").value("common.ok"))
             .andExpect(jsonPath("$.data.reportId").value(100))
-            .andExpect(jsonPath("$.data.lockerId").value(10))
-            .andExpect(jsonPath("$.data.reportStatus").value("COMPLETED"));
+            .andExpect(jsonPath("$.data.lockerId").value(Matchers.nullValue()))
+            .andExpect(jsonPath("$.data.reportStatus").value("SUBMITTED"));
     }
 
     @Test
@@ -109,7 +111,7 @@ class LockerReportControllerTest {
             .andExpect(status().isUnauthorized())
             .andExpect(content().contentTypeCompatibleWith("application/json"))
             .andExpect(jsonPath("$.code").value("AUTH-401-1"))
-            .andExpect(jsonPath("$.message").value("인증된 사용자 정보를 찾을 수 없습니다."))
+            .andExpect(jsonPath("$.message").value(ErrorCode.AUTHENTICATED_USER_NOT_FOUND.getMessage()))
             .andExpect(jsonPath("$.status").value(401))
             .andExpect(jsonPath("$.path").value("/api/v1/locker-reports"));
     }
@@ -136,7 +138,7 @@ class LockerReportControllerTest {
                       "maxPrice": null,
                       "startTime": null,
                       "endTime": null,
-                      "additionalInfo": "신촌역 2번 출구 근처",
+                      "additionalInfo": "홍대입구 2번 출구 근처",
                       "imageUrl": null,
                       "locationConsentAgreed": true
                     }
@@ -172,7 +174,7 @@ class LockerReportControllerTest {
                       "maxPrice": null,
                       "startTime": null,
                       "endTime": null,
-                      "additionalInfo": "신촌역 2번 출구 근처",
+                      "additionalInfo": "홍대입구 2번 출구 근처",
                       "imageUrl": null,
                       "locationConsentAgreed": true
                     }
@@ -203,7 +205,7 @@ class LockerReportControllerTest {
               "maxPrice": null,
               "startTime": null,
               "endTime": null,
-              "additionalInfo": "신촌역 2번 출구 근처",
+              "additionalInfo": "홍대입구 2번 출구 근처",
               "imageUrl": null,
               "locationConsentAgreed": true
             }

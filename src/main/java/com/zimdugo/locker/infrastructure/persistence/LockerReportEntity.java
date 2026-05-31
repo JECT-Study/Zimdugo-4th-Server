@@ -17,6 +17,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,8 +38,8 @@ public class LockerReportEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "locker_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "locker_id")
     private LockerEntity locker;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -50,12 +51,6 @@ public class LockerReportEntity {
 
     @Column(length = 255)
     private String roadAddress;
-
-    @Column(length = 255)
-    private String detailLocation;
-
-    @Column(length = 100)
-    private String buildingName;
 
     @Column(length = 30)
     private String floor;
@@ -72,11 +67,18 @@ public class LockerReportEntity {
     @Column(length = 100)
     private String priceInfo;
 
-    @Column(length = 100)
-    private String operatingHours;
+    @Column(length = 255)
+    private String additionalInfo;
+
+    private LocalTime startTime;
+
+    private LocalTime endTime;
 
     @Column(length = 500)
     private String imageUrl;
+
+    @Column(nullable = false)
+    private boolean locationConsentAgreed;
 
     @Column(nullable = false)
     private double latitude;
@@ -100,15 +102,16 @@ public class LockerReportEntity {
         UserEntity user,
         String name,
         String roadAddress,
-        String detailLocation,
-        String buildingName,
         String floor,
         String indoorOutdoorType,
         String lockerType,
         String sizeInfo,
         String priceInfo,
-        String operatingHours,
+        String additionalInfo,
+        LocalTime startTime,
+        LocalTime endTime,
         String imageUrl,
+        boolean locationConsentAgreed,
         double latitude,
         double longitude
     ) {
@@ -116,18 +119,19 @@ public class LockerReportEntity {
         this.user = user;
         this.name = name;
         this.roadAddress = roadAddress;
-        this.detailLocation = detailLocation;
-        this.buildingName = buildingName;
         this.floor = floor;
         this.indoorOutdoorType = indoorOutdoorType;
         this.lockerType = lockerType != null ? lockerType : "UNKNOWN";
         this.sizeInfo = sizeInfo;
         this.priceInfo = priceInfo;
-        this.operatingHours = operatingHours;
+        this.additionalInfo = additionalInfo;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.imageUrl = imageUrl;
+        this.locationConsentAgreed = locationConsentAgreed;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.status = LockerReportStatus.COMPLETED;
+        this.status = LockerReportStatus.SUBMITTED;
     }
 
     @PrePersist

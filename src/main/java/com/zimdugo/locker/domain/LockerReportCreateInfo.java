@@ -1,19 +1,26 @@
 package com.zimdugo.locker.domain;
 
+import java.time.LocalTime;
+import java.util.List;
+
 public record LockerReportCreateInfo(
-    Long lockerId,
     Long userId,
     String name,
     String roadAddress,
-    String detailLocation,
-    String buildingName,
-    String floor,
+    boolean hasFloor,
+    String floorType,
+    Integer floorNumber,
     String indoorOutdoorType,
     String lockerType,
-    String sizeInfo,
-    String priceInfo,
-    String operatingHours,
+    List<String> sizeTypes,
+    Boolean isFree,
+    Integer minPrice,
+    Integer maxPrice,
+    LocalTime startTime,
+    LocalTime endTime,
+    String additionalInfo,
     String imageUrl,
+    boolean locationConsentAgreed,
     double latitude,
     double longitude
 ) {
