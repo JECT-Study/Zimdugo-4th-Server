@@ -3,7 +3,6 @@ package com.zimdugo.locker.application;
 import com.zimdugo.locker.application.result.pin.LockerPinItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinType;
 import com.zimdugo.locker.domain.NearbyLocker;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,17 +48,9 @@ class LockerPinAssemblerTest {
     private NearbyLocker locker(Long id, Long placeId, double latitude, double longitude) {
         return new NearbyLocker(
             id,
-            "dummy",
-            "서울",
             latitude,
             longitude,
-            10d,
-            "UNKNOWN",
-            LocalDateTime.now(),
-            false,
-            placeId,
-            "dummy place",
-            1
+            placeId
         );
     }
 }

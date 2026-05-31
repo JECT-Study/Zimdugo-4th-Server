@@ -4,7 +4,6 @@ import com.zimdugo.locker.application.result.pin.LockerPinItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
 import com.zimdugo.locker.domain.NearbyLocker;
 import com.zimdugo.locker.domain.NearbyLockerPlaceReader;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,17 +60,9 @@ class LockerPinQueryServiceTest {
     private NearbyLocker sampleLocker() {
         return new NearbyLocker(
             1L,
-            "신촌역 물품보관함",
-            "서울",
             37.55,
             126.93,
-            10,
-            "UNKNOWN",
-            LocalDateTime.now(),
-            false,
-            1L,
-            "신촌역",
-            1
+            1L
         );
     }
 }
