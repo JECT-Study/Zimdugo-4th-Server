@@ -25,26 +25,8 @@ public class LockerReportCommandService {
             command.latitude(),
             command.longitude()
         );
-        SavedLockerReport report = lockerReportStore.create(toCreateInfo(userId, locker.id(), command));
-
-        return new LockerReportCreateResult(
-            report.id(),
+        LockerReportCreateInfo info = new LockerReportCreateInfo(
             locker.id(),
-            locker.name(),
-            locker.roadAddress(),
-            locker.latitude(),
-            locker.longitude(),
-            report.status()
-        );
-    }
-
-    private LockerReportCreateInfo toCreateInfo(
-        Long userId,
-        Long lockerId,
-        LockerReportCreateCommand command
-    ) {
-        return new LockerReportCreateInfo(
-            lockerId,
             userId,
             command.name(),
             command.roadAddress(),
@@ -60,5 +42,8 @@ public class LockerReportCommandService {
             command.latitude(),
             command.longitude()
         );
+        SavedLockerReport report = lockerReportStore.create(info);
+
+        return LockerReportCreateResult.of(report, locker);
     }
 }

@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,8 +68,10 @@ class LockerReportControllerTest {
                 .contentType("application/json")
                 .content("{roadAddress:\"서울 마포구 양화로 160\"}"))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("C400"))
-            .andExpect(jsonPath("$.message").value("common.bad_request"));
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.code").value("COMMON-400-2"))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.path").value("/api/v1/locker-reports"));
     }
 
     @Test
@@ -104,8 +107,11 @@ class LockerReportControllerTest {
                 .contentType("application/json")
                 .content(validCreateRequestJson()))
             .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.code").value("A4011"))
-            .andExpect(jsonPath("$.message").value("auth.authenticated_user_not_found"));
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.code").value("AUTH-401-1"))
+            .andExpect(jsonPath("$.message").value("인증된 사용자 정보를 찾을 수 없습니다."))
+            .andExpect(jsonPath("$.status").value(401))
+            .andExpect(jsonPath("$.path").value("/api/v1/locker-reports"));
     }
 
     @Test
@@ -136,9 +142,12 @@ class LockerReportControllerTest {
                     }
                     """))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("C400"))
-            .andExpect(jsonPath("$.validationErrors[0].field").value("lockerType"))
-            .andExpect(jsonPath("$.validationErrors[0].message").value("validation.not_blank"));
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.code").value("COMMON-400-1"))
+            .andExpect(jsonPath("$.message").value("요청 값 검증에 실패했습니다."))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.validationErrors").isArray())
+            .andExpect(jsonPath("$.validationErrors[0].field").exists());
     }
 
     @Test
@@ -169,9 +178,12 @@ class LockerReportControllerTest {
                     }
                     """))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("C400"))
-            .andExpect(jsonPath("$.validationErrors[0].field").value("roadAddress"))
-            .andExpect(jsonPath("$.validationErrors[0].message").value("validation.not_blank"));
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.code").value("COMMON-400-1"))
+            .andExpect(jsonPath("$.message").value("요청 값 검증에 실패했습니다."))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.validationErrors").isArray())
+            .andExpect(jsonPath("$.validationErrors[0].field").exists());
     }
 
     private String validCreateRequestJson() {

@@ -2,49 +2,43 @@ package com.zimdugo.locker.infrastructure.persistence;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import java.util.Locale;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Converter(autoApply = false)
-public class LockerSizeTypeConverter implements AttributeConverter<LockerSizeType, String> {
+public class LockerSizeTypeConverter implements AttributeConverter<Set<LockerSizeType>, String> {
 
     @Override
-    public String convertToDatabaseColumn(LockerSizeType attribute) {
-        return attribute == null ? null : attribute.name();
+    public String convertToDatabaseColumn(Set<LockerSizeType> attribute) {
+        if (attribute == null || attribute.isEmpty()) {
+            return null;
+        }
+
+        return attribute.stream()
+            .filter(java.util.Objects::nonNull)
+            .map(Enum::name)
+            .sorted()
+            .collect(Collectors.joining(","));
     }
 
     @Override
-    public LockerSizeType convertToEntityAttribute(String dbData) {
+    public Set<LockerSizeType> convertToEntityAttribute(String dbData) {
         if (dbData == null || dbData.isBlank()) {
-            return null;
+            return Collections.emptySet();
         }
 
-        String normalized = dbData.trim().toUpperCase(Locale.ROOT);
-        if (normalized.contains(",")) {
-            String[] tokens = normalized.split(",");
-            for (String token : tokens) {
-                LockerSizeType parsed = parseToken(token);
-                if (parsed != null) {
-                    return parsed;
-                }
+        EnumSet<LockerSizeType> sizes = EnumSet.noneOf(LockerSizeType.class);
+        String[] tokens = dbData.split(",");
+
+        for (String token : tokens) {
+            LockerSizeType size = LockerSizeType.from(token);
+            if (size != null) {
+                sizes.add(size);
             }
-            return null;
         }
 
-        return parseToken(normalized);
-    }
-
-    private LockerSizeType parseToken(String token) {
-        String value = token.trim();
-        if (value.isEmpty()) {
-            return null;
-        }
-        if ("LARGE".equals(value)) {
-            return LockerSizeType.BIG;
-        }
-        try {
-            return LockerSizeType.valueOf(value);
-        } catch (IllegalArgumentException ignored) {
-            return null;
-        }
+        return Collections.unmodifiableSet(sizes);
     }
 }
