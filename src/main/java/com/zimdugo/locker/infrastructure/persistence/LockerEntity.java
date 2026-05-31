@@ -2,13 +2,17 @@ package com.zimdugo.locker.infrastructure.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name = "lockers")
@@ -32,10 +36,22 @@ public class LockerEntity {
     @Column(nullable = false)
     private double longitude;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id")
+    private PlaceEntity place;
+
+    @Column(columnDefinition = "geography(Point,4326)", insertable = false, updatable = false)
+    private Point location;
+
     public LockerEntity(String name, String roadAddress, double latitude, double longitude) {
+        this(name, roadAddress, latitude, longitude, null);
+    }
+
+    public LockerEntity(String name, String roadAddress, double latitude, double longitude, PlaceEntity place) {
         this.name = name;
         this.roadAddress = roadAddress;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.place = place;
     }
 }
