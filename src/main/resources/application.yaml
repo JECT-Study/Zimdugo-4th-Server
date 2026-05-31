@@ -135,6 +135,9 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+
   jpa:
     hibernate:
       ddl-auto: update

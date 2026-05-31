@@ -78,6 +78,10 @@ jobs:
             repo_lower="$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')"
             grep -q '^GHCR_OWNER=' .env || echo "GHCR_OWNER=${owner_lower}" >> .env
             grep -q '^GHCR_REPO=' .env || echo "GHCR_REPO=${repo_lower}" >> .env
+            if ! grep -q '^ELASTICSEARCH_URIS=' .env; then
+              echo "ELASTICSEARCH_URIS is missing in /opt/zimdugo/.env"
+              exit 1
+            fi
             if grep -q '^IMAGE_TAG=' .env; then
               sudo sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${{ github.sha }}|" .env
             else
