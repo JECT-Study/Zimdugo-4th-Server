@@ -4,6 +4,8 @@ import com.zimdugo.auth.application.AccountWithdrawalService;
 import com.zimdugo.auth.application.AuthCommandService;
 import com.zimdugo.auth.application.AuthRefreshResult;
 import com.zimdugo.common.config.SecurityConfig;
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(
@@ -75,23 +79,33 @@ class AuthControllerTest {
     @DisplayName("RT가 없으면 4xx를 반환한다")
     void refresh_withoutRT_returns4xx() throws Exception {
         given(authCommandService.refresh(null))
-            .willThrow(new IllegalArgumentException("refresh token not found"));
+            .willThrow(new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
         mockMvc.perform(post("/api/auth/refresh"))
             .andDo(print())
-            .andExpect(status().is4xxClientError());
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.code").value("AUTH-400-1"))
+            .andExpect(jsonPath("$.message").value("리프레시 토큰이 없습니다."))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.path").value("/api/auth/refresh"));
     }
 
     @Test
     @DisplayName("RT가 불일치하면 4xx를 반환한다")
     void refresh_withMismatchedRT_returns4xx() throws Exception {
         given(authCommandService.refresh("invalid-rt"))
-            .willThrow(new IllegalArgumentException("refresh token mismatch"));
+            .willThrow(new BusinessException(ErrorCode.REFRESH_TOKEN_MISMATCH));
 
         mockMvc.perform(post("/api/auth/refresh")
                 .cookie(new Cookie("refreshToken", "invalid-rt")))
             .andDo(print())
-            .andExpect(status().is4xxClientError());
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.code").value("AUTH-400-3"))
+            .andExpect(jsonPath("$.message").value("리프레시 토큰이 일치하지 않습니다."))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.path").value("/api/auth/refresh"));
     }
 
     @Test

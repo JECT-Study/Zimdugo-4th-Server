@@ -1,16 +1,26 @@
 package com.zimdugo.core.exception;
 
-public class BusinessException extends CustomException {
+import lombok.Getter;
+
+@Getter
+public class BusinessException extends RuntimeException {
+
+    private final ErrorCode errorCode;
 
     public BusinessException(ErrorCode errorCode) {
-        super(errorCode);
+        this(errorCode, errorCode.getMessage(), null);
+    }
+
+    public BusinessException(ErrorCode errorCode, Throwable cause) {
+        this(errorCode, errorCode.getMessage(), cause);
     }
 
     public BusinessException(ErrorCode errorCode, String message) {
-        super(errorCode, message);
+        this(errorCode, message, null);
     }
 
     public BusinessException(ErrorCode errorCode, String message, Throwable cause) {
-        super(errorCode, message, cause);
+        super(message, cause);
+        this.errorCode = errorCode;
     }
 }

@@ -1,9 +1,9 @@
 package com.zimdugo.core.exception;
 
-public class ExternalApiException extends CustomException {
+public class ExternalApiException extends BusinessException {
 
     public ExternalApiException(String message) {
-        super(ErrorCode.EXTERNAL_API_ERROR, message);
+        this(message, null);
     }
 
     public ExternalApiException(String message, Throwable cause) {

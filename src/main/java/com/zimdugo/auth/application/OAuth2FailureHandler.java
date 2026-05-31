@@ -26,7 +26,7 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
         String callbackUrl = callbackUrlCookieManager.resolveCallbackUrl(request);
         callbackUrlCookieManager.clearCallbackUrl(response);
 
-        log.warn("oauth login failure. callbackUrl={}, reason={}", callbackUrl, exception.getMessage());
+        log.warn("OAuth 로그인 실패. callbackUrl={}, 사유={}", callbackUrl, exception.getMessage());
         response.sendRedirect(appendCode(callbackUrl, "LOGIN_FAILED"));
     }
 

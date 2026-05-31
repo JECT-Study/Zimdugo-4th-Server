@@ -8,4 +8,8 @@ public interface BaseCode {
     String getMessage();
 
     HttpStatus getStatus();
+
+    default int getStatusCode() {
+        return getStatus().value();
+    }
 }

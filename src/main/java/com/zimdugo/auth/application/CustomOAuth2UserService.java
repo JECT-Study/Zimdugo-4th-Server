@@ -2,6 +2,7 @@ package com.zimdugo.auth.application;
 
 import com.zimdugo.auth.domain.OAuth2UserInfo;
 import com.zimdugo.auth.domain.OAuth2UserInfoFactory;
+import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.domain.SocialAccount;
 import com.zimdugo.user.domain.SocialAccountReader;
 import com.zimdugo.user.domain.SocialAccountStore;
@@ -65,7 +66,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         if (userInfo.getProviderUserId() == null || userInfo.getProviderUserId().isBlank()) {
             throw new OAuth2AuthenticationException(
                     new OAuth2Error("invalid_user_info"),
-                    registrationId + " 사용자 식별값(providerUserId)을 가져오지 못했습니다."
+                    ErrorCode.OAUTH2_INVALID_USER_INFO.getMessage()
             );
         }
     }
