@@ -94,7 +94,7 @@ public class OAuth2CallbackUrlCookieManager {
 
         String trimmed = callbackUrl.trim();
         if (trimmed.contains("\r") || trimmed.contains("\n")) {
-            log.warn("Unsafe callbackUrl detected. fallback to default. callbackUrl={}", trimmed);
+            log.warn("안전하지 않은 callbackUrl이 감지되었습니다. 기본값으로 대체합니다. callbackUrl={}", trimmed);
             return toFrontendUrl(RELATIVE_PATH_DEFAULT);
         }
 
@@ -104,7 +104,7 @@ public class OAuth2CallbackUrlCookieManager {
 
         String origin = extractOrigin(trimmed);
         if (origin == null || !allowedOrigins.contains(origin)) {
-            log.warn("Unsafe callbackUrl detected. fallback to default. callbackUrl={}", trimmed);
+            log.warn("안전하지 않은 callbackUrl이 감지되었습니다. 기본값으로 대체합니다. callbackUrl={}", trimmed);
             return toFrontendUrl(RELATIVE_PATH_DEFAULT);
         }
 
@@ -119,7 +119,7 @@ public class OAuth2CallbackUrlCookieManager {
         try {
             return URLDecoder.decode(value, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
-            log.warn("Failed to decode callback cookie. fallback to default.", e);
+            log.warn("콜백 쿠키 디코딩에 실패했습니다. 기본값으로 대체합니다.", e);
             return toFrontendUrl(RELATIVE_PATH_DEFAULT);
         }
     }

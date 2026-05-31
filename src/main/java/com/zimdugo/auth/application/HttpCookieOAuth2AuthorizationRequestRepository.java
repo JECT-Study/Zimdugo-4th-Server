@@ -2,6 +2,8 @@ package com.zimdugo.auth.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -105,7 +107,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 
             return encodedPayload + "." + signature;
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("OAuth2 인가 요청 쿠키 직렬화에 실패했습니다.", e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, e);
         }
     }
 
@@ -161,7 +163,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 
             return Base64.getUrlEncoder().withoutPadding().encodeToString(signature);
         } catch (Exception e) {
-            throw new IllegalStateException("OAuth2 인가 요청 쿠키 서명 생성에 실패했습니다.", e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, e);
         }
     }
 
