@@ -16,15 +16,24 @@ public class RestResponse<T> {
     private final int status;
     private final T data;
     private final OffsetDateTime timestamp;
+    private final String path;
+    private final String traceId;
     private final List<ValidationError> validationErrors;
 
-    private RestResponse(BaseCode baseCode, T data, List<ValidationError> validationErrors) {
+    private RestResponse(
+        BaseCode baseCode,
+        String message,
+        T data,
+        ErrorMeta errorMeta
+    ) {
         this.code = baseCode.getCode();
-        this.message = baseCode.getMessage();
-        this.status = baseCode.getStatus().value();
+        this.message = message;
+        this.status = baseCode.getStatusCode();
         this.data = data;
-        this.timestamp = OffsetDateTime.now(ZoneOffset.UTC);
-        this.validationErrors = validationErrors;
+        this.timestamp = nowUtc();
+        this.path = errorMeta.path();
+        this.traceId = errorMeta.traceId();
+        this.validationErrors = errorMeta.validationErrors();
     }
 
     public static <T> RestResponse<T> of(SuccessCode code, T data) {
@@ -36,21 +45,72 @@ public class RestResponse<T> {
     }
 
     public static RestResponse<Void> error(ErrorCode code) {
-        return failure(code, null);
+        return failure(code, code.getMessage(), ErrorMeta.empty());
     }
 
     public static RestResponse<Void> error(ErrorCode code, List<ValidationError> validationErrors) {
-        return failure(code, validationErrors);
+        return failure(
+            code,
+            code.getMessage(),
+            new ErrorMeta(null, null, validationErrors)
+        );
+    }
+
+    public static RestResponse<Void> error(
+        ErrorCode code,
+        String message,
+        String path,
+        String traceId
+    ) {
+        return failure(code, message, new ErrorMeta(path, traceId, null));
+    }
+
+    public static RestResponse<Void> error(
+        ErrorCode code,
+        List<ValidationError> validationErrors,
+        String path,
+        String traceId
+    ) {
+        return failure(
+            code,
+            code.getMessage(),
+            new ErrorMeta(path, traceId, validationErrors)
+        );
+    }
+
+    public static RestResponse<Void> error(
+        ErrorCode code,
+        String message,
+        List<ValidationError> validationErrors,
+        String path,
+        String traceId
+    ) {
+        return failure(code, message, new ErrorMeta(path, traceId, validationErrors));
     }
 
     private static <T> RestResponse<T> success(SuccessCode code, T data) {
-        return new RestResponse<>(code, data, null);
+        return new RestResponse<>(code, code.getMessage(), data, ErrorMeta.empty());
     }
 
     private static RestResponse<Void> failure(
         ErrorCode code,
+        String message,
+        ErrorMeta errorMeta
+    ) {
+        return new RestResponse<>(code, message, null, errorMeta);
+    }
+
+    private static OffsetDateTime nowUtc() {
+        return OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
+    private record ErrorMeta(
+        String path,
+        String traceId,
         List<ValidationError> validationErrors
     ) {
-        return new RestResponse<>(code, null, validationErrors);
+        private static ErrorMeta empty() {
+            return new ErrorMeta(null, null, null);
+        }
     }
 }
