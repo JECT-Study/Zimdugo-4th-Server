@@ -5,33 +5,43 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 public enum ErrorCode implements BaseCode {
-    BAD_REQUEST("C400", "common.bad_request", HttpStatus.BAD_REQUEST),
-    UNAUTHORIZED("C401", "common.unauthorized", HttpStatus.UNAUTHORIZED),
-    FORBIDDEN("C403", "common.forbidden", HttpStatus.FORBIDDEN),
-    NOT_FOUND("C404", "common.not_found", HttpStatus.NOT_FOUND),
-    INTERNAL_SERVER_ERROR("C500", "common.internal_server_error", HttpStatus.INTERNAL_SERVER_ERROR),
+    // 공통 (COMMON)
+    BAD_REQUEST("COMMON-400", "잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
+    VALIDATION_FAILED("COMMON-400-1", "요청 값 검증에 실패했습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_JSON_FORMAT("COMMON-400-2", "요청 본문을 읽을 수 없습니다. JSON 형식을 확인해 주세요.", HttpStatus.BAD_REQUEST),
+    UNAUTHORIZED("COMMON-401", "인증이 필요합니다.", HttpStatus.UNAUTHORIZED),
+    FORBIDDEN("COMMON-403", "접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
+    NOT_FOUND("COMMON-404", "요청한 대상을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    INVALID_PARAMETER_FORMAT("COMMON-400-3", "요청 파라미터 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INTERNAL_SERVER_ERROR("COMMON-500", "서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
+    // 인증 (AUTH)
+    REFRESH_TOKEN_NOT_FOUND("AUTH-400-1", "리프레시 토큰이 없습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_REFRESH_TOKEN("AUTH-400-2", "리프레시 토큰이 유효하지 않습니다.", HttpStatus.BAD_REQUEST),
+    REFRESH_TOKEN_MISMATCH("AUTH-400-3", "리프레시 토큰이 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+    REFRESH_TOKEN_REVOKED("AUTH-400-4", "리프레시 토큰이 폐기되었습니다.", HttpStatus.BAD_REQUEST),
+    UNSUPPORTED_SOCIAL_LOGIN("AUTH-400-5", "지원하지 않는 소셜 로그인 제공자입니다.", HttpStatus.BAD_REQUEST),
+    OAUTH2_INVALID_USER_INFO("AUTH-400-6", "소셜 로그인 사용자 정보를 가져올 수 없습니다.", HttpStatus.BAD_REQUEST),
+    AUTHENTICATED_USER_NOT_FOUND("AUTH-401-1", "인증된 사용자 정보를 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED),
 
-    REFRESH_TOKEN_NOT_FOUND("A4001", "auth.refresh_token_not_found", HttpStatus.BAD_REQUEST),
-    INVALID_REFRESH_TOKEN("A4002", "auth.invalid_refresh_token", HttpStatus.BAD_REQUEST),
-    REFRESH_TOKEN_MISMATCH("A4003", "auth.refresh_token_mismatch", HttpStatus.BAD_REQUEST),
-    REFRESH_TOKEN_REVOKED("A4004", "auth.refresh_token_revoked", HttpStatus.BAD_REQUEST),
+    // 외부 API (EXTERNAL)
+    EXTERNAL_API_ERROR("EXTERNAL-502-1", "외부 API 호출 중 오류가 발생했습니다.", HttpStatus.BAD_GATEWAY),
 
+    // 사용자 (USER)
+    USER_NOT_FOUND("USER-404-1", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    USER_ALREADY_WITHDRAWN("USER-400-2", "이미 탈퇴한 사용자입니다.", HttpStatus.BAD_REQUEST),
 
-    EXTERNAL_API_ERROR("E5021", "external.api_error", HttpStatus.BAD_GATEWAY),
-
-
-    USER_NOT_FOUND("U4041", "user.not_found", HttpStatus.NOT_FOUND),
-    USER_ALREADY_WITHDRAWN("U4002", "user.already_withdrawn", HttpStatus.BAD_REQUEST),
-
-
-    UNSUPPORTED_SOCIAL_LOGIN("A4005", "auth.unsupported_social_login", HttpStatus.BAD_REQUEST),
-    AUTHENTICATED_USER_NOT_FOUND("A4011", "auth.authenticated_user_not_found", HttpStatus.UNAUTHORIZED);
+    // 보관함 (LOCKER)
+    INVALID_LOCATION_RANGE("LOCKER-400-1", "좌표 범위가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    SEARCH_KEYWORD_TOO_SHORT("LOCKER-400-2", "검색어는 최소 2글자 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_LOCKER_SIZE_TYPE("LOCKER-400-3", "보관함 크기 타입이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INDEX_SYNC_FAILED("LOCKER-500-1", "검색 인덱스 동기화에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     @Getter
     private final String code;
     @Getter
     private final String message;
+    @Getter
     private final HttpStatus httpStatus;
 
     ErrorCode(String code, String message, HttpStatus httpStatus) {
@@ -40,18 +50,7 @@ public enum ErrorCode implements BaseCode {
         this.httpStatus = httpStatus;
     }
 
-    public String code() {
-        return code;
-    }
-
-    public String message() {
-        return message;
-    }
-
-    public HttpStatus httpStatus() {
-        return httpStatus;
-    }
-
+    @Override
     public HttpStatus getStatus() {
         return httpStatus;
     }
