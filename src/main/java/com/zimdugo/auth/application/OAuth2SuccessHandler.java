@@ -63,7 +63,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
         callbackUrlCookieManager.clearCallbackUrl(response);
 
-        log.info("oauth login success. userId={}, sid={}, callbackUrl={}", userId, sid, callbackUrl);
+        log.info("OAuth 로그인 성공. userId={}, sid={}, callbackUrl={}", userId, sid, callbackUrl);
         response.sendRedirect(appendCode(callbackUrl, "LOGIN_SUCCESS"));
     }
 
