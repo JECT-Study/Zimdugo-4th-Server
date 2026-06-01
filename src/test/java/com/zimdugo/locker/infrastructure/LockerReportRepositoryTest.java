@@ -34,26 +34,16 @@ class LockerReportRepositoryTest {
     void saveReportWithOptionalFieldsNull() {
         UserEntity user = saveUser();
 
-        LockerReportEntity report = lockerReportRepository.save(new LockerReportEntity(
-            user,
-            "물품보관함",
-            null,
-            null,
-            null,
-            IndoorOutdoorType.INDOOR,
-            LockerType.ETC,
-            Set.of(),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            false,
-            37.556,
-            126.923
-        ));
+        LockerReportEntity report = lockerReportRepository.save(LockerReportEntity.builder()
+            .user(user)
+            .name("물품보관함")
+            .indoorOutdoorType(IndoorOutdoorType.INDOOR)
+            .lockerType(LockerType.ETC)
+            .lockerSize(Set.of())
+            .locationConsentAgreed(false)
+            .latitude(37.556)
+            .longitude(126.923)
+            .build());
 
         entityManager.flush();
         entityManager.clear();
@@ -82,26 +72,26 @@ class LockerReportRepositoryTest {
     void saveReportWithAdditionalFields() {
         UserEntity user = saveUser();
 
-        LockerReportEntity report = lockerReportRepository.save(new LockerReportEntity(
-            user,
-            "물품보관함",
-            "서울 마포구 양화로 160",
-            GroundLevelType.UNDERGROUND,
-            2,
-            IndoorOutdoorType.INDOOR,
-            LockerType.SUBWAY_STATION,
-            Set.of(LockerSizeType.SMALL, LockerSizeType.MEDIUM),
-            false,
-            1000,
-            3000,
-            "B2 화장실 옆",
-            LocalTime.of(9, 0),
-            LocalTime.of(22, 30),
-            "https://cdn.example.com/locker/1.jpg",
-            true,
-            37.556,
-            126.923
-        ));
+        LockerReportEntity report = lockerReportRepository.save(LockerReportEntity.builder()
+            .user(user)
+            .name("물품보관함")
+            .roadAddress("서울 마포구 양화로 160")
+            .groundLevelType(GroundLevelType.UNDERGROUND)
+            .floor(2)
+            .indoorOutdoorType(IndoorOutdoorType.INDOOR)
+            .lockerType(LockerType.SUBWAY_STATION)
+            .lockerSize(Set.of(LockerSizeType.SMALL, LockerSizeType.MEDIUM))
+            .isFree(false)
+            .minPrice(1000)
+            .maxPrice(3000)
+            .additionalInfo("B2 화장실 옆")
+            .startTime(LocalTime.of(9, 0))
+            .endTime(LocalTime.of(22, 30))
+            .imageUrl("https://cdn.example.com/locker/1.jpg")
+            .locationConsentAgreed(true)
+            .latitude(37.556)
+            .longitude(126.923)
+            .build());
 
         entityManager.flush();
         entityManager.clear();

@@ -20,6 +20,8 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,6 +32,8 @@ import lombok.NoArgsConstructor;
         @Index(name = "idx_locker_reports_user_id", columnList = "user_id")
     }
 )
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LockerReportEntity {
@@ -65,7 +69,8 @@ public class LockerReportEntity {
 
     @Convert(converter = LockerSizeTypeConverter.class)
     @Column(length = 100)
-    private java.util.Set<LockerSizeType> lockerSize;
+    @Builder.Default
+    private java.util.Set<LockerSizeType> lockerSize = java.util.Set.of();
 
     @Column
     private Boolean isFree;
@@ -97,55 +102,14 @@ public class LockerReportEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private LockerReportStatus status;
+    @Builder.Default
+    private LockerReportStatus status = LockerReportStatus.SUBMITTED;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    @SuppressWarnings("checkstyle:ParameterNumber")
-    public LockerReportEntity(
-        UserEntity user,
-        String name,
-        String roadAddress,
-        GroundLevelType groundLevelType,
-        Integer floor,
-        IndoorOutdoorType indoorOutdoorType,
-        LockerType lockerType,
-        java.util.Set<LockerSizeType> lockerSize,
-        Boolean isFree,
-        Integer minPrice,
-        Integer maxPrice,
-        String additionalInfo,
-        LocalTime startTime,
-        LocalTime endTime,
-        String imageUrl,
-        boolean locationConsentAgreed,
-        double latitude,
-        double longitude
-    ) {
-        this.user = user;
-        this.name = name;
-        this.roadAddress = roadAddress;
-        this.groundLevelType = groundLevelType;
-        this.floor = floor;
-        this.indoorOutdoorType = indoorOutdoorType;
-        this.lockerType = lockerType;
-        this.lockerSize = lockerSize == null ? java.util.Set.of() : java.util.Set.copyOf(lockerSize);
-        this.isFree = isFree;
-        this.minPrice = minPrice;
-        this.maxPrice = maxPrice;
-        this.additionalInfo = additionalInfo;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.imageUrl = imageUrl;
-        this.locationConsentAgreed = locationConsentAgreed;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.status = LockerReportStatus.SUBMITTED;
-    }
 
     @PrePersist
     protected void onCreate() {

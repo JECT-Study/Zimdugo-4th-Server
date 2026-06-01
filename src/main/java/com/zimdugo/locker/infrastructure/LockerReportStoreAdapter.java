@@ -30,26 +30,26 @@ public class LockerReportStoreAdapter implements LockerReportStore {
         UserEntity user = userRepository.findById(createInfo.userId())
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        LockerReportEntity report = lockerReportRepository.save(new LockerReportEntity(
-            user,
-            createInfo.name(),
-            createInfo.roadAddress(),
-            toGroundLevelType(createInfo.groundLevelType()),
-            createInfo.floorNumber(),
-            IndoorOutdoorType.valueOf(createInfo.indoorOutdoorType()),
-            LockerType.valueOf(createInfo.lockerType()),
-            toLockerSize(createInfo.sizeTypes()),
-            createInfo.isFree(),
-            createInfo.minPrice(),
-            createInfo.maxPrice(),
-            createInfo.additionalInfo(),
-            createInfo.startTime(),
-            createInfo.endTime(),
-            createInfo.imageUrl(),
-            createInfo.locationConsentAgreed(),
-            createInfo.latitude(),
-            createInfo.longitude()
-        ));
+        LockerReportEntity report = lockerReportRepository.save(LockerReportEntity.builder()
+            .user(user)
+            .name(createInfo.name())
+            .roadAddress(createInfo.roadAddress())
+            .groundLevelType(toGroundLevelType(createInfo.groundLevelType()))
+            .floor(createInfo.floorNumber())
+            .indoorOutdoorType(IndoorOutdoorType.valueOf(createInfo.indoorOutdoorType()))
+            .lockerType(LockerType.valueOf(createInfo.lockerType()))
+            .lockerSize(toLockerSize(createInfo.sizeTypes()))
+            .isFree(createInfo.isFree())
+            .minPrice(createInfo.minPrice())
+            .maxPrice(createInfo.maxPrice())
+            .additionalInfo(createInfo.additionalInfo())
+            .startTime(createInfo.startTime())
+            .endTime(createInfo.endTime())
+            .imageUrl(createInfo.imageUrl())
+            .locationConsentAgreed(createInfo.locationConsentAgreed())
+            .latitude(createInfo.latitude())
+            .longitude(createInfo.longitude())
+            .build());
 
         return new SavedLockerReport(report.getId(), report.getStatus().name());
     }
