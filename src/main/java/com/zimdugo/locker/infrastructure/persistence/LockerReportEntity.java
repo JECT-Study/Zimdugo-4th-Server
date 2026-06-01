@@ -3,6 +3,7 @@ package com.zimdugo.locker.infrastructure.persistence;
 import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,7 +27,6 @@ import lombok.NoArgsConstructor;
 @Table(
     name = "locker_reports",
     indexes = {
-        @Index(name = "idx_locker_reports_locker_id", columnList = "locker_id"),
         @Index(name = "idx_locker_reports_user_id", columnList = "user_id")
     }
 )
@@ -38,10 +38,6 @@ public class LockerReportEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "locker_id")
-    private LockerEntity locker;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
@@ -52,20 +48,33 @@ public class LockerReportEntity {
     @Column(length = 255)
     private String roadAddress;
 
-    @Column(length = 30)
-    private String floor;
-
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String indoorOutdoorType;
+    private GroundLevelType groundLevelType;
 
-    @Column(nullable = false, length = 20)
-    private String lockerType;
+    @Column
+    private Integer floor;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private IndoorOutdoorType indoorOutdoorType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private LockerType lockerType;
+
+    @Convert(converter = LockerSizeTypeConverter.class)
     @Column(length = 100)
-    private String sizeInfo;
+    private java.util.Set<LockerSizeType> lockerSize;
 
-    @Column(length = 100)
-    private String priceInfo;
+    @Column
+    private Boolean isFree;
+
+    @Column
+    private Integer minPrice;
+
+    @Column
+    private Integer maxPrice;
 
     @Column(length = 255)
     private String additionalInfo;
@@ -98,15 +107,17 @@ public class LockerReportEntity {
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     public LockerReportEntity(
-        LockerEntity locker,
         UserEntity user,
         String name,
         String roadAddress,
-        String floor,
-        String indoorOutdoorType,
-        String lockerType,
-        String sizeInfo,
-        String priceInfo,
+        GroundLevelType groundLevelType,
+        Integer floor,
+        IndoorOutdoorType indoorOutdoorType,
+        LockerType lockerType,
+        java.util.Set<LockerSizeType> lockerSize,
+        Boolean isFree,
+        Integer minPrice,
+        Integer maxPrice,
         String additionalInfo,
         LocalTime startTime,
         LocalTime endTime,
@@ -115,15 +126,17 @@ public class LockerReportEntity {
         double latitude,
         double longitude
     ) {
-        this.locker = locker;
         this.user = user;
         this.name = name;
         this.roadAddress = roadAddress;
+        this.groundLevelType = groundLevelType;
         this.floor = floor;
         this.indoorOutdoorType = indoorOutdoorType;
-        this.lockerType = lockerType != null ? lockerType : "UNKNOWN";
-        this.sizeInfo = sizeInfo;
-        this.priceInfo = priceInfo;
+        this.lockerType = lockerType;
+        this.lockerSize = lockerSize == null ? java.util.Set.of() : java.util.Set.copyOf(lockerSize);
+        this.isFree = isFree;
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
         this.additionalInfo = additionalInfo;
         this.startTime = startTime;
         this.endTime = endTime;

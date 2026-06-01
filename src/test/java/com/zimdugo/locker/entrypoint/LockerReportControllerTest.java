@@ -15,7 +15,6 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.LockerReportCommandService;
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import java.util.List;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +81,6 @@ class LockerReportControllerTest {
         given(lockerReportCommandService.create(eq(1L), any()))
             .willReturn(new LockerReportCreateResult(
                 100L,
-                null,
                 "물품보관함",
                 "서울 마포구 양화로 160",
                 37.556,
@@ -98,7 +96,6 @@ class LockerReportControllerTest {
             .andExpect(jsonPath("$.code").value("S200"))
             .andExpect(jsonPath("$.message").value("common.ok"))
             .andExpect(jsonPath("$.data.reportId").value(100))
-            .andExpect(jsonPath("$.data.lockerId").value(Matchers.nullValue()))
             .andExpect(jsonPath("$.data.reportStatus").value("SUBMITTED"));
     }
 

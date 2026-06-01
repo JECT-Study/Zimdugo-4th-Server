@@ -9,6 +9,12 @@ import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.SavedLockerReport;
+import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
+import com.zimdugo.locker.infrastructure.persistence.IndoorOutdoorType;
+import com.zimdugo.locker.infrastructure.persistence.LockerSizeType;
+import com.zimdugo.locker.infrastructure.persistence.LockerType;
+import java.time.LocalTime;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,8 +27,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class LockerReportCommandServiceTest {
 
-    private static final String LOCKER_NAME = "물품보관함";
-    private static final String ROAD_ADDRESS = "서울 마포구 양화로 160";
+    private static final String LOCKER_NAME = "\uBB3C\uD488\uBCF4\uAD00\uD568";
+    private static final String ROAD_ADDRESS = "\uC11C\uC6B8 \uB9C8\uD3EC\uAD6C \uC591\uD654\uB85C 160";
+    private static final String ADDITIONAL_INFO = "B2 \uD654\uC7A5\uC2E4 \uC606";
 
     @Mock
     private LockerReportStore lockerReportStore;
@@ -31,11 +38,11 @@ class LockerReportCommandServiceTest {
     private LockerReportCommandService lockerReportCommandService;
 
     @Nested
-    @DisplayName("보관함 제보 등록")
+    @DisplayName("\uBCF4\uAD00\uD568 \uC81C\uBCF4 \uB4F1\uB85D")
     class Create {
 
         @Test
-        @DisplayName("신규 제보면 report를 저장한다")
+        @DisplayName("\uC2E0\uADDC \uC81C\uBCF4\uBA74 report\uB97C \uC800\uC7A5\uD55C\uB2E4")
         void createNewReport() {
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
                 .willReturn(testReport());
@@ -43,13 +50,13 @@ class LockerReportCommandServiceTest {
             LockerReportCreateResult result = lockerReportCommandService.create(1L, createNewCommand());
 
             assertThat(result.reportId()).isEqualTo(100L);
-            assertThat(result.lockerId()).isNull();
+            assertThat(result.name()).isEqualTo(LOCKER_NAME);
             assertThat(result.reportStatus()).isEqualTo("SUBMITTED");
             verify(lockerReportStore).create(any(LockerReportCreateInfo.class));
         }
 
         @Test
-        @DisplayName("제보 저장 시 typed field를 그대로 전달한다")
+        @DisplayName("\uC81C\uBCF4 \uC785\uB825 typed field\uB97C \uADF8\uB300\uB85C \uC804\uB2EC\uD55C\uB2E4")
         void saveReportWithTypedFields() {
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
                 .willReturn(testReport());
@@ -64,8 +71,20 @@ class LockerReportCommandServiceTest {
             assertThat(createInfo.userId()).isEqualTo(1L);
             assertThat(createInfo.name()).isEqualTo(LOCKER_NAME);
             assertThat(createInfo.roadAddress()).isEqualTo(ROAD_ADDRESS);
-            assertThat(createInfo.additionalInfo()).isEqualTo("B2 화장실 옆");
+            assertThat(createInfo.groundLevelType()).isEqualTo(GroundLevelType.UNDERGROUND);
+            assertThat(createInfo.floorNumber()).isEqualTo(2);
+            assertThat(createInfo.indoorOutdoorType()).isEqualTo(IndoorOutdoorType.INDOOR);
+            assertThat(createInfo.lockerType()).isEqualTo(LockerType.SUBWAY_STATION);
+            assertThat(createInfo.lockerSize()).containsExactlyInAnyOrder(LockerSizeType.SMALL, LockerSizeType.MEDIUM);
+            assertThat(createInfo.isFree()).isFalse();
+            assertThat(createInfo.minPrice()).isEqualTo(1000);
+            assertThat(createInfo.maxPrice()).isEqualTo(3000);
+            assertThat(createInfo.startTime()).isEqualTo(LocalTime.of(9, 0));
+            assertThat(createInfo.endTime()).isEqualTo(LocalTime.of(22, 30));
+            assertThat(createInfo.additionalInfo()).isEqualTo(ADDITIONAL_INFO);
             assertThat(createInfo.locationConsentAgreed()).isTrue();
+            assertThat(createInfo.latitude()).isEqualTo(37.556);
+            assertThat(createInfo.longitude()).isEqualTo(126.923);
         }
     }
 
@@ -83,13 +102,13 @@ class LockerReportCommandServiceTest {
             2,
             "INDOOR",
             "SUBWAY_STATION",
-            java.util.List.of("SMALL", "MEDIUM"),
+            List.of("SMALL", "MEDIUM"),
             false,
             1000,
             3000,
-            java.time.LocalTime.of(9, 0),
-            java.time.LocalTime.of(22, 30),
-            "B2 화장실 옆",
+            LocalTime.of(9, 0),
+            LocalTime.of(22, 30),
+            ADDITIONAL_INFO,
             "https://cdn.example.com/locker/1.jpg",
             true
         );

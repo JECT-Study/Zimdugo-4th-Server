@@ -46,7 +46,6 @@ public class LockerReportController implements LockerReportApi {
     private LockerReportCreateResponse toResponse(LockerReportCreateResult result) {
         return new LockerReportCreateResponse(
             result.reportId(),
-            result.lockerId(),
             result.name(),
             result.roadAddress(),
             result.latitude(),

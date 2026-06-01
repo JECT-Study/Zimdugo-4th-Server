@@ -4,6 +4,12 @@ import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.SavedLockerReport;
+import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
+import com.zimdugo.locker.infrastructure.persistence.IndoorOutdoorType;
+import com.zimdugo.locker.infrastructure.persistence.LockerSizeType;
+import com.zimdugo.locker.infrastructure.persistence.LockerType;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +26,6 @@ public class LockerReportCommandService {
 
         return new LockerReportCreateResult(
             report.id(),
-            null,
             command.name(),
             command.roadAddress(),
             command.latitude(),
@@ -34,12 +39,11 @@ public class LockerReportCommandService {
             userId,
             command.name(),
             command.roadAddress(),
-            command.hasFloor(),
-            command.floorType(),
+            toGroundLevelType(command.hasFloor(), command.floorType()),
             command.floorNumber(),
-            command.indoorOutdoorType(),
-            command.lockerType(),
-            command.sizeTypes(),
+            IndoorOutdoorType.valueOf(command.indoorOutdoorType()),
+            LockerType.valueOf(command.lockerType()),
+            toLockerSize(command.sizeTypes()),
             command.isFree(),
             command.minPrice(),
             command.maxPrice(),
@@ -51,5 +55,21 @@ public class LockerReportCommandService {
             command.latitude(),
             command.longitude()
         );
+    }
+
+    private GroundLevelType toGroundLevelType(boolean hasFloor, String floorType) {
+        if (!hasFloor || floorType == null || floorType.isBlank()) {
+            return null;
+        }
+        return GroundLevelType.valueOf(floorType);
+    }
+
+    private Set<LockerSizeType> toLockerSize(java.util.List<String> sizeTypes) {
+        if (sizeTypes == null || sizeTypes.isEmpty()) {
+            return Set.of();
+        }
+        return sizeTypes.stream()
+            .map(LockerSizeType::from)
+            .collect(Collectors.toUnmodifiableSet());
     }
 }

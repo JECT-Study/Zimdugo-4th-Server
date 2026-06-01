@@ -6,9 +6,6 @@ public record LockerReportCreateResponse(
     @Schema(description = "제보 ID", example = "10")
     Long reportId,
 
-    @Schema(description = "제보와 연결된 보관함 ID (관리자 반영 전에는 null일 수 있음)", nullable = true)
-    Long lockerId,
-
     @Schema(description = "보관함 이름", example = "물품보관함")
     String name,
 
