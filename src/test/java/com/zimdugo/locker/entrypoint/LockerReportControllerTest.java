@@ -185,6 +185,40 @@ class LockerReportControllerTest {
             .andExpect(jsonPath("$.validationErrors[0].field").exists());
     }
 
+    @Test
+    @DisplayName("enum 형식이 잘못되면 validation error를 반환한다")
+    void createLockerReportWithInvalidEnumValueReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/locker-reports")
+                .principal(authenticatedUser())
+                .contentType("application/json")
+                .content("""
+                    {
+                      "roadAddress": "서울 마포구 양화로 160",
+                      "latitude": 37.556,
+                      "longitude": 126.923,
+                      "hasFloor": true,
+                      "floorType": "BASEMENT",
+                      "floorNumber": 2,
+                      "indoorOutdoorType": "INDOORS",
+                      "lockerType": "SUBWAY",
+                      "sizeTypes": ["SMALL", "MEDIUM"],
+                      "isFree": true,
+                      "minPrice": null,
+                      "maxPrice": null,
+                      "startTime": null,
+                      "endTime": null,
+                      "additionalInfo": "홍대입구 2번 출구 근처",
+                      "imageUrl": null,
+                      "locationConsentAgreed": true
+                    }
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.code").value("COMMON-400-1"))
+            .andExpect(jsonPath("$.validationErrors").isArray())
+            .andExpect(jsonPath("$.validationErrors[0].field").exists());
+    }
+
     private String validCreateRequestJson() {
         return """
             {
