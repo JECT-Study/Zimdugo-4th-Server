@@ -1,21 +1,17 @@
 package com.zimdugo.locker.domain;
 
-import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
-import com.zimdugo.locker.infrastructure.persistence.IndoorOutdoorType;
-import com.zimdugo.locker.infrastructure.persistence.LockerSizeType;
-import com.zimdugo.locker.infrastructure.persistence.LockerType;
 import java.time.LocalTime;
-import java.util.Set;
+import java.util.List;
 
 public record LockerReportCreateInfo(
     Long userId,
     String name,
     String roadAddress,
-    GroundLevelType groundLevelType,
+    String groundLevelType,
     Integer floorNumber,
-    IndoorOutdoorType indoorOutdoorType,
-    LockerType lockerType,
-    Set<LockerSizeType> lockerSize,
+    String indoorOutdoorType,
+    String lockerType,
+    List<String> sizeTypes,
     Boolean isFree,
     Integer minPrice,
     Integer maxPrice,
