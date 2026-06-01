@@ -27,9 +27,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class LockerReportCommandServiceTest {
 
-    private static final String LOCKER_NAME = "\uBB3C\uD488\uBCF4\uAD00\uD568";
-    private static final String ROAD_ADDRESS = "\uC11C\uC6B8 \uB9C8\uD3EC\uAD6C \uC591\uD654\uB85C 160";
-    private static final String ADDITIONAL_INFO = "B2 \uD654\uC7A5\uC2E4 \uC606";
+    private static final String LOCKER_NAME = "물품보관함";
+    private static final String ROAD_ADDRESS = "서울 마포구 양화로 160";
+    private static final String ADDITIONAL_INFO = "B2 화장실 옆";
 
     @Mock
     private LockerReportStore lockerReportStore;
@@ -38,11 +38,11 @@ class LockerReportCommandServiceTest {
     private LockerReportCommandService lockerReportCommandService;
 
     @Nested
-    @DisplayName("\uBCF4\uAD00\uD568 \uC81C\uBCF4 \uB4F1\uB85D")
+    @DisplayName("보관함 제보 등록")
     class Create {
 
         @Test
-        @DisplayName("\uC2E0\uADDC \uC81C\uBCF4\uBA74 report\uB97C \uC800\uC7A5\uD55C\uB2E4")
+        @DisplayName("신규 제보면 report를 저장한다")
         void createNewReport() {
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
                 .willReturn(testReport());
@@ -56,7 +56,7 @@ class LockerReportCommandServiceTest {
         }
 
         @Test
-        @DisplayName("\uC81C\uBCF4 \uC785\uB825 typed field\uB97C \uADF8\uB300\uB85C \uC804\uB2EC\uD55C\uB2E4")
+        @DisplayName("제보 입력 typed field를 그대로 전달한다")
         void saveReportWithTypedFields() {
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
                 .willReturn(testReport());
