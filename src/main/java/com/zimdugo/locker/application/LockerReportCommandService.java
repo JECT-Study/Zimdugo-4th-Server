@@ -3,8 +3,6 @@ package com.zimdugo.locker.application;
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
-import com.zimdugo.locker.domain.LockerStore;
-import com.zimdugo.locker.domain.ReportLocker;
 import com.zimdugo.locker.domain.SavedLockerReport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,48 +13,39 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class LockerReportCommandService {
 
-    private final LockerStore lockerStore;
     private final LockerReportStore lockerReportStore;
 
     public LockerReportCreateResult create(Long userId, LockerReportCreateCommand command) {
-        ReportLocker locker = lockerStore.create(
-            command.name(),
-            command.roadAddress(),
-            command.latitude(),
-            command.longitude()
-        );
-        SavedLockerReport report = lockerReportStore.create(toCreateInfo(userId, locker.id(), command));
+        SavedLockerReport report = lockerReportStore.create(toCreateInfo(userId, command));
 
         return new LockerReportCreateResult(
             report.id(),
-            locker.id(),
-            locker.name(),
-            locker.roadAddress(),
-            locker.latitude(),
-            locker.longitude(),
+            command.name(),
+            command.roadAddress(),
+            command.latitude(),
+            command.longitude(),
             report.status()
         );
     }
 
-    private LockerReportCreateInfo toCreateInfo(
-        Long userId,
-        Long lockerId,
-        LockerReportCreateCommand command
-    ) {
+    private LockerReportCreateInfo toCreateInfo(Long userId, LockerReportCreateCommand command) {
         return new LockerReportCreateInfo(
-            lockerId,
             userId,
             command.name(),
             command.roadAddress(),
-            command.detailLocation(),
-            command.buildingName(),
-            command.floor(),
+            command.hasFloor() ? command.floorType() : null,
+            command.floorNumber(),
             command.indoorOutdoorType(),
             command.lockerType(),
-            command.sizeInfo(),
-            command.priceInfo(),
-            command.operatingHours(),
+            command.sizeTypes(),
+            command.isFree(),
+            command.minPrice(),
+            command.maxPrice(),
+            command.startTime(),
+            command.endTime(),
+            command.additionalInfo(),
             command.imageUrl(),
+            command.locationConsentAgreed(),
             command.latitude(),
             command.longitude()
         );

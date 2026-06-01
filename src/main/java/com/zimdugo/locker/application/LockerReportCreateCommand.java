@@ -2,10 +2,8 @@ package com.zimdugo.locker.application;
 
 import java.time.LocalTime;
 import java.util.List;
-import java.util.StringJoiner;
 
 public record LockerReportCreateCommand(
-    String reportName,
     String roadAddress,
     double latitude,
     double longitude,
@@ -24,50 +22,9 @@ public record LockerReportCreateCommand(
     String imageUrl,
     boolean locationConsentAgreed
 ) {
+    private static final String DEFAULT_REPORT_NAME = "물품보관함";
+
     public String name() {
-        return reportName;
-    }
-
-    public String detailLocation() {
-        return null;
-    }
-
-    public String buildingName() {
-        return null;
-    }
-
-    public String floor() {
-        if (!hasFloor) {
-            return null;
-        }
-        return floorType + ":" + floorNumber;
-    }
-
-    public String sizeInfo() {
-        if (sizeTypes == null || sizeTypes.isEmpty()) {
-            return null;
-        }
-        return String.join(",", sizeTypes);
-    }
-
-    public String priceInfo() {
-        if (isFree == null) {
-            return null;
-        }
-        if (Boolean.TRUE.equals(isFree)) {
-            return "FREE";
-        }
-
-        StringJoiner joiner = new StringJoiner("~");
-        joiner.add(minPrice == null ? "" : minPrice.toString());
-        joiner.add(maxPrice == null ? "" : maxPrice.toString());
-        return joiner.toString();
-    }
-
-    public String operatingHours() {
-        if (startTime == null || endTime == null) {
-            return null;
-        }
-        return startTime + "~" + endTime;
+        return DEFAULT_REPORT_NAME;
     }
 }

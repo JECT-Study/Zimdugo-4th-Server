@@ -3,6 +3,7 @@ package com.zimdugo.locker.infrastructure.persistence;
 import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -17,7 +18,10 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,10 +29,11 @@ import lombok.NoArgsConstructor;
 @Table(
     name = "locker_reports",
     indexes = {
-        @Index(name = "idx_locker_reports_locker_id", columnList = "locker_id"),
         @Index(name = "idx_locker_reports_user_id", columnList = "user_id")
     }
 )
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LockerReportEntity {
@@ -36,10 +41,6 @@ public class LockerReportEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "locker_id", nullable = false)
-    private LockerEntity locker;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -51,32 +52,47 @@ public class LockerReportEntity {
     @Column(length = 255)
     private String roadAddress;
 
-    @Column(length = 255)
-    private String detailLocation;
-
-    @Column(length = 100)
-    private String buildingName;
-
-    @Column(length = 30)
-    private String floor;
-
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String indoorOutdoorType;
+    private GroundLevelType groundLevelType;
 
-    @Column(nullable = false, length = 20)
-    private String lockerType;
+    @Column
+    private Integer floor;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private IndoorOutdoorType indoorOutdoorType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private LockerType lockerType;
+
+    @Convert(converter = LockerSizeTypeConverter.class)
     @Column(length = 100)
-    private String sizeInfo;
+    @Builder.Default
+    private java.util.Set<LockerSizeType> lockerSize = java.util.Set.of();
 
-    @Column(length = 100)
-    private String priceInfo;
+    @Column
+    private Boolean isFree;
 
-    @Column(length = 100)
-    private String operatingHours;
+    @Column
+    private Integer minPrice;
+
+    @Column
+    private Integer maxPrice;
+
+    @Column(length = 255)
+    private String additionalInfo;
+
+    private LocalTime startTime;
+
+    private LocalTime endTime;
 
     @Column(length = 500)
     private String imageUrl;
+
+    @Column(nullable = false)
+    private boolean locationConsentAgreed;
 
     @Column(nullable = false)
     private double latitude;
@@ -86,49 +102,14 @@ public class LockerReportEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private LockerReportStatus status;
+    @Builder.Default
+    private LockerReportStatus status = LockerReportStatus.SUBMITTED;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    @SuppressWarnings("checkstyle:ParameterNumber")
-    public LockerReportEntity(
-        LockerEntity locker,
-        UserEntity user,
-        String name,
-        String roadAddress,
-        String detailLocation,
-        String buildingName,
-        String floor,
-        String indoorOutdoorType,
-        String lockerType,
-        String sizeInfo,
-        String priceInfo,
-        String operatingHours,
-        String imageUrl,
-        double latitude,
-        double longitude
-    ) {
-        this.locker = locker;
-        this.user = user;
-        this.name = name;
-        this.roadAddress = roadAddress;
-        this.detailLocation = detailLocation;
-        this.buildingName = buildingName;
-        this.floor = floor;
-        this.indoorOutdoorType = indoorOutdoorType;
-        this.lockerType = lockerType != null ? lockerType : "UNKNOWN";
-        this.sizeInfo = sizeInfo;
-        this.priceInfo = priceInfo;
-        this.operatingHours = operatingHours;
-        this.imageUrl = imageUrl;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.status = LockerReportStatus.COMPLETED;
-    }
 
     @PrePersist
     protected void onCreate() {

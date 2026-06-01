@@ -1,5 +1,8 @@
 package com.zimdugo.locker.domain;
 
 public enum LockerReportStatus {
-    COMPLETED
+    SUBMITTED,
+    UNDER_REVIEW,
+    APPROVED,
+    REJECTED
 }

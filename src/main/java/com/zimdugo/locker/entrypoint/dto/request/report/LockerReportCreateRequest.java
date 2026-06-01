@@ -83,18 +83,35 @@ public record LockerReportCreateRequest(
     @AssertTrue
     Boolean locationConsentAgreed
 ) {
-
-    private static final String DEFAULT_REPORT_NAME = "물품보관함";
-
     @AssertTrue(message = "validation.invalid_floor")
     public boolean isFloorInputValid() {
         if (Boolean.FALSE.equals(hasFloor)) {
             return floorType == null && floorNumber == null;
         }
         if (Boolean.TRUE.equals(hasFloor)) {
-            return floorType != null && !floorType.isBlank() && floorNumber != null && floorNumber > 0;
+            return isValidEnumValue(floorType, Set.of("ABOVE_GROUND", "UNDERGROUND"))
+                && floorNumber != null
+                && floorNumber > 0;
         }
         return false;
+    }
+
+    @AssertTrue(message = "validation.invalid_enum_value")
+    public boolean isEnumInputValid() {
+        return isValidEnumValue(indoorOutdoorType, Set.of("INDOOR", "OUTDOOR"))
+            && isValidEnumValue(
+            lockerType,
+            Set.of(
+                "MUSEUM",
+                "SUBWAY_STATION",
+                "DEPARTMENT_STORE",
+                "CONVENIENCE_STORE",
+                "PUBLIC_OFFICE",
+                "PRIVATE_LOCKER",
+                "TRAIN_STATION",
+                "ETC"
+            )
+        );
     }
 
     @AssertTrue(message = "validation.invalid_price")
@@ -138,13 +155,8 @@ public record LockerReportCreateRequest(
         return sizeTypes.stream().allMatch(allowedSizeTypes::contains);
     }
 
-    private String reportName() {
-        return DEFAULT_REPORT_NAME;
-    }
-
     public LockerReportCreateCommand toCommand() {
         return new LockerReportCreateCommand(
-            reportName(),
             roadAddress,
             latitude,
             longitude,
@@ -163,5 +175,9 @@ public record LockerReportCreateRequest(
             imageUrl,
             Boolean.TRUE.equals(locationConsentAgreed)
         );
+    }
+
+    private boolean isValidEnumValue(String value, Set<String> allowedValues) {
+        return value != null && !value.isBlank() && allowedValues.contains(value);
     }
 }
