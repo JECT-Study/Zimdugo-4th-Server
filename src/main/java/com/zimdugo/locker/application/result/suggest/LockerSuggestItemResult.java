@@ -11,6 +11,8 @@ public record LockerSuggestItemResult(
     String lockerName,
     String roadAddress,
     String lockerType,
+    double latitude,
+    double longitude,
     long distanceMeters,
     LocalDateTime updatedAt
 ) {
@@ -23,6 +25,8 @@ public record LockerSuggestItemResult(
             candidate.lockerName(),
             candidate.roadAddress(),
             candidate.lockerType(),
+            candidate.lockerLatitude(),
+            candidate.lockerLongitude(),
             candidate.distanceMeters(),
             candidate.updatedAt()
         );
@@ -37,6 +41,8 @@ public record LockerSuggestItemResult(
             null,
             candidate.roadAddress(),
             null,
+            candidate.placeLatitude(),
+            candidate.placeLongitude(),
             candidate.distanceMeters(),
             null
         );

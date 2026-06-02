@@ -58,8 +58,31 @@ public class LockerSuggestDocument {
     )
     private String lockerNameDecomposed;
 
-    @Field(type = FieldType.Text)
+    @MultiField(
+        mainField = @Field(type = FieldType.Text),
+        otherFields = {
+            @InnerField(
+                suffix = "autocomplete",
+                type = FieldType.Text,
+                analyzer = "autocomplete_analyzer",
+                searchAnalyzer = "suggest_search_analyzer"
+            )
+        }
+    )
     private String roadAddress;
+
+    @MultiField(
+        mainField = @Field(type = FieldType.Text),
+        otherFields = {
+            @InnerField(
+                suffix = "autocomplete",
+                type = FieldType.Text,
+                analyzer = "autocomplete_analyzer",
+                searchAnalyzer = "suggest_search_analyzer"
+            )
+        }
+    )
+    private String roadAddressDecomposed;
 
     @Field(type = FieldType.Keyword)
     private String lockerType;
