@@ -113,6 +113,7 @@ public class LockerSuggestIndexSyncService {
             .lockerName(p.getLockerName())
             .lockerNameDecomposed(HangulUtils.decompose(p.getLockerName()))
             .roadAddress(p.getRoadAddress())
+            .roadAddressDecomposed(HangulUtils.decompose(p.getRoadAddress()))
             .lockerType(p.getLockerType())
             .updatedAt(p.getUpdatedAt())
             .placeId(p.getPlaceId())

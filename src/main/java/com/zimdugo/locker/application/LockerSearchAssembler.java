@@ -2,6 +2,7 @@ package com.zimdugo.locker.application;
 
 import com.zimdugo.common.util.HangulUtils;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
+import com.zimdugo.locker.domain.LockerSearchMatchType;
 import com.zimdugo.locker.domain.LockerSuggestCandidate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -10,12 +11,13 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LockerSuggestAssembler {
+public class LockerSearchAssembler {
 
     public List<LockerSuggestItemResult> assemble(
         List<LockerSuggestCandidate> candidates,
         String keyword,
-        int limit
+        int limit,
+        LockerSearchMatchType matchType
     ) {
         String normalizedKeyword = normalize(keyword);
         String decomposedKeyword = HangulUtils.decompose(normalizedKeyword);
@@ -26,7 +28,7 @@ public class LockerSuggestAssembler {
             if (suggestions.size() >= limit) {
                 break;
             }
-            suggestions.add(toItemResult(candidate, normalizedKeyword, decomposedKeyword));
+            suggestions.add(toItemResult(candidate, normalizedKeyword, decomposedKeyword, matchType));
         }
         return suggestions;
     }
@@ -42,13 +44,22 @@ public class LockerSuggestAssembler {
     private LockerSuggestItemResult toItemResult(
         LockerSuggestCandidate candidate,
         String normalizedKeyword,
-        String decomposedKeyword
+        String decomposedKeyword,
+        LockerSearchMatchType matchType
     ) {
         String normalizedPlaceName = normalize(candidate.placeName());
         boolean placeMatched = isPlaceMatched(decomposedKeyword, normalizedPlaceName);
         boolean hasDetailKeyword = isDetailKeyword(normalizedKeyword, normalizedPlaceName);
 
-        if (candidate.lockerCount() == 1 || hasDetailKeyword) {
+        if (candidate.lockerCount() == 1) {
+            return LockerSuggestItemResult.locker(candidate);
+        }
+
+        if (matchType == LockerSearchMatchType.ADDRESS) {
+            return LockerSuggestItemResult.place(candidate);
+        }
+
+        if (hasDetailKeyword) {
             return LockerSuggestItemResult.locker(candidate);
         }
 

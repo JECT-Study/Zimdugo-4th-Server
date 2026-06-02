@@ -12,6 +12,10 @@ public record LockerSuggestCandidate(
     String placeName,
     int lockerCount,
     long distanceMeters,
+    double lockerLatitude,
+    double lockerLongitude,
+    double placeLatitude,
+    double placeLongitude,
     float score
 ) {
 }
