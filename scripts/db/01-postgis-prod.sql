@@ -34,6 +34,29 @@ BEGIN
           OR ST_Y(location::geometry) IS DISTINCT FROM latitude
       );
 
+    IF EXISTS (
+        SELECT 1
+        FROM public.lockers
+        WHERE latitude IS NULL
+           OR longitude IS NULL
+           OR location IS NULL
+    ) THEN
+        RAISE EXCEPTION 'lockers latitude/longitude/location must not be null';
+    END IF;
+
+    ALTER TABLE public.lockers
+        ALTER COLUMN latitude SET NOT NULL,
+        ALTER COLUMN longitude SET NOT NULL,
+        ALTER COLUMN location SET NOT NULL;
+
+    ALTER TABLE public.lockers
+        DROP CONSTRAINT IF EXISTS chk_lockers_latitude_range,
+        DROP CONSTRAINT IF EXISTS chk_lockers_longitude_range;
+
+    ALTER TABLE public.lockers
+        ADD CONSTRAINT chk_lockers_latitude_range CHECK (latitude >= -90 AND latitude <= 90),
+        ADD CONSTRAINT chk_lockers_longitude_range CHECK (longitude >= -180 AND longitude <= 180);
+
     DROP TRIGGER IF EXISTS trg_lockers_set_location ON public.lockers;
     CREATE TRIGGER trg_lockers_set_location
         BEFORE INSERT OR UPDATE OF latitude, longitude ON public.lockers
