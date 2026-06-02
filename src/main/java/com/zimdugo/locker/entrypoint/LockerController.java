@@ -2,11 +2,14 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
+import com.zimdugo.locker.application.LockerKeywordQueryService;
 import com.zimdugo.locker.application.LockerPinQueryService;
 import com.zimdugo.locker.application.LockerSuggestQueryService;
+import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
-import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
+import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
+import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,7 @@ public class LockerController implements LockerApi {
 
     private final LockerPinQueryService lockerPinQueryService;
     private final LockerSuggestQueryService lockerSuggestQueryService;
+    private final LockerKeywordQueryService lockerKeywordQueryService;
 
     @Override
     public ResponseEntity<RestResponse<LockerPinResponse>> getPins(
@@ -47,5 +51,21 @@ public class LockerController implements LockerApi {
             limit
         );
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerSuggestResponse.from(result)));
+    }
+
+    @Override
+    public ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
+        double latitude,
+        double longitude,
+        String keyword,
+        int limit
+    ) {
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(
+            latitude,
+            longitude,
+            keyword,
+            limit
+        );
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerKeywordResponse.from(result)));
     }
 }
