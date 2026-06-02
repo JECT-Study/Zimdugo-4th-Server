@@ -1,6 +1,7 @@
 package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.core.response.RestResponse;
+import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,6 +75,38 @@ public interface LockerApi {
         @DecimalMax(value = "180.0") double longitude,
         @RequestParam("keyword")
         @Parameter(description = "자동완성 키워드", example = "신촌역 1번 출구 b")
+        @NotBlank
+        @Size(max = 100) String keyword,
+        @RequestParam(name = "limit", defaultValue = "10")
+        @Parameter(description = "최대 결과 개수, 기본값 10, 최대 20", example = "10")
+        @Schema(minimum = "1", maximum = "20")
+        @Min(1)
+        @Max(20) int limit
+    );
+
+    @Operation(
+        summary = "보관함 키워드 검색 조회",
+        description = "현재 좌표 기준 거리순 장소/보관함 검색 결과를 반환한다. PLACE 결과는 하위 보관함 목록을 함께 반환한다."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터")
+    })
+    @SecurityRequirements
+    @GetMapping("/lockers/keyword")
+    ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
+        @RequestParam("lat")
+        @Parameter(description = "사용자 위도", example = "37.498095")
+        @Schema(minimum = "-90", maximum = "90")
+        @DecimalMin(value = "-90.0")
+        @DecimalMax(value = "90.0") double latitude,
+        @RequestParam("lng")
+        @Parameter(description = "사용자 경도", example = "127.027610")
+        @Schema(minimum = "-180", maximum = "180")
+        @DecimalMin(value = "-180.0")
+        @DecimalMax(value = "180.0") double longitude,
+        @RequestParam("keyword")
+        @Parameter(description = "검색 키워드", example = "신촌역 1번 출구")
         @NotBlank
         @Size(max = 100) String keyword,
         @RequestParam(name = "limit", defaultValue = "10")

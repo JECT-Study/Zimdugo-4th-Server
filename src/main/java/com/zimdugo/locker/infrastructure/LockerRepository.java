@@ -46,4 +46,30 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         WHERE l.place_id IS NOT NULL
         """, nativeQuery = true)
     List<LockerSuggestIndexQueryProjection> findAllForSuggestIndex();
+
+    @Query(value = """
+        WITH target AS (
+            SELECT ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography AS point
+        )
+        SELECT
+            l.place_id AS placeId,
+            l.id AS lockerId,
+            l.name AS lockerName,
+            l.road_address AS roadAddress,
+            ld.locker_type AS lockerType,
+            ST_Y(l.location::geometry) AS lockerLatitude,
+            ST_X(l.location::geometry) AS lockerLongitude,
+            ST_Distance(l.location, target.point) AS distanceMeters,
+            ld.updated_at AS updatedAt
+        FROM lockers l
+        JOIN locker_details ld ON ld.locker_id = l.id
+        CROSS JOIN target
+        WHERE l.place_id IN (:placeIds)
+        ORDER BY l.place_id ASC, ST_Distance(l.location, target.point) ASC
+        """, nativeQuery = true)
+    List<LockerPlaceLockerQueryProjection> findByPlaceIds(
+        @Param("latitude") double latitude,
+        @Param("longitude") double longitude,
+        @Param("placeIds") List<Long> placeIds
+    );
 }
