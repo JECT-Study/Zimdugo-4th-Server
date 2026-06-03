@@ -25,6 +25,7 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
                     entityManager.getReference(LockerEntity.class, lockerId)
                 )
             );
+            entityManager.flush();
         } catch (DataIntegrityViolationException e) {
             if (favoriteLockerRepository.existsByUserIdAndLockerId(userId, lockerId)) {
                 return;
