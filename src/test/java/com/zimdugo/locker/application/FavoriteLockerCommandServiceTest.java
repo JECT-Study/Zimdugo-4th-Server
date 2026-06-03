@@ -4,8 +4,7 @@ import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.FavoriteLockerReader;
 import com.zimdugo.locker.domain.FavoriteLockerStore;
-import com.zimdugo.locker.domain.LockerStore;
-import com.zimdugo.locker.domain.ReportLocker;
+import com.zimdugo.locker.domain.LockerReader;
 import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserReader;
 import com.zimdugo.user.domain.UserStatus;
@@ -32,7 +31,7 @@ class FavoriteLockerCommandServiceTest {
     private FavoriteLockerReader favoriteLockerReader;
 
     @Mock
-    private LockerStore lockerStore;
+    private LockerReader lockerReader;
 
     @Mock
     private UserReader userReader;
@@ -44,7 +43,7 @@ class FavoriteLockerCommandServiceTest {
     @DisplayName("존재하는 사용자와 보관함이면 즐겨찾기를 등록한다")
     void addFavoriteLocker() {
         given(userReader.findById(1L)).willReturn(Optional.of(activeUser(1L)));
-        given(lockerStore.getById(10L)).willReturn(locker(10L));
+        given(lockerReader.existsById(10L)).willReturn(true);
         given(favoriteLockerReader.exists(1L, 10L)).willReturn(false);
 
         favoriteLockerCommandService.add(1L, 10L);
@@ -56,7 +55,7 @@ class FavoriteLockerCommandServiceTest {
     @DisplayName("이미 즐겨찾기된 보관함이면 중복 등록하지 않는다")
     void skipWhenAlreadyFavorite() {
         given(userReader.findById(1L)).willReturn(Optional.of(activeUser(1L)));
-        given(lockerStore.getById(10L)).willReturn(locker(10L));
+        given(lockerReader.existsById(10L)).willReturn(true);
         given(favoriteLockerReader.exists(1L, 10L)).willReturn(true);
 
         favoriteLockerCommandService.add(1L, 10L);
@@ -76,6 +75,18 @@ class FavoriteLockerCommandServiceTest {
     }
 
     @Test
+    @DisplayName("보관함이 없으면 예외를 던진다")
+    void throwWhenLockerNotFound() {
+        given(userReader.findById(1L)).willReturn(Optional.of(activeUser(1L)));
+        given(lockerReader.existsById(10L)).willReturn(false);
+
+        assertThatThrownBy(() -> favoriteLockerCommandService.add(1L, 10L))
+            .isInstanceOf(BusinessException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.NOT_FOUND);
+    }
+
+    @Test
     @DisplayName("즐겨찾기 해제는 저장소에 위임한다")
     void removeFavoriteLocker() {
         favoriteLockerCommandService.remove(1L, 10L);
@@ -85,9 +96,5 @@ class FavoriteLockerCommandServiceTest {
 
     private User activeUser(Long id) {
         return new User(id, "user@zimdugo.com", "zimdugo", null, UserStatus.ACTIVE, null, null, null);
-    }
-
-    private ReportLocker locker(Long id) {
-        return new ReportLocker(id, "강남역 11번 출구", "서울 강남구 강남대로", 37.498095, 127.02761);
     }
 }

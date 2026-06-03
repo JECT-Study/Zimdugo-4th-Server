@@ -1,6 +1,5 @@
 package com.zimdugo.locker.infrastructure;
 
-import com.zimdugo.locker.domain.FavoriteLocker;
 import com.zimdugo.locker.domain.FavoriteLockerStore;
 import com.zimdugo.locker.infrastructure.persistence.FavoriteLockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
@@ -18,18 +17,17 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
     private final EntityManager entityManager;
 
     @Override
-    public FavoriteLocker save(Long userId, Long lockerId) {
+    public void save(Long userId, Long lockerId) {
         try {
-            FavoriteLockerEntity favoriteLocker = favoriteLockerRepository.save(
+            favoriteLockerRepository.save(
                 new FavoriteLockerEntity(
                     entityManager.getReference(UserEntity.class, userId),
                     entityManager.getReference(LockerEntity.class, lockerId)
                 )
             );
-            return toDomain(favoriteLocker);
         } catch (DataIntegrityViolationException e) {
             if (favoriteLockerRepository.existsByUserIdAndLockerId(userId, lockerId)) {
-                return null;
+                return;
             }
             throw e;
         }
@@ -38,14 +36,5 @@ public class FavoriteLockerStoreAdapter implements FavoriteLockerStore {
     @Override
     public void delete(Long userId, Long lockerId) {
         favoriteLockerRepository.deleteByUserIdAndLockerId(userId, lockerId);
-    }
-
-    private FavoriteLocker toDomain(FavoriteLockerEntity favoriteLocker) {
-        return new FavoriteLocker(
-            favoriteLocker.getId(),
-            favoriteLocker.getUser().getId(),
-            favoriteLocker.getLocker().getId(),
-            favoriteLocker.getCreatedAt()
-        );
     }
 }
