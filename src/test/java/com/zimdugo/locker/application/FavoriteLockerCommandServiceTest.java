@@ -83,18 +83,46 @@ class FavoriteLockerCommandServiceTest {
         assertThatThrownBy(() -> favoriteLockerCommandService.add(1L, 10L))
             .isInstanceOf(BusinessException.class)
             .extracting("errorCode")
-            .isEqualTo(ErrorCode.NOT_FOUND);
+            .isEqualTo(ErrorCode.LOCKER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("탈퇴한 사용자는 즐겨찾기를 등록할 수 없다")
+    void throwWhenUserAlreadyWithdrawnOnAdd() {
+        given(userReader.findById(1L)).willReturn(Optional.of(deletedUser(1L)));
+
+        assertThatThrownBy(() -> favoriteLockerCommandService.add(1L, 10L))
+            .isInstanceOf(BusinessException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.USER_ALREADY_WITHDRAWN);
     }
 
     @Test
     @DisplayName("즐겨찾기 해제는 저장소에 위임한다")
     void removeFavoriteLocker() {
+        given(userReader.findById(1L)).willReturn(Optional.of(activeUser(1L)));
+
         favoriteLockerCommandService.remove(1L, 10L);
 
         verify(favoriteLockerStore).delete(1L, 10L);
     }
 
+    @Test
+    @DisplayName("탈퇴한 사용자는 즐겨찾기를 해제할 수 없다")
+    void throwWhenUserAlreadyWithdrawnOnRemove() {
+        given(userReader.findById(1L)).willReturn(Optional.of(deletedUser(1L)));
+
+        assertThatThrownBy(() -> favoriteLockerCommandService.remove(1L, 10L))
+            .isInstanceOf(BusinessException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.USER_ALREADY_WITHDRAWN);
+    }
+
     private User activeUser(Long id) {
         return new User(id, "user@zimdugo.com", "zimdugo", null, UserStatus.ACTIVE, null, null, null);
+    }
+
+    private User deletedUser(Long id) {
+        return new User(id, "user@zimdugo.com", "zimdugo", null, UserStatus.DELETED, null, null, null);
     }
 }

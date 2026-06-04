@@ -7,20 +7,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEntity, Long> {
-    @Query("""
-        SELECT COUNT(fl) > 0
-        FROM FavoriteLockerEntity fl
-        WHERE fl.user.id = :userId
-          AND fl.locker.id = :lockerId
-        """)
-    boolean existsByUserIdAndLockerId(@Param("userId") Long userId, @Param("lockerId") Long lockerId);
+    boolean existsByUserIdAndLockerId(Long userId, Long lockerId);
 
     @Modifying
-    @Query("""
-        DELETE
-        FROM FavoriteLockerEntity fl
-        WHERE fl.user.id = :userId
-          AND fl.locker.id = :lockerId
-        """)
-    void deleteByUserIdAndLockerId(@Param("userId") Long userId, @Param("lockerId") Long lockerId);
+    @Query(value = """
+        INSERT INTO favorite_lockers (user_id, locker_id, created_at)
+        VALUES (:userId, :lockerId, CURRENT_TIMESTAMP)
+        ON CONFLICT (user_id, locker_id) DO NOTHING
+        """, nativeQuery = true)
+    int insertIgnoreConflict(@Param("userId") Long userId, @Param("lockerId") Long lockerId);
+
+    long deleteByUserIdAndLockerId(Long userId, Long lockerId);
 }

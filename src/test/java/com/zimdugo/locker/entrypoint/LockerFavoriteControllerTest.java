@@ -88,14 +88,14 @@ class LockerFavoriteControllerTest {
     @Test
     @DisplayName("존재하지 않는 보관함이면 404를 반환한다")
     void addFavoriteLockerWithUnknownLockerReturnsNotFound() throws Exception {
-        willThrow(new BusinessException(ErrorCode.NOT_FOUND))
+        willThrow(new BusinessException(ErrorCode.LOCKER_NOT_FOUND))
             .given(favoriteLockerCommandService).add(1L, 999L);
 
         mockMvc.perform(post("/api/v1/me/favorite-lockers/999")
                 .principal(authenticatedUser()))
             .andExpect(status().isNotFound())
             .andExpect(content().contentTypeCompatibleWith("application/json"))
-            .andExpect(jsonPath("$.code").value("COMMON-404"));
+            .andExpect(jsonPath("$.code").value("LOCKER-404-1"));
     }
 
     @Test
