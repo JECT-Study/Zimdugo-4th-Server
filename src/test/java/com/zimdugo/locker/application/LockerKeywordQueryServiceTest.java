@@ -41,6 +41,7 @@ class LockerKeywordQueryServiceTest {
         LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", 10);
 
         assertThat(result.count()).isZero();
+        assertThat(result.bounds()).isNull();
         assertThat(result.items()).isEmpty();
         then(lockerPlaceLockerReader).shouldHaveNoInteractions();
     }
@@ -82,6 +83,10 @@ class LockerKeywordQueryServiceTest {
         LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", 10);
 
         assertThat(result.count()).isEqualTo(1);
+        assertThat(result.bounds().swLat()).isEqualTo(37.557);
+        assertThat(result.bounds().swLng()).isEqualTo(126.924);
+        assertThat(result.bounds().neLat()).isEqualTo(37.557);
+        assertThat(result.bounds().neLng()).isEqualTo(126.924);
         LockerKeywordItemResult item = result.items().getFirst();
         assertThat(item.suggestType()).isEqualTo(LockerSuggestType.PLACE);
         assertThat(item.latitude()).isEqualTo(37.557);
@@ -121,6 +126,10 @@ class LockerKeywordQueryServiceTest {
         );
 
         assertThat(result.count()).isEqualTo(1);
+        assertThat(result.bounds().swLat()).isEqualTo(37.556);
+        assertThat(result.bounds().swLng()).isEqualTo(126.923);
+        assertThat(result.bounds().neLat()).isEqualTo(37.556);
+        assertThat(result.bounds().neLng()).isEqualTo(126.923);
         LockerKeywordItemResult item = result.items().getFirst();
         assertThat(item.suggestType()).isEqualTo(LockerSuggestType.LOCKER);
         assertThat(item.lockerId()).isEqualTo(10L);
@@ -129,5 +138,63 @@ class LockerKeywordQueryServiceTest {
         assertThat(item.isFavorite()).isFalse();
         assertThat(item.lockers()).isEmpty();
         then(lockerPlaceLockerReader).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("keyword bounds는 하위 보관함을 제외한 대표 아이템 좌표로 계산한다")
+    void calculatesBoundsFromCollapsedItemsOnly() {
+        LockerSuggestItemResult placeItem = new LockerSuggestItemResult(
+            LockerSuggestType.PLACE,
+            101L,
+            "신촌역 1번 출구",
+            null,
+            null,
+            "서울 서대문구 신촌역로 1",
+            null,
+            37.557,
+            126.924,
+            100L,
+            null
+        );
+        LockerSuggestItemResult lockerItem = new LockerSuggestItemResult(
+            LockerSuggestType.LOCKER,
+            102L,
+            "홍대입구역",
+            20L,
+            "홍대입구역 2번 출구 보관함",
+            "서울 마포구 양화로 1",
+            "SUBWAY_STATION",
+            37.551,
+            126.936,
+            200L,
+            LocalDateTime.of(2026, 5, 31, 12, 0)
+        );
+        given(lockerSearchQueryService.search(37.55, 126.93, "역", 10))
+            .willReturn(List.of(placeItem, lockerItem));
+        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L)))
+            .willReturn(Map.of(
+                101L,
+                List.of(new LockerPlaceLocker(
+                    101L,
+                    10L,
+                    "bounds에 포함하지 않는 하위 보관함",
+                    "서울 서대문구 신촌역로 1",
+                    "SUBWAY_STATION",
+                    37.1,
+                    126.1,
+                    95L,
+                    LocalDateTime.of(2026, 5, 31, 12, 0)
+                ))
+            ));
+
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "역", 10);
+
+        assertThat(result.count()).isEqualTo(2);
+        assertThat(result.bounds().swLat()).isEqualTo(37.551);
+        assertThat(result.bounds().swLng()).isEqualTo(126.924);
+        assertThat(result.bounds().neLat()).isEqualTo(37.557);
+        assertThat(result.bounds().neLng()).isEqualTo(126.936);
+        assertThat(result.items().getFirst().lockers().getFirst().latitude()).isEqualTo(37.1);
+        assertThat(result.items().getFirst().lockers().getFirst().longitude()).isEqualTo(126.1);
     }
 }
