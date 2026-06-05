@@ -14,6 +14,10 @@ public record LockerKeywordResult(
     }
 
     public static LockerKeywordResult of(List<LockerKeywordItemResult> items) {
+        if (items == null || items.isEmpty()) {
+            return empty();
+        }
+
         LockerBoundsResult bounds = GeoBoundsUtils.from(
             items,
             LockerKeywordItemResult::latitude,
