@@ -1,4 +1,4 @@
-package com.zimdugo.locker.infrastructure.persistence;
+package com.zimdugo.locker.domain;
 
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;

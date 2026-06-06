@@ -1,4 +1,4 @@
-package com.zimdugo.locker.infrastructure.persistence;
+package com.zimdugo.locker.domain;
 
 public enum IndoorOutdoorType {
     INDOOR,

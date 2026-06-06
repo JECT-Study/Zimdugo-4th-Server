@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
-import com.zimdugo.locker.infrastructure.persistence.IndoorOutdoorType;
+import com.zimdugo.locker.domain.IndoorOutdoorType;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
-import com.zimdugo.locker.infrastructure.persistence.LockerSizeType;
-import com.zimdugo.locker.infrastructure.persistence.LockerType;
+import com.zimdugo.locker.domain.LockerSizeType;
+import com.zimdugo.locker.domain.LockerType;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
