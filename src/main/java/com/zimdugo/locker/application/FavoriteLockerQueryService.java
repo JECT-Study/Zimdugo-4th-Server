@@ -10,6 +10,7 @@ import com.zimdugo.locker.domain.FavoriteLockerQueryReader;
 import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserReader;
 import com.zimdugo.user.domain.UserStatus;
+import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class FavoriteLockerQueryService {
         int size
     ) {
         validateUser(userId);
+        validateLocation(latitude, longitude);
 
         double resolvedLatitude = latitude == null ? DEFAULT_LATITUDE : latitude;
         double resolvedLongitude = longitude == null ? DEFAULT_LONGITUDE : longitude;
@@ -47,7 +49,11 @@ public class FavoriteLockerQueryService {
         );
 
         if (result.items().isEmpty()) {
-            return FavoriteLockerListResult.empty();
+            return FavoriteLockerListResult.of(
+                Collections.emptyList(),
+                result.totalCount(),
+                result.hasNext()
+            );
         }
 
         List<FavoriteLockerListItemResult> items = result.items().stream()
@@ -76,6 +82,12 @@ public class FavoriteLockerQueryService {
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         if (user.getStatus() == UserStatus.DELETED) {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
+        }
+    }
+
+    private void validateLocation(Double latitude, Double longitude) {
+        if ((latitude == null) != (longitude == null)) {
+            throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
     }
 }
