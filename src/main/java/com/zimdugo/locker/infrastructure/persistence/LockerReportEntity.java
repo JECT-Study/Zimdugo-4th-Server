@@ -1,6 +1,9 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
+import com.zimdugo.locker.domain.IndoorOutdoorType;
 import com.zimdugo.locker.domain.LockerReportStatus;
+import com.zimdugo.locker.domain.LockerSizeType;
+import com.zimdugo.locker.domain.LockerType;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;

@@ -1,5 +1,6 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
+import com.zimdugo.locker.domain.LockerSizeType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import java.util.Collections;
