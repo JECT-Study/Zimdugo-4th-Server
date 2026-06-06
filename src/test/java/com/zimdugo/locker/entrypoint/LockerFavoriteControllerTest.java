@@ -6,6 +6,7 @@ import com.zimdugo.common.config.SecurityConfig;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.FavoriteLockerCommandService;
+import com.zimdugo.locker.application.FavoriteLockerQueryService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,9 @@ class LockerFavoriteControllerTest {
 
     @MockitoBean
     private FavoriteLockerCommandService favoriteLockerCommandService;
+
+    @MockitoBean
+    private FavoriteLockerQueryService favoriteLockerQueryService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
