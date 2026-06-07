@@ -18,6 +18,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -95,6 +96,7 @@ public interface LockerApi {
     @SecurityRequirements
     @GetMapping("/lockers/keyword")
     ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
+        Authentication authentication,
         @RequestParam("lat")
         @Parameter(description = "사용자 위도", example = "37.498095")
         @Schema(minimum = "-90", maximum = "90")

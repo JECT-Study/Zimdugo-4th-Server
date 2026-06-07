@@ -13,6 +13,7 @@ import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,17 +56,31 @@ public class LockerController implements LockerApi {
 
     @Override
     public ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
+        Authentication authentication,
         double latitude,
         double longitude,
         String keyword,
         int limit
     ) {
         LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(
+            extractUserIdOrNull(authentication),
             latitude,
             longitude,
             keyword,
             limit
         );
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerKeywordResponse.from(result)));
+    }
+
+    private Long extractUserIdOrNull(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return null;
+        }
+
+        try {
+            return Long.valueOf(authentication.getName());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

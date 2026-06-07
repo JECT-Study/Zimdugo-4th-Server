@@ -14,7 +14,7 @@ public record LockerKeywordLockerResult(
     LocalDateTime updatedAt,
     boolean isFavorite
 ) {
-    public static LockerKeywordLockerResult from(LockerPlaceLocker locker) {
+    public static LockerKeywordLockerResult from(LockerPlaceLocker locker, boolean isFavorite) {
         return new LockerKeywordLockerResult(
             locker.lockerId(),
             locker.lockerName(),
@@ -24,7 +24,7 @@ public record LockerKeywordLockerResult(
             locker.longitude(),
             locker.distanceMeters(),
             locker.updatedAt(),
-            false
+            isFavorite
         );
     }
 }

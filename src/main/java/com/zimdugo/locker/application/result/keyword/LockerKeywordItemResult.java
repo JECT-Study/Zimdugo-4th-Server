@@ -20,7 +20,7 @@ public record LockerKeywordItemResult(
     Boolean isFavorite,
     List<LockerKeywordLockerResult> lockers
 ) {
-    public static LockerKeywordItemResult locker(LockerSuggestItemResult item) {
+    public static LockerKeywordItemResult locker(LockerSuggestItemResult item, boolean isFavorite) {
         return new LockerKeywordItemResult(
             item.suggestType(),
             item.placeId(),
@@ -33,7 +33,7 @@ public record LockerKeywordItemResult(
             item.longitude(),
             item.distanceMeters(),
             item.updatedAt(),
-            false,
+            isFavorite,
             List.of()
         );
     }

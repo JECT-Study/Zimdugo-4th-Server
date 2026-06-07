@@ -1,6 +1,7 @@
 package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.infrastructure.persistence.FavoriteLockerEntity;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,14 @@ import org.springframework.data.repository.query.Param;
 
 public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEntity, Long> {
     boolean existsByUserIdAndLockerId(Long userId, Long lockerId);
+
+    @Query("""
+        SELECT fl.locker.id
+        FROM FavoriteLockerEntity fl
+        WHERE fl.user.id = :userId
+          AND fl.locker.id IN :lockerIds
+        """)
+    Set<Long> findFavoriteLockerIds(@Param("userId") Long userId, @Param("lockerIds") Set<Long> lockerIds);
 
     @Modifying
     @Query(value = """
