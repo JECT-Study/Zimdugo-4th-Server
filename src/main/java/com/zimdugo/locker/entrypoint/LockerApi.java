@@ -47,9 +47,9 @@ public interface LockerApi {
         @DecimalMax(value = "180.0") double longitude,
         @RequestParam(name = "radius", defaultValue = "500")
         @Parameter(description = "조회 반경(m)", example = "500")
-        @Schema(minimum = "1", maximum = "1000")
+        @Schema(minimum = "1", maximum = "7000")
         @Min(1)
-        @Max(1000) int radiusMeters
+        @Max(7000) int radiusMeters
     );
 
     @Operation(
