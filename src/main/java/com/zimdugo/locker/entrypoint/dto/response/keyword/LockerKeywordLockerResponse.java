@@ -1,8 +1,10 @@
 package com.zimdugo.locker.entrypoint.dto.response.keyword;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
 import java.time.LocalDateTime;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record LockerKeywordLockerResponse(
     Long lockerId,
     String lockerName,
