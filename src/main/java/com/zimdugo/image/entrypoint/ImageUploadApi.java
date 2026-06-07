@@ -25,7 +25,7 @@ public interface ImageUploadApi {
         @ApiResponse(responseCode = "400", description = "잘못된 요청"),
         @ApiResponse(responseCode = "401", description = "로그인 필요")
     })
-    @PostMapping("/uploads/presign")
+    @PostMapping("/uploads")
     ResponseEntity<RestResponse<PresignedUploadResponse>> createPresignedUpload(
         Authentication authentication,
         @Valid @RequestBody PresignedUploadRequest request
