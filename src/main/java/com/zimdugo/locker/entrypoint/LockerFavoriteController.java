@@ -5,6 +5,9 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.locker.application.FavoriteLockerCommandService;
+import com.zimdugo.locker.application.FavoriteLockerQueryService;
+import com.zimdugo.locker.application.result.favorite.FavoriteLockerListResult;
+import com.zimdugo.locker.entrypoint.dto.response.favorite.FavoriteLockerListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LockerFavoriteController implements LockerFavoriteApi {
 
     private final FavoriteLockerCommandService favoriteLockerCommandService;
+    private final FavoriteLockerQueryService favoriteLockerQueryService;
 
     @Override
     public ResponseEntity<RestResponse<Void>> addFavoriteLocker(
@@ -36,6 +40,24 @@ public class LockerFavoriteController implements LockerFavoriteApi {
     ) {
         favoriteLockerCommandService.remove(extractUserId(authentication), lockerId);
         return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
+    }
+
+    @Override
+    public ResponseEntity<RestResponse<FavoriteLockerListResponse>> getFavoriteLockers(
+        Authentication authentication,
+        Double latitude,
+        Double longitude,
+        int page,
+        int size
+    ) {
+        FavoriteLockerListResult result = favoriteLockerQueryService.getFavoriteLockers(
+            extractUserId(authentication),
+            latitude,
+            longitude,
+            page,
+            size
+        );
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, FavoriteLockerListResponse.from(result)));
     }
 
     private Long extractUserId(Authentication authentication) {
