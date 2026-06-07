@@ -60,6 +60,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
+    // AWS S3
+    implementation("software.amazon.awssdk:s3")
+
     // DB
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("com.h2database:h2")
@@ -94,6 +97,7 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom("de.codecentric:spring-boot-admin-dependencies:${property("springBootAdminVersion")}")
+        mavenBom("software.amazon.awssdk:bom:2.32.4")
     }
 }
 
