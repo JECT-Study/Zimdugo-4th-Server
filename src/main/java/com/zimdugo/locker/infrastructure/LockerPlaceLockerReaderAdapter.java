@@ -65,6 +65,7 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
             lockerType,
             indoorOutdoorType,
             lockerSize,
+            projection.getMinPrice(),
             projection.getLockerLatitude(),
             projection.getLockerLongitude(),
             (long) projection.getDistanceMeters(),

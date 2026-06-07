@@ -39,6 +39,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             ld.locker_type AS lockerType,
             ld.indoor_outdoor_type AS indoorOutdoorType,
             ld.locker_size AS lockerSize,
+            ld.min_price AS minPrice,
             ld.updated_at AS updatedAt,
             p.id AS placeId,
             p.name AS placeName
@@ -61,6 +62,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             ld.locker_type AS lockerType,
             ld.indoor_outdoor_type AS indoorOutdoorType,
             ld.locker_size AS lockerSize,
+            ld.min_price AS minPrice,
             ST_Y(l.location::geometry) AS lockerLatitude,
             ST_X(l.location::geometry) AS lockerLongitude,
             ST_Distance(l.location, target.point) AS distanceMeters,

@@ -10,6 +10,7 @@ public record LockerPlaceLocker(
     LockerType lockerType,
     IndoorOutdoorType indoorOutdoorType,
     LockerSizeType lockerSize,
+    Integer minPrice,
     double latitude,
     double longitude,
     long distanceMeters,

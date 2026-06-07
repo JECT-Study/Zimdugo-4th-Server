@@ -120,6 +120,7 @@ class LockerSearchCandidateReaderAdapterTest {
             .lockerName("신촌역 1번 출구 보관함")
             .roadAddress("서울 서대문구 신촌역로 1")
             .lockerType("SUBWAY_STATION")
+            .minPrice(1000)
             .updatedAt(LocalDateTime.of(2026, 5, 31, 12, 0))
             .placeId(101L)
             .placeName("신촌역 1번 출구")

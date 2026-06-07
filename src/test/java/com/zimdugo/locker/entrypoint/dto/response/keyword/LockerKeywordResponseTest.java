@@ -34,6 +34,7 @@ class LockerKeywordResponseTest {
                 "신촌역 1번 출구 보관함",
                 "서울 서대문구 신촌역로 1",
                 "SUBWAY_STATION",
+                1000,
                 37.551,
                 126.936,
                 95L,
@@ -53,6 +54,7 @@ class LockerKeywordResponseTest {
         assertThat(bounds.path("neLat").asDouble()).isEqualTo(37.557);
         assertThat(bounds.path("neLng").asDouble()).isEqualTo(126.936);
         assertThat(root.path("data").path("items")).hasSize(1);
+        assertThat(root.path("data").path("items").get(0).path("minPrice").asInt()).isEqualTo(1000);
     }
 
     @Test

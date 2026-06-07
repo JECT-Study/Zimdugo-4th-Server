@@ -11,6 +11,7 @@ public interface LockerSuggestIndexQueryProjection {
     String getLockerType();
     String getIndoorOutdoorType();
     String getLockerSize();
+    Integer getMinPrice();
     LocalDateTime getUpdatedAt();
     Long getPlaceId();
     String getPlaceName();

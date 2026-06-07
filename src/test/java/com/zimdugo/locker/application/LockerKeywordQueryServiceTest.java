@@ -87,6 +87,7 @@ class LockerKeywordQueryServiceTest {
             101L,
             "신촌역 1번 출구",
             null,
+            null,
             "서울 서대문구 신촌역로 1",
             null,
             null,
@@ -108,6 +109,7 @@ class LockerKeywordQueryServiceTest {
                     LockerType.SUBWAY_STATION,
                     IndoorOutdoorType.INDOOR,
                     LockerSizeType.BIG,
+                    1000,
                     37.556,
                     126.923,
                     95L,
@@ -129,6 +131,7 @@ class LockerKeywordQueryServiceTest {
         assertThat(item.isFavorite()).isNull();
         assertThat(item.lockers()).hasSize(1);
         assertThat(item.lockers().getFirst().lockerId()).isEqualTo(10L);
+        assertThat(item.lockers().getFirst().minPrice()).isEqualTo(1000);
         assertThat(item.lockers().getFirst().latitude()).isEqualTo(37.556);
         assertThat(item.lockers().getFirst().longitude()).isEqualTo(126.923);
         assertThat(item.lockers().getFirst().isFavorite()).isFalse();
@@ -145,6 +148,7 @@ class LockerKeywordQueryServiceTest {
             "신촌역 1번 출구 b1 관리사무소 옆",
             "서울 서대문구 신촌역로 1",
             "SUBWAY_STATION",
+            1000,
             37.556,
             126.923,
             95L,
@@ -169,6 +173,7 @@ class LockerKeywordQueryServiceTest {
         LockerKeywordItemResult item = result.items().getFirst();
         assertThat(item.suggestType()).isEqualTo(LockerSuggestType.LOCKER);
         assertThat(item.lockerId()).isEqualTo(10L);
+        assertThat(item.minPrice()).isEqualTo(1000);
         assertThat(item.latitude()).isEqualTo(37.556);
         assertThat(item.longitude()).isEqualTo(126.923);
         assertThat(item.isFavorite()).isFalse();
@@ -183,6 +188,7 @@ class LockerKeywordQueryServiceTest {
             LockerSuggestType.PLACE,
             101L,
             "신촌역 1번 출구",
+            null,
             null,
             "서울 서대문구 신촌역로 1",
             null,
@@ -200,6 +206,7 @@ class LockerKeywordQueryServiceTest {
             "홍대입구역 2번 출구 보관함",
             "서울 마포구 양화로 1",
             "SUBWAY_STATION",
+            1000,
             37.551,
             126.936,
             200L,
@@ -218,6 +225,7 @@ class LockerKeywordQueryServiceTest {
                     LockerType.SUBWAY_STATION,
                     IndoorOutdoorType.INDOOR,
                     LockerSizeType.BIG,
+                    1000,
                     37.1,
                     126.1,
                     95L,

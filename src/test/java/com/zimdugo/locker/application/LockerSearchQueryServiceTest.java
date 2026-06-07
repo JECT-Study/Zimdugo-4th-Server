@@ -127,6 +127,7 @@ class LockerSearchQueryServiceTest {
             "신촌역 1번 출구 b1 관리사무소 옆",
             "서울 서대문구 신촌역로 1",
             LockerType.SUBWAY_STATION,
+            1000,
             LocalDateTime.now(),
             101L,
             "신촌역 1번 출구",
