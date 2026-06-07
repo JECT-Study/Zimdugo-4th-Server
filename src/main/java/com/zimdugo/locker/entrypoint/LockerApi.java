@@ -79,12 +79,7 @@ public interface LockerApi {
         @RequestParam("keyword")
         @Parameter(description = "자동완성 키워드", example = "신촌역 1번 출구 b")
         @NotBlank
-        @Size(max = 100) String keyword,
-        @RequestParam(name = "limit", defaultValue = "10")
-        @Parameter(description = "최대 결과 개수, 기본값 10, 최대 20", example = "10")
-        @Schema(minimum = "1", maximum = "20")
-        @Min(1)
-        @Max(20) int limit
+        @Size(max = 100) String keyword
     );
 
     @Operation(

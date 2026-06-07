@@ -27,26 +27,26 @@ public class LockerSearchQueryService {
     public List<LockerSuggestItemResult> search(
         double latitude,
         double longitude,
-        String keyword,
-        int limit
+        String keyword
     ) {
-        return search(latitude, longitude, keyword, limit, LockerSearchFilter.empty());
+        return search(latitude, longitude, keyword, LockerSearchFilter.empty());
     }
 
     public List<LockerSuggestItemResult> search(
         double latitude,
         double longitude,
         String keyword,
-        int limit,
         LockerSearchFilter filter
     ) {
         validateInputs(latitude, longitude, keyword);
 
+        if (filter == null) {
+            filter = LockerSearchFilter.empty();
+        }
         LockerSearchCandidateResult candidateResult = lockerSearchCandidateReader.search(
             latitude,
             longitude,
             keyword,
-            limit,
             filter
         );
         if (candidateResult.candidates().isEmpty()) {
@@ -56,7 +56,6 @@ public class LockerSearchQueryService {
         return lockerSearchAssembler.assemble(
             candidateResult.candidates(),
             keyword,
-            limit,
             candidateResult.matchType()
         );
     }

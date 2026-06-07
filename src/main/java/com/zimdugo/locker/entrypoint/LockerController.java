@@ -42,14 +42,12 @@ public class LockerController implements LockerApi {
     public ResponseEntity<RestResponse<LockerSuggestResponse>> getSuggestions(
         double latitude,
         double longitude,
-        String keyword,
-        int limit
+        String keyword
     ) {
         LockerSuggestResult result = lockerSuggestQueryService.getSuggestions(
             latitude,
             longitude,
-            keyword,
-            limit
+            keyword
         );
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerSuggestResponse.from(result)));
     }

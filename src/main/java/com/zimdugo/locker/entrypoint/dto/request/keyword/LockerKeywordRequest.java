@@ -4,8 +4,6 @@ import com.zimdugo.locker.application.LockerKeywordSearchCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -29,11 +27,6 @@ public record LockerKeywordRequest(
     @Size(max = 100)
     String keyword,
 
-    @Schema(description = "최대 결과 개수, 기본값 10, 최대 20", example = "10", minimum = "1", maximum = "20")
-    @Min(1)
-    @Max(20)
-    Integer limit,
-
     @Schema(description = "보관함 크기 필터, 복수 선택 가능", example = "[\"SMALL\", \"MEDIUM\", \"BIG\"]")
     Set<String> sizeTypes,
 
@@ -44,14 +37,11 @@ public record LockerKeywordRequest(
     String lockerType
 ) {
 
-    private static final int DEFAULT_LIMIT = 10;
-
     public LockerKeywordSearchCommand toCommand() {
         return new LockerKeywordSearchCommand(
             lat,
             lng,
             keyword,
-            limit == null ? DEFAULT_LIMIT : limit,
             sizeTypes,
             indoorOutdoorType,
             lockerType

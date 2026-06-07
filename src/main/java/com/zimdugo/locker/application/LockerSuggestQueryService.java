@@ -17,14 +17,12 @@ public class LockerSuggestQueryService {
     public LockerSuggestResult getSuggestions(
         double latitude,
         double longitude,
-        String keyword,
-        int limit
+        String keyword
     ) {
         List<LockerSuggestItemResult> items = lockerSearchQueryService.search(
             latitude,
             longitude,
-            keyword,
-            limit
+            keyword
         );
         if (items.isEmpty()) {
             return LockerSuggestResult.empty();

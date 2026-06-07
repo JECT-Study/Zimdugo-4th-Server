@@ -28,7 +28,6 @@ public class LockerKeywordQueryService {
             command.latitude(),
             command.longitude(),
             command.keyword(),
-            command.limit(),
             LockerSearchFilter.from(command.sizeTypes(), command.indoorOutdoorType(), command.lockerType())
         );
     }
@@ -37,14 +36,15 @@ public class LockerKeywordQueryService {
         double latitude,
         double longitude,
         String keyword,
-        int limit,
         LockerSearchFilter filter
     ) {
+        if (filter == null) {
+            filter = LockerSearchFilter.empty();
+        }
         List<LockerSuggestItemResult> suggestItems = lockerSearchQueryService.search(
             latitude,
             longitude,
             keyword,
-            limit,
             filter
         );
         if (suggestItems.isEmpty()) {

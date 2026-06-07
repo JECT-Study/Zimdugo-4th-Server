@@ -16,18 +16,14 @@ public class LockerSearchAssembler {
     public List<LockerSuggestItemResult> assemble(
         List<LockerSuggestCandidate> candidates,
         String keyword,
-        int limit,
         LockerSearchMatchType matchType
     ) {
         String normalizedKeyword = normalize(keyword);
         String decomposedKeyword = HangulUtils.decompose(normalizedKeyword);
         Map<Long, LockerSuggestCandidate> bestCandidateByPlace = getBestCandidates(candidates);
 
-        List<LockerSuggestItemResult> suggestions = new ArrayList<>(Math.min(limit, bestCandidateByPlace.size()));
+        List<LockerSuggestItemResult> suggestions = new ArrayList<>(bestCandidateByPlace.size());
         for (LockerSuggestCandidate candidate : bestCandidateByPlace.values()) {
-            if (suggestions.size() >= limit) {
-                break;
-            }
             suggestions.add(toItemResult(candidate, normalizedKeyword, decomposedKeyword, matchType));
         }
         return suggestions;

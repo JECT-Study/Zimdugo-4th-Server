@@ -34,6 +34,7 @@ public record LockerSearchFilter(
         Set<LockerSizeType> parsedSizeTypes = sizeTypes == null
             ? Set.of()
             : sizeTypes.stream()
+                .filter(Objects::nonNull)
                 .flatMap(value -> Arrays.stream(value.split(",")))
                 .map(LockerSizeType::from)
                 .filter(Objects::nonNull)
