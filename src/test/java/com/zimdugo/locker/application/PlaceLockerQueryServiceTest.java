@@ -57,6 +57,10 @@ class PlaceLockerQueryServiceTest {
 
         assertThat(result.placeId()).isEqualTo(101L);
         assertThat(result.placeName()).isEqualTo("신촌역");
+        assertThat(result.bounds().swLat()).isEqualTo(37.556);
+        assertThat(result.bounds().swLng()).isEqualTo(126.923);
+        assertThat(result.bounds().neLat()).isEqualTo(37.556);
+        assertThat(result.bounds().neLng()).isEqualTo(126.923);
         assertThat(result.lockers()).extracting(locker -> locker.lockerId()).containsExactly(10L);
         then(lockerPlaceLockerReader).should().readByPlaceIds(37.55, 126.93, List.of(101L), filter);
     }
@@ -75,6 +79,7 @@ class PlaceLockerQueryServiceTest {
         PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(command());
 
         assertThat(result.placeId()).isEqualTo(101L);
+        assertThat(result.bounds()).isNull();
         assertThat(result.lockers()).isEmpty();
     }
 
