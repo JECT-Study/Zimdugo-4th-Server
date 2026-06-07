@@ -2,13 +2,13 @@ package com.zimdugo.locker.entrypoint.dto.response.keyword;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordItemResult;
-import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestTypeResponse;
+import com.zimdugo.locker.entrypoint.dto.response.LockerItemTypeResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record LockerKeywordItemResponse(
-    LockerSuggestTypeResponse suggestType,
+    LockerItemTypeResponse type,
     Long placeId,
     String placeName,
     Long lockerId,
@@ -25,7 +25,7 @@ public record LockerKeywordItemResponse(
 ) {
     public static LockerKeywordItemResponse from(LockerKeywordItemResult item) {
         return new LockerKeywordItemResponse(
-            LockerSuggestTypeResponse.from(item.suggestType()),
+            LockerItemTypeResponse.from(item.type()),
             item.placeId(),
             item.placeName(),
             item.lockerId(),

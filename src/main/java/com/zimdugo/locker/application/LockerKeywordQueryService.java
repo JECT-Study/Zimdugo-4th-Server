@@ -4,7 +4,7 @@ import com.zimdugo.locker.application.result.keyword.LockerKeywordItemResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
-import com.zimdugo.locker.application.result.suggest.LockerSuggestType;
+import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.domain.LockerPlaceLocker;
 import com.zimdugo.locker.domain.LockerPlaceLockerReader;
 import com.zimdugo.locker.domain.LockerSearchFilter;
@@ -52,7 +52,7 @@ public class LockerKeywordQueryService {
         }
 
         List<Long> placeIds = suggestItems.stream()
-            .filter(item -> item.suggestType() == LockerSuggestType.PLACE)
+            .filter(item -> item.type() == LockerItemType.PLACE)
             .map(LockerSuggestItemResult::placeId)
             .toList();
         Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId = placeIds.isEmpty()
@@ -69,7 +69,7 @@ public class LockerKeywordQueryService {
         LockerSuggestItemResult item,
         Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId
     ) {
-        if (item.suggestType() == LockerSuggestType.LOCKER) {
+        if (item.type() == LockerItemType.LOCKER) {
             return LockerKeywordItemResult.locker(item);
         }
 

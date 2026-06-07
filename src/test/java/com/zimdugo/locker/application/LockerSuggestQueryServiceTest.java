@@ -2,7 +2,7 @@ package com.zimdugo.locker.application;
 
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
-import com.zimdugo.locker.application.result.suggest.LockerSuggestType;
+import com.zimdugo.locker.application.result.LockerItemType;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +39,7 @@ class LockerSuggestQueryServiceTest {
     @DisplayName("검색 결과가 있으면 suggest 응답으로 래핑한다")
     void wrapsSearchItemsToSuggestResult() {
         LockerSuggestItemResult item = new LockerSuggestItemResult(
-            LockerSuggestType.LOCKER,
+            LockerItemType.LOCKER,
             101L,
             "신촌역 1번 출구",
             10L,
