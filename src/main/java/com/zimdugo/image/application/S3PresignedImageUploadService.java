@@ -46,7 +46,8 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         Long userId
     ) {
         validateConfiguration();
-        validateRequest(category, originalFileName, contentType, userId);
+        String normalizedContentType = normalizeContentType(contentType);
+        validateRequest(category, originalFileName, normalizedContentType, userId);
 
         String extension = extractExtension(originalFileName);
         String key = createKey(category, extension, userId);
@@ -55,7 +56,7 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
             .bucket(properties.bucket())
             .key(key)
-            .contentType(contentType)
+            .contentType(normalizedContentType)
             .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
@@ -93,6 +94,13 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
             throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
+    }
+
+    private String normalizeContentType(String contentType) {
+        if (contentType == null) {
+            return null;
+        }
+        return contentType.trim().toLowerCase(Locale.ROOT);
     }
 
     private void validateConfiguration() {
