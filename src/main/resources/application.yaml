@@ -76,6 +76,13 @@ auth:
     frontend-base-url: http://localhost:3000
     allowed-origins: http://localhost:3000,http://localhost:5173
 
+storage:
+  s3:
+    region: ${AWS_REGION:ap-northeast-2}
+    bucket: ${AWS_S3_BUCKET}
+    public-base-url: ${AWS_CLOUDFRONT_PUBLIC_BASE_URL}
+    upload-expiration-minutes: ${AWS_S3_UPLOAD_EXPIRE_MINUTES:10}
+
 ---
 spring:
   config:
