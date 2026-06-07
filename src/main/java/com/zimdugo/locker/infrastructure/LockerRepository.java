@@ -2,11 +2,43 @@ package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
+
+    @Query(value = """
+        SELECT
+            l.id AS lockerId,
+            l.name AS lockerName,
+            l.road_address AS roadAddress,
+            l.latitude AS latitude,
+            l.longitude AS longitude,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.locker_type AS lockerType,
+            ld.indoor_outdoor_type AS indoorOutdoorType,
+            ld.ground_level_type AS groundLevelType,
+            ld.floor AS floor,
+            ld.min_price AS minPrice,
+            ld.max_price AS maxPrice,
+            ld.locker_size AS lockerSizes,
+            ld.detail_info AS detailInfo,
+            ld.start_time AS startTime,
+            ld.end_time AS endTime,
+            ld.image_url AS imageUrl,
+            ld.accurate_vote_count AS accurateVoteCount,
+            ld.inaccurate_vote_count AS inaccurateVoteCount,
+            ld.created_at AS createdAt,
+            ld.updated_at AS updatedAt
+        FROM lockers l
+        JOIN locker_details ld ON ld.locker_id = l.id
+        LEFT JOIN places p ON p.id = l.place_id
+        WHERE l.id = :lockerId
+        """, nativeQuery = true)
+    Optional<LockerDetailQueryProjection> findDetailById(@Param("lockerId") Long lockerId);
 
     @Query(value = """
         WITH target AS (
