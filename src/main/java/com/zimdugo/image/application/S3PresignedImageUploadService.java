@@ -84,7 +84,7 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
             throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
         if (contentType == null || !ALLOWED_IMAGE_CONTENT_TYPES.contains(contentType)) {
-            throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
+            throw new BusinessException(ErrorCode.UNSUPPORTED_IMAGE_TYPE);
         }
         if (category == UploadCategory.PROFILE && userId == null) {
             throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
@@ -92,7 +92,7 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
 
         String extension = extractExtension(originalFileName);
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
+            throw new BusinessException(ErrorCode.INVALID_IMAGE_EXTENSION);
         }
     }
 
