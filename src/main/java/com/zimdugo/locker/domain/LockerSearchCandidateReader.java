@@ -5,7 +5,6 @@ public interface LockerSearchCandidateReader {
         double latitude,
         double longitude,
         String keyword,
-        int limit,
         LockerSearchFilter filter
     );
 }
