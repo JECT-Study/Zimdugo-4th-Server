@@ -2,16 +2,19 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
+import com.zimdugo.locker.application.LockerDetailQueryService;
 import com.zimdugo.locker.application.LockerKeywordQueryService;
 import com.zimdugo.locker.application.LockerPinQueryService;
 import com.zimdugo.locker.application.LockerSuggestQueryService;
 import com.zimdugo.locker.application.PlaceLockerQueryService;
+import com.zimdugo.locker.application.result.detail.LockerDetailResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
 import com.zimdugo.locker.application.result.place.PlaceLockerResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
 import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
 import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
+import com.zimdugo.locker.entrypoint.dto.response.detail.LockerDetailResponse;
 import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
@@ -28,10 +31,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class LockerController implements LockerApi {
 
+    private final LockerDetailQueryService lockerDetailQueryService;
     private final LockerPinQueryService lockerPinQueryService;
     private final LockerSuggestQueryService lockerSuggestQueryService;
     private final LockerKeywordQueryService lockerKeywordQueryService;
     private final PlaceLockerQueryService placeLockerQueryService;
+
+    @Override
+    public ResponseEntity<RestResponse<LockerDetailResponse>> getLockerDetail(Long lockerId) {
+        LockerDetailResult result = lockerDetailQueryService.getDetail(lockerId);
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerDetailResponse.from(result)));
+    }
 
     @Override
     public ResponseEntity<RestResponse<LockerPinResponse>> getPins(
