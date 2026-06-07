@@ -6,7 +6,7 @@ public record LockerSuggestCandidate(
     Long lockerId,
     String lockerName,
     String roadAddress,
-    String lockerType,
+    LockerType lockerType,
     LocalDateTime updatedAt,
     Long placeId,
     String placeName,

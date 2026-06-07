@@ -38,6 +38,8 @@ public class LockerSuggestIndexSyncService {
             if (!indexOperations.exists()) {
                 log.info("검색 인덱스가 존재하지 않아 새로 생성합니다.");
                 indexOperations.createWithMapping();
+            } else {
+                indexOperations.putMapping(LockerSuggestDocument.class);
             }
 
             List<LockerSuggestDocument> documents = toDocuments(lockerRepository.findAllForSuggestIndex());
@@ -115,6 +117,8 @@ public class LockerSuggestIndexSyncService {
             .roadAddress(p.getRoadAddress())
             .roadAddressDecomposed(HangulUtils.decompose(p.getRoadAddress()))
             .lockerType(p.getLockerType())
+            .indoorOutdoorType(p.getIndoorOutdoorType())
+            .lockerSize(p.getLockerSize())
             .updatedAt(p.getUpdatedAt())
             .placeId(p.getPlaceId())
             .placeName(p.getPlaceName())

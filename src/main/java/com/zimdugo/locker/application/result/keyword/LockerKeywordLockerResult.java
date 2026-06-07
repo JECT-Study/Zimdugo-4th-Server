@@ -19,7 +19,7 @@ public record LockerKeywordLockerResult(
             locker.lockerId(),
             locker.lockerName(),
             locker.roadAddress(),
-            locker.lockerType(),
+            locker.lockerType().name(),
             locker.latitude(),
             locker.longitude(),
             locker.distanceMeters(),

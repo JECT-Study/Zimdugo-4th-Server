@@ -6,9 +6,14 @@ import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestType;
 import com.zimdugo.locker.domain.LockerPlaceLocker;
 import com.zimdugo.locker.domain.LockerPlaceLockerReader;
+import com.zimdugo.locker.domain.IndoorOutdoorType;
+import com.zimdugo.locker.domain.LockerSearchFilter;
+import com.zimdugo.locker.domain.LockerSizeType;
+import com.zimdugo.locker.domain.LockerType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +28,8 @@ import static org.mockito.BDDMockito.then;
 @ExtendWith(MockitoExtension.class)
 class LockerKeywordQueryServiceTest {
 
+    private static final LockerSearchFilter EMPTY_FILTER = LockerSearchFilter.empty();
+
     @Mock
     private LockerSearchQueryService lockerSearchQueryService;
 
@@ -35,15 +42,41 @@ class LockerKeywordQueryServiceTest {
     @Test
     @DisplayName("suggest 결과가 비어있으면 빈 keyword 결과를 반환한다")
     void returnsEmptyWhenSuggestResultIsEmpty() {
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10))
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10, EMPTY_FILTER))
             .willReturn(List.of());
 
-        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", 10);
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", 10, EMPTY_FILTER);
 
         assertThat(result.count()).isZero();
         assertThat(result.bounds()).isNull();
         assertThat(result.items()).isEmpty();
         then(lockerPlaceLockerReader).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("keyword 요청 필터를 도메인 필터로 변환해 검색에 전달한다")
+    void convertsCommandFilters() {
+        LockerSearchFilter filter = new LockerSearchFilter(
+            Set.of(LockerSizeType.SMALL, LockerSizeType.BIG),
+            IndoorOutdoorType.INDOOR,
+            LockerType.SUBWAY_STATION
+        );
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10, filter))
+            .willReturn(List.of());
+        LockerKeywordSearchCommand command = new LockerKeywordSearchCommand(
+            37.55,
+            126.93,
+            "신촌",
+            10,
+            Set.of("SMALL", "BIG"),
+            "INDOOR",
+            "SUBWAY_STATION"
+        );
+
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(command);
+
+        assertThat(result.items()).isEmpty();
+        then(lockerSearchQueryService).should().search(37.55, 126.93, "신촌", 10, filter);
     }
 
     @Test
@@ -54,17 +87,17 @@ class LockerKeywordQueryServiceTest {
             101L,
             "신촌역 1번 출구",
             null,
-            null,
             "서울 서대문구 신촌역로 1",
+            null,
             null,
             37.557,
             126.924,
             100L,
             null
         );
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10))
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10, EMPTY_FILTER))
             .willReturn(List.of(placeItem));
-        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L)))
+        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER))
             .willReturn(Map.of(
                 101L,
                 List.of(new LockerPlaceLocker(
@@ -72,7 +105,9 @@ class LockerKeywordQueryServiceTest {
                     10L,
                     "신촌역 1번 출구 b1 관리사무소 옆",
                     "서울 서대문구 신촌역로 1",
-                    "SUBWAY_STATION",
+                    LockerType.SUBWAY_STATION,
+                    IndoorOutdoorType.INDOOR,
+                    LockerSizeType.BIG,
                     37.556,
                     126.923,
                     95L,
@@ -80,7 +115,7 @@ class LockerKeywordQueryServiceTest {
                 ))
             ));
 
-        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", 10);
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", 10, EMPTY_FILTER);
 
         assertThat(result.count()).isEqualTo(1);
         assertThat(result.bounds().swLat()).isEqualTo(37.557);
@@ -115,14 +150,15 @@ class LockerKeywordQueryServiceTest {
             95L,
             LocalDateTime.of(2026, 5, 31, 12, 0)
         );
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌역1번출구b1", 10))
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌역1번출구b1", 10, EMPTY_FILTER))
             .willReturn(List.of(lockerItem));
 
         LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(
             37.55,
             126.93,
             "신촌역1번출구b1",
-            10
+            10,
+            EMPTY_FILTER
         );
 
         assertThat(result.count()).isEqualTo(1);
@@ -148,8 +184,8 @@ class LockerKeywordQueryServiceTest {
             101L,
             "신촌역 1번 출구",
             null,
-            null,
             "서울 서대문구 신촌역로 1",
+            null,
             null,
             37.557,
             126.924,
@@ -169,9 +205,9 @@ class LockerKeywordQueryServiceTest {
             200L,
             LocalDateTime.of(2026, 5, 31, 12, 0)
         );
-        given(lockerSearchQueryService.search(37.55, 126.93, "역", 10))
+        given(lockerSearchQueryService.search(37.55, 126.93, "역", 10, EMPTY_FILTER))
             .willReturn(List.of(placeItem, lockerItem));
-        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L)))
+        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER))
             .willReturn(Map.of(
                 101L,
                 List.of(new LockerPlaceLocker(
@@ -179,7 +215,9 @@ class LockerKeywordQueryServiceTest {
                     10L,
                     "bounds에 포함하지 않는 하위 보관함",
                     "서울 서대문구 신촌역로 1",
-                    "SUBWAY_STATION",
+                    LockerType.SUBWAY_STATION,
+                    IndoorOutdoorType.INDOOR,
+                    LockerSizeType.BIG,
                     37.1,
                     126.1,
                     95L,
@@ -187,7 +225,7 @@ class LockerKeywordQueryServiceTest {
                 ))
             ));
 
-        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "역", 10);
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "역", 10, EMPTY_FILTER);
 
         assertThat(result.count()).isEqualTo(2);
         assertThat(result.bounds().swLat()).isEqualTo(37.551);
