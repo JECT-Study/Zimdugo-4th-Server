@@ -42,10 +42,10 @@ class LockerKeywordQueryServiceTest {
     @Test
     @DisplayName("suggest 결과가 비어있으면 빈 keyword 결과를 반환한다")
     void returnsEmptyWhenSuggestResultIsEmpty() {
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10, EMPTY_FILTER))
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", EMPTY_FILTER))
             .willReturn(List.of());
 
-        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", 10, EMPTY_FILTER);
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", EMPTY_FILTER);
 
         assertThat(result.count()).isZero();
         assertThat(result.bounds()).isNull();
@@ -61,13 +61,12 @@ class LockerKeywordQueryServiceTest {
             IndoorOutdoorType.INDOOR,
             LockerType.SUBWAY_STATION
         );
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10, filter))
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", filter))
             .willReturn(List.of());
         LockerKeywordSearchCommand command = new LockerKeywordSearchCommand(
             37.55,
             126.93,
             "신촌",
-            10,
             Set.of("SMALL", "BIG"),
             "INDOOR",
             "SUBWAY_STATION"
@@ -76,7 +75,7 @@ class LockerKeywordQueryServiceTest {
         LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(command);
 
         assertThat(result.items()).isEmpty();
-        then(lockerSearchQueryService).should().search(37.55, 126.93, "신촌", 10, filter);
+        then(lockerSearchQueryService).should().search(37.55, 126.93, "신촌", filter);
     }
 
     @Test
@@ -96,7 +95,7 @@ class LockerKeywordQueryServiceTest {
             100L,
             null
         );
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10, EMPTY_FILTER))
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", EMPTY_FILTER))
             .willReturn(List.of(placeItem));
         given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER))
             .willReturn(Map.of(
@@ -117,7 +116,7 @@ class LockerKeywordQueryServiceTest {
                 ))
             ));
 
-        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", 10, EMPTY_FILTER);
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "신촌", EMPTY_FILTER);
 
         assertThat(result.count()).isEqualTo(1);
         assertThat(result.bounds().swLat()).isEqualTo(37.557);
@@ -154,14 +153,13 @@ class LockerKeywordQueryServiceTest {
             95L,
             LocalDateTime.of(2026, 5, 31, 12, 0)
         );
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌역1번출구b1", 10, EMPTY_FILTER))
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌역1번출구b1", EMPTY_FILTER))
             .willReturn(List.of(lockerItem));
 
         LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(
             37.55,
             126.93,
             "신촌역1번출구b1",
-            10,
             EMPTY_FILTER
         );
 
@@ -212,7 +210,7 @@ class LockerKeywordQueryServiceTest {
             200L,
             LocalDateTime.of(2026, 5, 31, 12, 0)
         );
-        given(lockerSearchQueryService.search(37.55, 126.93, "역", 10, EMPTY_FILTER))
+        given(lockerSearchQueryService.search(37.55, 126.93, "역", EMPTY_FILTER))
             .willReturn(List.of(placeItem, lockerItem));
         given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER))
             .willReturn(Map.of(
@@ -233,7 +231,7 @@ class LockerKeywordQueryServiceTest {
                 ))
             ));
 
-        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "역", 10, EMPTY_FILTER);
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(37.55, 126.93, "역", EMPTY_FILTER);
 
         assertThat(result.count()).isEqualTo(2);
         assertThat(result.bounds().swLat()).isEqualTo(37.551);

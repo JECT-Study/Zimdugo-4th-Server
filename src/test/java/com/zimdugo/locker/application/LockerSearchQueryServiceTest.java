@@ -38,10 +38,10 @@ class LockerSearchQueryServiceTest {
     @Test
     @DisplayName("주변 보관함이 없으면 빈 결과를 반환한다")
     void returnsEmptyWhenNoNearbyLockers() {
-        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌", 10, EMPTY_FILTER))
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌", EMPTY_FILTER))
             .willReturn(LockerSearchCandidateResult.empty());
 
-        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "신촌", 10);
+        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "신촌");
 
         assertThat(items).isEmpty();
     }
@@ -50,30 +50,29 @@ class LockerSearchQueryServiceTest {
     @DisplayName("장소 키워드는 PLACE 결과로 변환한다")
     void returnsPlaceSuggestionWhenPlaceKeywordMatched() {
         List<LockerSuggestCandidate> candidates = List.of(sampleCandidate());
-        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌", 10, EMPTY_FILTER))
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌", EMPTY_FILTER))
             .willReturn(LockerSearchCandidateResult.name(candidates));
 
-        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "신촌", 10);
+        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "신촌");
 
         assertThat(items).hasSize(1);
         LockerSuggestItemResult item = items.getFirst();
         assertThat(item.suggestType()).isEqualTo(LockerSuggestType.PLACE);
         assertThat(item.placeName()).isEqualTo("신촌역 1번 출구");
-        verify(lockerSearchCandidateReader).search(37.55, 126.93, "신촌", 10, EMPTY_FILTER);
+        verify(lockerSearchCandidateReader).search(37.55, 126.93, "신촌", EMPTY_FILTER);
     }
 
     @Test
     @DisplayName("상세 키워드는 LOCKER 결과로 변환한다")
     void returnsLockerSuggestionWhenDetailKeywordMatched() {
         List<LockerSuggestCandidate> candidates = List.of(sampleCandidate());
-        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌역1번출구b1", 10, EMPTY_FILTER))
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌역1번출구b1", EMPTY_FILTER))
             .willReturn(LockerSearchCandidateResult.name(candidates));
 
         List<LockerSuggestItemResult> items = lockerSearchQueryService.search(
             37.55,
             126.93,
-            "신촌역1번출구b1",
-            10
+            "신촌역1번출구b1"
         );
 
         assertThat(items).hasSize(1);
@@ -81,40 +80,40 @@ class LockerSearchQueryServiceTest {
         assertThat(item.suggestType()).isEqualTo(LockerSuggestType.LOCKER);
         assertThat(item.lockerId()).isEqualTo(10L);
         assertThat(item.lockerName()).isEqualTo("신촌역 1번 출구 b1 관리사무소 옆");
-        verify(lockerSearchCandidateReader).search(37.55, 126.93, "신촌역1번출구b1", 10, EMPTY_FILTER);
+        verify(lockerSearchCandidateReader).search(37.55, 126.93, "신촌역1번출구b1", EMPTY_FILTER);
     }
 
     @Test
     @DisplayName("주소 fallback 결과가 여러 보관함 장소이면 PLACE 결과로 변환한다")
     void returnsPlaceSuggestionWhenAddressFallbackMatchedMultipleLockers() {
         List<LockerSuggestCandidate> candidates = List.of(sampleCandidate());
-        given(lockerSearchCandidateReader.search(37.55, 126.93, "대구광역시", 10, EMPTY_FILTER))
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "대구광역시", EMPTY_FILTER))
             .willReturn(LockerSearchCandidateResult.address(candidates));
 
-        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "대구광역시", 10);
+        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "대구광역시");
 
         assertThat(items).hasSize(1);
         LockerSuggestItemResult item = items.getFirst();
         assertThat(item.suggestType()).isEqualTo(LockerSuggestType.PLACE);
         assertThat(item.placeId()).isEqualTo(101L);
         assertThat(item.lockerId()).isNull();
-        verify(lockerSearchCandidateReader).search(37.55, 126.93, "대구광역시", 10, EMPTY_FILTER);
+        verify(lockerSearchCandidateReader).search(37.55, 126.93, "대구광역시", EMPTY_FILTER);
     }
 
     @Test
     @DisplayName("주소 fallback 결과가 단일 보관함 장소이면 LOCKER 결과로 변환한다")
     void returnsLockerSuggestionWhenAddressFallbackMatchedSingleLocker() {
         List<LockerSuggestCandidate> candidates = List.of(sampleCandidate(1));
-        given(lockerSearchCandidateReader.search(37.55, 126.93, "대구광역시", 10, EMPTY_FILTER))
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "대구광역시", EMPTY_FILTER))
             .willReturn(LockerSearchCandidateResult.address(candidates));
 
-        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "대구광역시", 10);
+        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "대구광역시");
 
         assertThat(items).hasSize(1);
         LockerSuggestItemResult item = items.getFirst();
         assertThat(item.suggestType()).isEqualTo(LockerSuggestType.LOCKER);
         assertThat(item.lockerId()).isEqualTo(10L);
-        verify(lockerSearchCandidateReader).search(37.55, 126.93, "대구광역시", 10, EMPTY_FILTER);
+        verify(lockerSearchCandidateReader).search(37.55, 126.93, "대구광역시", EMPTY_FILTER);
     }
 
     private LockerSuggestCandidate sampleCandidate() {
