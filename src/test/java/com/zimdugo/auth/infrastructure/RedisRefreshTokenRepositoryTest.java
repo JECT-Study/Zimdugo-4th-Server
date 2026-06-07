@@ -21,7 +21,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @DataRedisTest
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @Import({
     RedisRefreshTokenRepository.class,
     RedisRefreshTokenRepositoryTest.TestConfig.class
