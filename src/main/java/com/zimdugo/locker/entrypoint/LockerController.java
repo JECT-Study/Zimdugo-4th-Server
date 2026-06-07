@@ -5,12 +5,16 @@ import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.locker.application.LockerKeywordQueryService;
 import com.zimdugo.locker.application.LockerPinQueryService;
 import com.zimdugo.locker.application.LockerSuggestQueryService;
+import com.zimdugo.locker.application.PlaceLockerQueryService;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
+import com.zimdugo.locker.application.result.place.PlaceLockerResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
 import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
+import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
 import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
+import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +31,7 @@ public class LockerController implements LockerApi {
     private final LockerPinQueryService lockerPinQueryService;
     private final LockerSuggestQueryService lockerSuggestQueryService;
     private final LockerKeywordQueryService lockerKeywordQueryService;
+    private final PlaceLockerQueryService placeLockerQueryService;
 
     @Override
     public ResponseEntity<RestResponse<LockerPinResponse>> getPins(
@@ -58,5 +63,14 @@ public class LockerController implements LockerApi {
     ) {
         LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(request.toCommand());
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerKeywordResponse.from(result)));
+    }
+
+    @Override
+    public ResponseEntity<RestResponse<PlaceLockerResponse>> getPlaceLockers(
+        Long placeId,
+        PlaceLockerRequest request
+    ) {
+        PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(request.toCommand(placeId));
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, PlaceLockerResponse.from(result)));
     }
 }

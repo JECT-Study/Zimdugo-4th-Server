@@ -2,8 +2,10 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
+import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
 import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
+import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,6 +24,7 @@ import jakarta.validation.constraints.Size;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Locker", description = "보관함 조회 API")
@@ -95,5 +98,21 @@ public interface LockerApi {
     @GetMapping("/lockers/keyword")
     ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
         @Valid @ParameterObject LockerKeywordRequest request
+    );
+
+    @Operation(
+        summary = "장소 하위 보관함 조회",
+        description = "장소 ID로 필터에 맞는 하위 보관함을 현재 좌표 기준 거리순으로 반환한다."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "존재하지 않는 장소")
+    })
+    @SecurityRequirements
+    @GetMapping("/places/{placeId}")
+    ResponseEntity<RestResponse<PlaceLockerResponse>> getPlaceLockers(
+        @PathVariable Long placeId,
+        @Valid @ParameterObject PlaceLockerRequest request
     );
 }
