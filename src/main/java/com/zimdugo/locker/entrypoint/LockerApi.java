@@ -57,7 +57,7 @@ public interface LockerApi {
 
     @Operation(
         summary = "보관함 자동완성 조회",
-        description = "현재 좌표 기준 거리순 장소/보관함 자동완성 목록을 반환한다."
+        description = "검색 점수 우선, 동점 시 현재 좌표 기준 거리순으로 장소/보관함 자동완성 목록을 반환한다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -89,7 +89,8 @@ public interface LockerApi {
 
     @Operation(
         summary = "보관함 키워드 검색 조회",
-        description = "현재 좌표 기준 거리순 장소/보관함 검색 결과를 반환한다. PLACE 결과는 하위 보관함 목록을 함께 반환한다."
+        description = "검색 점수 우선, 동점 시 현재 좌표 기준 거리순으로 장소/보관함 검색 결과를 반환한다. "
+            + "사이즈, 실내/실외, 보관함 유형 필터를 함께 적용할 수 있으며 PLACE 결과는 필터에 맞는 거리순 하위 보관함 목록을 반환한다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
