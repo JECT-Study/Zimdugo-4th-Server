@@ -27,9 +27,9 @@ class LockerSuggestQueryServiceTest {
     @Test
     @DisplayName("검색 결과가 없으면 빈 응답을 반환한다")
     void returnsEmptyWhenNoSearchItems() {
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10)).willReturn(List.of());
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌")).willReturn(List.of());
 
-        LockerSuggestResult result = lockerSuggestQueryService.getSuggestions(37.55, 126.93, "신촌", 10);
+        LockerSuggestResult result = lockerSuggestQueryService.getSuggestions(37.55, 126.93, "신촌");
 
         assertThat(result.count()).isZero();
         assertThat(result.items()).isEmpty();
@@ -52,9 +52,9 @@ class LockerSuggestQueryServiceTest {
             95L,
             LocalDateTime.of(2026, 5, 31, 12, 0)
         );
-        given(lockerSearchQueryService.search(37.55, 126.93, "신촌", 10)).willReturn(List.of(item));
+        given(lockerSearchQueryService.search(37.55, 126.93, "신촌")).willReturn(List.of(item));
 
-        LockerSuggestResult result = lockerSuggestQueryService.getSuggestions(37.55, 126.93, "신촌", 10);
+        LockerSuggestResult result = lockerSuggestQueryService.getSuggestions(37.55, 126.93, "신촌");
 
         assertThat(result.count()).isEqualTo(1);
         assertThat(result.items()).containsExactly(item);

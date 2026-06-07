@@ -52,7 +52,7 @@ class LockerSearchCandidateReaderAdapterTest {
         given(searchHits.getSearchHits()).willReturn(java.util.List.of());
 
         LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(
-            37.55, 126.93, "중앙로", 10, LockerSearchFilter.empty()
+            37.55, 126.93, "중앙로", LockerSearchFilter.empty()
         );
 
         ArgumentCaptor<NativeQuery> captor = ArgumentCaptor.forClass(NativeQuery.class);
@@ -77,7 +77,7 @@ class LockerSearchCandidateReaderAdapterTest {
         given(searchHits.getSearchHits()).willReturn(searchHitList);
 
         LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(
-            37.55, 126.93, "신촌", 10, LockerSearchFilter.empty()
+            37.55, 126.93, "신촌", LockerSearchFilter.empty()
         );
 
         ArgumentCaptor<NativeQuery> captor = ArgumentCaptor.forClass(NativeQuery.class);
@@ -102,7 +102,7 @@ class LockerSearchCandidateReaderAdapterTest {
             LockerType.SUBWAY_STATION
         );
 
-        lockerSearchCandidateReaderAdapter.search(37.55, 126.93, "중앙로", 10, filter);
+        lockerSearchCandidateReaderAdapter.search(37.55, 126.93, "중앙로", filter);
 
         ArgumentCaptor<NativeQuery> captor = ArgumentCaptor.forClass(NativeQuery.class);
         verify(elasticsearchOperations, times(2)).search(captor.capture(), eq(LockerSuggestDocument.class));
