@@ -46,6 +46,7 @@ class LockerSuggestQueryServiceTest {
             "신촌역 1번 출구 b1 관리사무소 옆",
             "서울 서대문구 신촌역로 1",
             "SUBWAY_STATION",
+            1000,
             37.556,
             126.923,
             95L,

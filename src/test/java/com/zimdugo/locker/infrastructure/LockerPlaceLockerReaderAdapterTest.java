@@ -72,6 +72,7 @@ class LockerPlaceLockerReaderAdapterTest {
         given(projection.getLockerType()).willReturn(lockerType);
         given(projection.getIndoorOutdoorType()).willReturn(indoorOutdoorType);
         given(projection.getLockerSize()).willReturn(lockerSize);
+        given(projection.getMinPrice()).willReturn(1000);
         given(projection.getLockerLatitude()).willReturn(37.55);
         given(projection.getLockerLongitude()).willReturn(126.93);
         given(projection.getDistanceMeters()).willReturn(100.0);

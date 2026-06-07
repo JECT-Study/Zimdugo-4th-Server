@@ -170,7 +170,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
 
         return new LockerSuggestCandidate(
             doc.getLockerId(), doc.getLockerName(), doc.getRoadAddress(),
-            LockerType.valueOf(doc.getLockerType()), doc.getUpdatedAt(), doc.getPlaceId(),
+            LockerType.valueOf(doc.getLockerType()), doc.getMinPrice(), doc.getUpdatedAt(), doc.getPlaceId(),
             doc.getPlaceName(), doc.getLockerCount(),
             (long) distanceMeters,
             lockerPoint.getLat(),

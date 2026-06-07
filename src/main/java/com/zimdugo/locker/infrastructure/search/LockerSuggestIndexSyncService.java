@@ -119,6 +119,7 @@ public class LockerSuggestIndexSyncService {
             .lockerType(p.getLockerType())
             .indoorOutdoorType(p.getIndoorOutdoorType())
             .lockerSize(p.getLockerSize())
+            .minPrice(p.getMinPrice())
             .updatedAt(p.getUpdatedAt())
             .placeId(p.getPlaceId())
             .placeName(p.getPlaceName())

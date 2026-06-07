@@ -93,6 +93,9 @@ public class LockerSuggestDocument {
     @Field(type = FieldType.Keyword)
     private String lockerSize;
 
+    @Field(type = FieldType.Integer)
+    private Integer minPrice;
+
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second)
     private LocalDateTime updatedAt;
 
