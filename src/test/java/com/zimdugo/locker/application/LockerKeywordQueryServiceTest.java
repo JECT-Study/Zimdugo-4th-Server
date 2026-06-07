@@ -2,8 +2,8 @@ package com.zimdugo.locker.application;
 
 import com.zimdugo.locker.application.result.keyword.LockerKeywordItemResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
+import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
-import com.zimdugo.locker.application.result.suggest.LockerSuggestType;
 import com.zimdugo.locker.domain.LockerPlaceLocker;
 import com.zimdugo.locker.domain.LockerPlaceLockerReader;
 import com.zimdugo.locker.domain.IndoorOutdoorType;
@@ -82,7 +82,7 @@ class LockerKeywordQueryServiceTest {
     @DisplayName("PLACE 결과는 하위 보관함 목록을 포함한다")
     void includesPlaceChildrenWhenResultIsPlace() {
         LockerSuggestItemResult placeItem = new LockerSuggestItemResult(
-            LockerSuggestType.PLACE,
+            LockerItemType.PLACE,
             101L,
             "신촌역 1번 출구",
             null,
@@ -124,7 +124,7 @@ class LockerKeywordQueryServiceTest {
         assertThat(result.bounds().neLat()).isEqualTo(37.557);
         assertThat(result.bounds().neLng()).isEqualTo(126.924);
         LockerKeywordItemResult item = result.items().getFirst();
-        assertThat(item.suggestType()).isEqualTo(LockerSuggestType.PLACE);
+        assertThat(item.type()).isEqualTo(LockerItemType.PLACE);
         assertThat(item.latitude()).isEqualTo(37.557);
         assertThat(item.longitude()).isEqualTo(126.924);
         assertThat(item.isFavorite()).isNull();
@@ -140,7 +140,7 @@ class LockerKeywordQueryServiceTest {
     @DisplayName("LOCKER 결과는 즐겨찾기 필드를 포함하고 하위 보관함 목록은 비운다")
     void returnsLockerWithFavoriteField() {
         LockerSuggestItemResult lockerItem = new LockerSuggestItemResult(
-            LockerSuggestType.LOCKER,
+            LockerItemType.LOCKER,
             101L,
             "신촌역 1번 출구",
             10L,
@@ -169,7 +169,7 @@ class LockerKeywordQueryServiceTest {
         assertThat(result.bounds().neLat()).isEqualTo(37.556);
         assertThat(result.bounds().neLng()).isEqualTo(126.923);
         LockerKeywordItemResult item = result.items().getFirst();
-        assertThat(item.suggestType()).isEqualTo(LockerSuggestType.LOCKER);
+        assertThat(item.type()).isEqualTo(LockerItemType.LOCKER);
         assertThat(item.lockerId()).isEqualTo(10L);
         assertThat(item.minPrice()).isEqualTo(1000);
         assertThat(item.latitude()).isEqualTo(37.556);
@@ -183,7 +183,7 @@ class LockerKeywordQueryServiceTest {
     @DisplayName("keyword bounds는 하위 보관함을 제외한 대표 아이템 좌표로 계산한다")
     void calculatesBoundsFromCollapsedItemsOnly() {
         LockerSuggestItemResult placeItem = new LockerSuggestItemResult(
-            LockerSuggestType.PLACE,
+            LockerItemType.PLACE,
             101L,
             "신촌역 1번 출구",
             null,
@@ -197,7 +197,7 @@ class LockerKeywordQueryServiceTest {
             null
         );
         LockerSuggestItemResult lockerItem = new LockerSuggestItemResult(
-            LockerSuggestType.LOCKER,
+            LockerItemType.LOCKER,
             102L,
             "홍대입구역",
             20L,

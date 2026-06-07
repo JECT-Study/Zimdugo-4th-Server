@@ -1,10 +1,11 @@
 package com.zimdugo.locker.entrypoint.dto.response.suggest;
 
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
+import com.zimdugo.locker.entrypoint.dto.response.LockerItemTypeResponse;
 import java.time.LocalDateTime;
 
 public record LockerSuggestItemResponse(
-    LockerSuggestTypeResponse suggestType,
+    LockerItemTypeResponse type,
     Long placeId,
     String placeName,
     Long lockerId,
@@ -16,7 +17,7 @@ public record LockerSuggestItemResponse(
 ) {
     public static LockerSuggestItemResponse from(LockerSuggestItemResult item) {
         return new LockerSuggestItemResponse(
-            LockerSuggestTypeResponse.from(item.suggestType()),
+            LockerItemTypeResponse.from(item.type()),
             item.placeId(),
             item.placeName(),
             item.lockerId(),

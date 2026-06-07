@@ -1,12 +1,12 @@
 package com.zimdugo.locker.application.result.keyword;
 
+import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
-import com.zimdugo.locker.application.result.suggest.LockerSuggestType;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record LockerKeywordItemResult(
-    LockerSuggestType suggestType,
+    LockerItemType type,
     Long placeId,
     String placeName,
     Long lockerId,
@@ -23,7 +23,7 @@ public record LockerKeywordItemResult(
 ) {
     public static LockerKeywordItemResult locker(LockerSuggestItemResult item) {
         return new LockerKeywordItemResult(
-            item.suggestType(),
+            item.type(),
             item.placeId(),
             item.placeName(),
             item.lockerId(),
@@ -45,7 +45,7 @@ public record LockerKeywordItemResult(
         List<LockerKeywordLockerResult> lockers
     ) {
         return new LockerKeywordItemResult(
-            item.suggestType(),
+            item.type(),
             item.placeId(),
             item.placeName(),
             item.lockerId(),

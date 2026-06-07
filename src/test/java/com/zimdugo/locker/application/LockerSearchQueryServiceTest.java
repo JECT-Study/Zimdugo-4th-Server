@@ -1,7 +1,7 @@
 package com.zimdugo.locker.application;
 
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
-import com.zimdugo.locker.application.result.suggest.LockerSuggestType;
+import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.domain.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.LockerSuggestCandidate;
 import com.zimdugo.locker.domain.LockerSearchCandidateReader;
@@ -57,7 +57,7 @@ class LockerSearchQueryServiceTest {
 
         assertThat(items).hasSize(1);
         LockerSuggestItemResult item = items.getFirst();
-        assertThat(item.suggestType()).isEqualTo(LockerSuggestType.PLACE);
+        assertThat(item.type()).isEqualTo(LockerItemType.PLACE);
         assertThat(item.placeName()).isEqualTo("신촌역 1번 출구");
         verify(lockerSearchCandidateReader).search(37.55, 126.93, "신촌", EMPTY_FILTER);
     }
@@ -77,7 +77,7 @@ class LockerSearchQueryServiceTest {
 
         assertThat(items).hasSize(1);
         LockerSuggestItemResult item = items.getFirst();
-        assertThat(item.suggestType()).isEqualTo(LockerSuggestType.LOCKER);
+        assertThat(item.type()).isEqualTo(LockerItemType.LOCKER);
         assertThat(item.lockerId()).isEqualTo(10L);
         assertThat(item.lockerName()).isEqualTo("신촌역 1번 출구 b1 관리사무소 옆");
         verify(lockerSearchCandidateReader).search(37.55, 126.93, "신촌역1번출구b1", EMPTY_FILTER);
@@ -94,7 +94,7 @@ class LockerSearchQueryServiceTest {
 
         assertThat(items).hasSize(1);
         LockerSuggestItemResult item = items.getFirst();
-        assertThat(item.suggestType()).isEqualTo(LockerSuggestType.PLACE);
+        assertThat(item.type()).isEqualTo(LockerItemType.PLACE);
         assertThat(item.placeId()).isEqualTo(101L);
         assertThat(item.lockerId()).isNull();
         verify(lockerSearchCandidateReader).search(37.55, 126.93, "대구광역시", EMPTY_FILTER);
@@ -111,7 +111,7 @@ class LockerSearchQueryServiceTest {
 
         assertThat(items).hasSize(1);
         LockerSuggestItemResult item = items.getFirst();
-        assertThat(item.suggestType()).isEqualTo(LockerSuggestType.LOCKER);
+        assertThat(item.type()).isEqualTo(LockerItemType.LOCKER);
         assertThat(item.lockerId()).isEqualTo(10L);
         verify(lockerSearchCandidateReader).search(37.55, 126.93, "대구광역시", EMPTY_FILTER);
     }

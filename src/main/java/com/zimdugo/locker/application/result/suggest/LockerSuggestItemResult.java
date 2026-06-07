@@ -1,10 +1,11 @@
 package com.zimdugo.locker.application.result.suggest;
 
+import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.domain.LockerSuggestCandidate;
 import java.time.LocalDateTime;
 
 public record LockerSuggestItemResult(
-    LockerSuggestType suggestType,
+    LockerItemType type,
     Long placeId,
     String placeName,
     Long lockerId,
@@ -19,7 +20,7 @@ public record LockerSuggestItemResult(
 ) {
     public static LockerSuggestItemResult locker(LockerSuggestCandidate candidate) {
         return new LockerSuggestItemResult(
-            LockerSuggestType.LOCKER,
+            LockerItemType.LOCKER,
             candidate.placeId(),
             candidate.placeName(),
             candidate.lockerId(),
@@ -36,7 +37,7 @@ public record LockerSuggestItemResult(
 
     public static LockerSuggestItemResult place(LockerSuggestCandidate candidate) {
         return new LockerSuggestItemResult(
-            LockerSuggestType.PLACE,
+            LockerItemType.PLACE,
             candidate.placeId(),
             candidate.placeName(),
             null,

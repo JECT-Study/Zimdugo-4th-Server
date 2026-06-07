@@ -8,7 +8,7 @@ import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.locker.application.result.LockerBoundsResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordItemResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
-import com.zimdugo.locker.application.result.suggest.LockerSuggestType;
+import com.zimdugo.locker.application.result.LockerItemType;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -27,7 +27,7 @@ class LockerKeywordResponseTest {
             1,
             new LockerBoundsResult(37.551, 126.924, 37.557, 126.936),
             List.of(new LockerKeywordItemResult(
-                LockerSuggestType.LOCKER,
+                LockerItemType.LOCKER,
                 101L,
                 "신촌역 1번 출구",
                 10L,
@@ -54,7 +54,10 @@ class LockerKeywordResponseTest {
         assertThat(bounds.path("neLat").asDouble()).isEqualTo(37.557);
         assertThat(bounds.path("neLng").asDouble()).isEqualTo(126.936);
         assertThat(root.path("data").path("items")).hasSize(1);
-        assertThat(root.path("data").path("items").get(0).path("minPrice").asInt()).isEqualTo(1000);
+        JsonNode item = root.path("data").path("items").get(0);
+        assertThat(item.path("type").asText()).isEqualTo("LOCKER");
+        assertThat(item.has("suggestType")).isFalse();
+        assertThat(item.path("minPrice").asInt()).isEqualTo(1000);
     }
 
     @Test
