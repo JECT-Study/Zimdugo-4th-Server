@@ -1,6 +1,5 @@
-package com.zimdugo.image.infrastructure;
+package com.zimdugo.image.application;
 
-import com.zimdugo.image.application.S3ImageProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.regions.Region;

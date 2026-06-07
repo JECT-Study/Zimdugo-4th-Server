@@ -1,11 +1,7 @@
-package com.zimdugo.image.infrastructure;
+package com.zimdugo.image.application;
 
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.image.application.PresignedImageUploadService;
-import com.zimdugo.image.application.PresignedUploadResult;
-import com.zimdugo.image.application.S3ImageProperties;
-import com.zimdugo.image.application.UploadCategory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
