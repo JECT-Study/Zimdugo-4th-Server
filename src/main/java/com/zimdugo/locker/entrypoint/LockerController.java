@@ -8,6 +8,7 @@ import com.zimdugo.locker.application.LockerSuggestQueryService;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
+import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
 import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
@@ -55,17 +56,9 @@ public class LockerController implements LockerApi {
 
     @Override
     public ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
-        double latitude,
-        double longitude,
-        String keyword,
-        int limit
+        LockerKeywordRequest request
     ) {
-        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(
-            latitude,
-            longitude,
-            keyword,
-            limit
-        );
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(request.toCommand());
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerKeywordResponse.from(result)));
     }
 }

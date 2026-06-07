@@ -5,6 +5,7 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.domain.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.LockerSearchCandidateReader;
+import com.zimdugo.locker.domain.LockerSearchFilter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,13 +30,24 @@ public class LockerSearchQueryService {
         String keyword,
         int limit
     ) {
+        return search(latitude, longitude, keyword, limit, LockerSearchFilter.empty());
+    }
+
+    public List<LockerSuggestItemResult> search(
+        double latitude,
+        double longitude,
+        String keyword,
+        int limit,
+        LockerSearchFilter filter
+    ) {
         validateInputs(latitude, longitude, keyword);
 
         LockerSearchCandidateResult candidateResult = lockerSearchCandidateReader.search(
             latitude,
             longitude,
             keyword,
-            limit
+            limit,
+            filter
         );
         if (candidateResult.candidates().isEmpty()) {
             return List.of();

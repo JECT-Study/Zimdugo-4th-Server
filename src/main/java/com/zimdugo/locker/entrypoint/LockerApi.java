@@ -1,6 +1,7 @@
 package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.core.response.RestResponse;
+import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
 import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
@@ -11,12 +12,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -95,24 +98,6 @@ public interface LockerApi {
     @SecurityRequirements
     @GetMapping("/lockers/keyword")
     ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
-        @RequestParam("lat")
-        @Parameter(description = "사용자 위도", example = "37.498095")
-        @Schema(minimum = "-90", maximum = "90")
-        @DecimalMin(value = "-90.0")
-        @DecimalMax(value = "90.0") double latitude,
-        @RequestParam("lng")
-        @Parameter(description = "사용자 경도", example = "127.027610")
-        @Schema(minimum = "-180", maximum = "180")
-        @DecimalMin(value = "-180.0")
-        @DecimalMax(value = "180.0") double longitude,
-        @RequestParam("keyword")
-        @Parameter(description = "검색 키워드", example = "신촌역 1번 출구")
-        @NotBlank
-        @Size(max = 100) String keyword,
-        @RequestParam(name = "limit", defaultValue = "10")
-        @Parameter(description = "최대 결과 개수, 기본값 10, 최대 20", example = "10")
-        @Schema(minimum = "1", maximum = "20")
-        @Min(1)
-        @Max(20) int limit
+        @Valid @ParameterObject LockerKeywordRequest request
     );
 }

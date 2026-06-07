@@ -1,10 +1,15 @@
 package com.zimdugo.locker.infrastructure.search;
 
 import com.zimdugo.locker.domain.LockerSearchCandidateResult;
+import com.zimdugo.locker.domain.IndoorOutdoorType;
+import com.zimdugo.locker.domain.LockerSearchFilter;
 import com.zimdugo.locker.domain.LockerSearchMatchType;
+import com.zimdugo.locker.domain.LockerSizeType;
+import com.zimdugo.locker.domain.LockerType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +51,9 @@ class LockerSearchCandidateReaderAdapterTest {
         )).willReturn(searchHits, searchHits);
         given(searchHits.getSearchHits()).willReturn(java.util.List.of());
 
-        LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(37.55, 126.93, "중앙로", 10);
+        LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(
+            37.55, 126.93, "중앙로", 10, LockerSearchFilter.empty()
+        );
 
         ArgumentCaptor<NativeQuery> captor = ArgumentCaptor.forClass(NativeQuery.class);
         verify(elasticsearchOperations, times(2)).search(captor.capture(), eq(LockerSuggestDocument.class));
@@ -69,7 +76,9 @@ class LockerSearchCandidateReaderAdapterTest {
         )).willReturn(searchHits);
         given(searchHits.getSearchHits()).willReturn(searchHitList);
 
-        LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(37.55, 126.93, "신촌", 10);
+        LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(
+            37.55, 126.93, "신촌", 10, LockerSearchFilter.empty()
+        );
 
         ArgumentCaptor<NativeQuery> captor = ArgumentCaptor.forClass(NativeQuery.class);
         verify(elasticsearchOperations).search(captor.capture(), eq(LockerSuggestDocument.class));
@@ -77,6 +86,32 @@ class LockerSearchCandidateReaderAdapterTest {
         assertThat(result.candidates()).hasSize(1);
         assertThat(captor.getValue().getQuery().toString()).contains("placeName.autocomplete");
         assertThat(captor.getValue().getQuery().toString()).doesNotContain("roadAddress.autocomplete");
+    }
+
+    @Test
+    @DisplayName("복수 사이즈와 실내외, 보관함 유형 필터를 이름과 주소 검색에 함께 적용한다")
+    void appliesKeywordFiltersToNameAndAddressQueries() {
+        given(elasticsearchOperations.search(
+            any(NativeQuery.class),
+            eq(LockerSuggestDocument.class)
+        )).willReturn(searchHits, searchHits);
+        given(searchHits.getSearchHits()).willReturn(java.util.List.of());
+        LockerSearchFilter filter = new LockerSearchFilter(
+            Set.of(LockerSizeType.SMALL, LockerSizeType.BIG),
+            IndoorOutdoorType.INDOOR,
+            LockerType.SUBWAY_STATION
+        );
+
+        lockerSearchCandidateReaderAdapter.search(37.55, 126.93, "중앙로", 10, filter);
+
+        ArgumentCaptor<NativeQuery> captor = ArgumentCaptor.forClass(NativeQuery.class);
+        verify(elasticsearchOperations, times(2)).search(captor.capture(), eq(LockerSuggestDocument.class));
+        for (NativeQuery query : captor.getAllValues()) {
+            String queryText = query.getQuery().toString();
+            assertThat(queryText).contains("lockerSize", "SMALL", "BIG");
+            assertThat(queryText).contains("indoorOutdoorType", "INDOOR");
+            assertThat(queryText).contains("lockerType", "SUBWAY_STATION");
+        }
     }
 
     private SearchHit<LockerSuggestDocument> searchHit() {

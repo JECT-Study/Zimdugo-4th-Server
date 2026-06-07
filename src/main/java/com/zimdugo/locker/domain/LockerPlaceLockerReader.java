@@ -7,6 +7,7 @@ public interface LockerPlaceLockerReader {
     Map<Long, List<LockerPlaceLocker>> readByPlaceIds(
         double latitude,
         double longitude,
-        List<Long> placeIds
+        List<Long> placeIds,
+        LockerSearchFilter filter
     );
 }

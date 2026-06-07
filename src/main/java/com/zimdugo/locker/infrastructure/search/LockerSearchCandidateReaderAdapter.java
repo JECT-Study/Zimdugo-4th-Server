@@ -1,11 +1,14 @@
 package com.zimdugo.locker.infrastructure.search;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.zimdugo.common.util.HangulUtils;
 import com.zimdugo.locker.domain.LockerSearchCandidateResult;
-import com.zimdugo.locker.domain.LockerSuggestCandidate;
 import com.zimdugo.locker.domain.LockerSearchCandidateReader;
+import com.zimdugo.locker.domain.LockerSearchFilter;
+import com.zimdugo.locker.domain.LockerSuggestCandidate;
+import com.zimdugo.locker.domain.LockerType;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -37,7 +40,13 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
     private final ElasticsearchOperations elasticsearchOperations;
 
     @Override
-    public LockerSearchCandidateResult search(double latitude, double longitude, String keyword, int limit) {
+    public LockerSearchCandidateResult search(
+        double latitude,
+        double longitude,
+        String keyword,
+        int limit,
+        LockerSearchFilter filter
+    ) {
         String normalizedKeyword = normalizeKeyword(keyword);
         if (normalizedKeyword.isBlank() || limit <= 0) {
             return LockerSearchCandidateResult.empty();
@@ -45,7 +54,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
 
         int fetchSize = Math.min(Math.max(limit * FETCH_MULTIPLIER, MIN_FETCH_SIZE), MAX_FETCH_SIZE);
         NativeQuery nameQuery = buildSearchQuery(
-            buildNameQuery(normalizedKeyword),
+            buildFilteredQuery(buildNameQuery(normalizedKeyword), filter),
             latitude,
             longitude,
             fetchSize
@@ -57,7 +66,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         }
 
         NativeQuery addressQuery = buildSearchQuery(
-            buildAddressQuery(normalizedKeyword),
+            buildFilteredQuery(buildAddressQuery(normalizedKeyword), filter),
             latitude,
             longitude,
             fetchSize
@@ -103,6 +112,38 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         ))));
     }
 
+    private Query buildFilteredQuery(Query query, LockerSearchFilter filter) {
+        if (filter.isEmpty()) {
+            return query;
+        }
+
+        return Query.of(q -> q.bool(b -> {
+            b.must(query);
+            if (!filter.sizeTypes().isEmpty()) {
+                List<FieldValue> values = filter.sizeTypes().stream()
+                    .map(sizeType -> FieldValue.of(sizeType.name()))
+                    .toList();
+                b.filter(f -> f.terms(t -> t
+                    .field("lockerSize")
+                    .terms(v -> v.value(values))
+                ));
+            }
+            if (filter.indoorOutdoorType() != null) {
+                b.filter(f -> f.term(t -> t
+                    .field("indoorOutdoorType")
+                    .value(filter.indoorOutdoorType().name())
+                ));
+            }
+            if (filter.lockerType() != null) {
+                b.filter(f -> f.term(t -> t
+                    .field("lockerType")
+                    .value(filter.lockerType().name())
+                ));
+            }
+            return b;
+        }));
+    }
+
     private List<LockerSuggestCandidate> convertToCandidates(SearchHits<LockerSuggestDocument> hits) {
         List<LockerSuggestCandidate> candidates = new ArrayList<>(hits.getSearchHits().size());
         for (SearchHit<LockerSuggestDocument> hit : hits.getSearchHits()) {
@@ -129,7 +170,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
 
         return new LockerSuggestCandidate(
             doc.getLockerId(), doc.getLockerName(), doc.getRoadAddress(),
-            doc.getLockerType(), doc.getUpdatedAt(), doc.getPlaceId(),
+            LockerType.valueOf(doc.getLockerType()), doc.getUpdatedAt(), doc.getPlaceId(),
             doc.getPlaceName(), doc.getLockerCount(),
             (long) distanceMeters,
             lockerPoint.getLat(),

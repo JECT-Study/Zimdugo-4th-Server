@@ -87,6 +87,12 @@ public class LockerSuggestDocument {
     @Field(type = FieldType.Keyword)
     private String lockerType;
 
+    @Field(type = FieldType.Keyword)
+    private String indoorOutdoorType;
+
+    @Field(type = FieldType.Keyword)
+    private String lockerSize;
+
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second)
     private LocalDateTime updatedAt;
 

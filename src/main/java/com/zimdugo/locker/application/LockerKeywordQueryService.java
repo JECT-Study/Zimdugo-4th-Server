@@ -7,6 +7,7 @@ import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestType;
 import com.zimdugo.locker.domain.LockerPlaceLocker;
 import com.zimdugo.locker.domain.LockerPlaceLockerReader;
+import com.zimdugo.locker.domain.LockerSearchFilter;
 import java.util.List;
 import java.util.Map;
 
@@ -22,17 +23,29 @@ public class LockerKeywordQueryService {
     private final LockerSearchQueryService lockerSearchQueryService;
     private final LockerPlaceLockerReader lockerPlaceLockerReader;
 
+    public LockerKeywordResult getKeywordResults(LockerKeywordSearchCommand command) {
+        return getKeywordResults(
+            command.latitude(),
+            command.longitude(),
+            command.keyword(),
+            command.limit(),
+            LockerSearchFilter.from(command.sizeTypes(), command.indoorOutdoorType(), command.lockerType())
+        );
+    }
+
     public LockerKeywordResult getKeywordResults(
         double latitude,
         double longitude,
         String keyword,
-        int limit
+        int limit,
+        LockerSearchFilter filter
     ) {
         List<LockerSuggestItemResult> suggestItems = lockerSearchQueryService.search(
             latitude,
             longitude,
             keyword,
-            limit
+            limit,
+            filter
         );
         if (suggestItems.isEmpty()) {
             return LockerKeywordResult.empty();
@@ -44,7 +57,7 @@ public class LockerKeywordQueryService {
             .toList();
         Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId = placeIds.isEmpty()
             ? Map.of()
-            : lockerPlaceLockerReader.readByPlaceIds(latitude, longitude, placeIds);
+            : lockerPlaceLockerReader.readByPlaceIds(latitude, longitude, placeIds, filter);
 
         List<LockerKeywordItemResult> items = suggestItems.stream()
             .map(item -> toKeywordItem(item, placeLockersByPlaceId))
