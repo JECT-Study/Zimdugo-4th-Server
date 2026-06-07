@@ -10,8 +10,12 @@ public class S3PresignerConfig {
 
     @Bean(destroyMethod = "close")
     public S3Presigner s3Presigner(S3ImageProperties properties) {
-        return S3Presigner.builder()
-            .region(Region.of(properties.region()))
-            .build();
+        try {
+            return S3Presigner.builder()
+                .region(Region.of(properties.region()))
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("Invalid AWS region configuration.", ex);
+        }
     }
 }

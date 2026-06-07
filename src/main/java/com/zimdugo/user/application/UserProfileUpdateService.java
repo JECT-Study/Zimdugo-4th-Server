@@ -23,8 +23,8 @@ public class UserProfileUpdateService {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
-        String resolvedNickname = nickname != null ? nickname : user.getNickname();
-        String resolvedProfileImageUrl = profileImageUrl != null ? profileImageUrl : user.getProfileImageUrl();
+        String resolvedNickname = hasText(nickname) ? nickname : user.getNickname();
+        String resolvedProfileImageUrl = hasText(profileImageUrl) ? profileImageUrl : user.getProfileImageUrl();
 
         user.updateProfile(resolvedNickname, resolvedProfileImageUrl);
         User updatedUser = userStore.store(user);
@@ -37,5 +37,9 @@ public class UserProfileUpdateService {
             updatedUser.getStatus().name(),
             userQueryService.getProfile(userId).providers()
         );
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

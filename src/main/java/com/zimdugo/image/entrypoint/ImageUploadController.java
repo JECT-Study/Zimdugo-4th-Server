@@ -42,6 +42,10 @@ public class ImageUploadController implements ImageUploadApi {
             throw new BusinessException(ErrorCode.AUTHENTICATED_USER_NOT_FOUND);
         }
 
-        return Long.valueOf(authentication.getName());
+        try {
+            return Long.valueOf(authentication.getName());
+        } catch (NumberFormatException ignored) {
+            throw new BusinessException(ErrorCode.AUTHENTICATED_USER_NOT_FOUND);
+        }
     }
 }
