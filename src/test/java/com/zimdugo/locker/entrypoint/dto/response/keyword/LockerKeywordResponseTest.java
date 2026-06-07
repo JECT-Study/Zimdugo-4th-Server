@@ -58,14 +58,14 @@ class LockerKeywordResponseTest {
     }
 
     @Test
-    @DisplayName("빈 keyword 응답은 bounds를 null로 노출한다")
-    void exposesNullBoundsWhenEmpty() throws Exception {
+    @DisplayName("빈 keyword 응답은 null인 bounds를 제외한다")
+    void excludesNullBoundsWhenEmpty() throws Exception {
         JsonNode root = objectMapper.readTree(objectMapper.writeValueAsString(
             RestResponse.of(SuccessCode.OK, LockerKeywordResponse.from(LockerKeywordResult.empty()))
         ));
 
         assertThat(root.path("data").path("count").asInt()).isZero();
-        assertThat(root.path("data").path("bounds").isNull()).isTrue();
+        assertThat(root.path("data").has("bounds")).isFalse();
         assertThat(root.path("data").path("items")).isEmpty();
     }
 }
