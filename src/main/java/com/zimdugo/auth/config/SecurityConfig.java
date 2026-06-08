@@ -83,6 +83,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
             "https://zimdugo.com",
             "https://www.zimdugo.com",
+            "https://zimdugo-web.vercel.app",
             "http://localhost:3000",
             "http://localhost:5173"
         ));

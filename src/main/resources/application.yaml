@@ -160,7 +160,7 @@ server:
 auth:
   callback:
     frontend-base-url: https://zimdugo.com
-    allowed-origins: https://zimdugo.com,https://www.zimdugo.com
+    allowed-origins: https://zimdugo.com,https://www.zimdugo.com,https://zimdugo-web.vercel.app
 
 management:
   endpoints:
