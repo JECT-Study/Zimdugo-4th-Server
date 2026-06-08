@@ -1,0 +1,207 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: 25
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Check Docker
+        run: |
+          docker version
+          docker info
+          docker ps -a
+
+      - name: Build
+        run: |
+          ./gradlew build
+          rm -f build/libs/*-plain.jar
+
+      - name: Upload Checkstyle reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-reports
+          path: build/reports/checkstyle/
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/reports/tests/
+
+      - name: Upload Build Artifact
+        if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs/
+          retention-days: 1
+
+  deploy:
+    name: Deploy to EC2
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs/
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image name
+        id: image
+        run: |
+          owner_lower="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          repo_lower="$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')"
+          echo "name=ghcr.io/${owner_lower}/${repo_lower}" >> "$GITHUB_OUTPUT"
+          echo "owner_lower=${owner_lower}" >> "$GITHUB_OUTPUT"
+          echo "repo_lower=${repo_lower}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:latest
+            ${{ steps.image.outputs.name }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Copy deployment files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.prod.yml,nginx/default.conf"
+          target: /opt/zimdugo
+
+      - name: Deploy on EC2 via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_SHA: ${{ github.sha }}
+          OWNER_LOWER: ${{ steps.image.outputs.owner_lower }}
+          REPO_LOWER: ${{ steps.image.outputs.repo_lower }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: GITHUB_TOKEN,GITHUB_ACTOR,GITHUB_SHA,OWNER_LOWER,REPO_LOWER
+          script: |
+            set -e
+            cd /opt/zimdugo
+            mkdir -p nginx
+            if [ ! -f nginx/service-env.inc ]; then
+              echo "set \$service_url http://app-blue:8080;" | sudo tee nginx/service-env.inc > /dev/null
+            fi
+
+            grep -q '^GHCR_OWNER=' .env || echo "GHCR_OWNER=${OWNER_LOWER}" >> .env
+            grep -q '^GHCR_REPO=' .env || echo "GHCR_REPO=${REPO_LOWER}" >> .env
+            grep -q '^ELASTICSEARCH_URIS=' .env || echo "ELASTICSEARCH_URIS=http://elasticsearch:9200" >> .env
+            if grep -q '^IMAGE_TAG=' .env; then
+              sudo sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${GITHUB_SHA}|" .env
+            else
+              echo "IMAGE_TAG=${GITHUB_SHA}" | sudo tee -a .env >/dev/null
+            fi
+
+            echo "${GITHUB_TOKEN}" | sudo docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+            
+            # 1. 인프라 서비스 실행 및 대기
+            sudo docker compose -f docker-compose.prod.yml up -d redis elasticsearch
+            for i in {1..60}; do
+              if curl -s http://127.0.0.1:9200 >/dev/null; then
+                echo "Elasticsearch is ready"
+                break
+              fi
+              if [ "$i" -eq 60 ]; then
+                echo "Elasticsearch startup failed. Dumping elasticsearch logs..."
+                sudo docker compose -f docker-compose.prod.yml logs elasticsearch --tail=200
+                exit 1
+              fi
+              sleep 2
+            done
+
+            # 2. 현재 상태 파악 및 다음 타겟 정의
+            if grep -q "app-blue" nginx/service-env.inc; then
+              CURRENT_COLOR="blue"
+              NEXT_COLOR="green"
+              NEXT_PORT="8082"
+            else
+              CURRENT_COLOR="green"
+              NEXT_COLOR="blue"
+              NEXT_PORT="8081"
+            fi
+            echo "Current active app is app-${CURRENT_COLOR}. Deploying to app-${NEXT_COLOR}..."
+
+            # 3. 신규 애플리케이션 버전 풀 및 시작
+            sudo docker compose -f docker-compose.prod.yml pull app-${NEXT_COLOR}
+            sudo docker compose -f docker-compose.prod.yml up -d app-${NEXT_COLOR}
+
+            # 4. 신규 애플리케이션 헬스 체크
+            for i in {1..30}; do
+              status_code="$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:${NEXT_PORT}/actuator/health || true)"
+              if [ "$status_code" = "200" ] || [ "$status_code" = "401" ]; then
+                echo "Health check passed for app-${NEXT_COLOR} with HTTP ${status_code}"
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "Health check failed for app-${NEXT_COLOR}. Dumping app logs..."
+                sudo docker compose -f docker-compose.prod.yml logs app-${NEXT_COLOR} --tail=200
+                exit 1
+              fi
+              sleep 2
+            done
+
+            # 5. Nginx 라우팅 대상을 신규 색상으로 변경 및 리로드
+            echo "set \$service_url http://app-${NEXT_COLOR}:8080;" | sudo tee nginx/service-env.inc > /dev/null
+            sudo docker compose -f docker-compose.prod.yml up -d nginx
+            sudo docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
+            echo "Nginx reloaded. Traffic is now routed to app-${NEXT_COLOR}."
+
+            # 6. 구버전 애플리케이션 종료
+            sudo docker compose -f docker-compose.prod.yml stop app-${CURRENT_COLOR} || true
+            echo "Stopped old application: app-${CURRENT_COLOR}."
+
+            sudo docker image prune -f

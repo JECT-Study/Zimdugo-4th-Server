@@ -21,19 +21,43 @@ services:
     ports:
       - "127.0.0.1:9200:9200"
 
-  app:
+  app-blue:
     image: ghcr.io/${GHCR_OWNER}/${GHCR_REPO}:${IMAGE_TAG:-latest}
-    container_name: zimdugo-be
+    container_name: zimdugo-be-blue
     restart: always
     depends_on:
       - redis
       - elasticsearch
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8081:8080"
     env_file:
       - .env
     environment:
       ELASTICSEARCH_URIS: ${ELASTICSEARCH_URIS:-http://elasticsearch:9200}
+
+  app-green:
+    image: ghcr.io/${GHCR_OWNER}/${GHCR_REPO}:${IMAGE_TAG:-latest}
+    container_name: zimdugo-be-green
+    restart: always
+    depends_on:
+      - redis
+      - elasticsearch
+    ports:
+      - "127.0.0.1:8082:8080"
+    env_file:
+      - .env
+    environment:
+      ELASTICSEARCH_URIS: ${ELASTICSEARCH_URIS:-http://elasticsearch:9200}
+
+  nginx:
+    image: nginx:alpine
+    container_name: zimdugo-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/service-env.inc:/etc/nginx/conf.d/service-env.inc
 
 volumes:
   redis-data:
