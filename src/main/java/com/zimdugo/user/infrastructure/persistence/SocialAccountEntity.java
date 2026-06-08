@@ -1,6 +1,6 @@
 package com.zimdugo.user.infrastructure.persistence;
 
-import com.zimdugo.identity.domain.AuthProvider;
+import com.zimdugo.user.domain.AuthProvider;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
