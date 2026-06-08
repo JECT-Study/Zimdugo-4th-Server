@@ -19,7 +19,7 @@ public interface LockerVoteApi {
 
     @Operation(
         summary = "보관함 정확도 투표 토글",
-        description = "보관함에 대해 정확해요/부정확해요 투표를 토글합니다. 이미 동일한 투표가 존재하면 취소하고, 다른 투표가 존재하면 변경합니다."
+        description = "보관함에 대해 정확해요(CORRECT) / 부정확해요(INCORRECT) 투표를 토글합니다. 이미 동일한 투표가 존재하면 취소하고, 다른 투표가 존재하면 변경합니다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "투표 처리 완료"),
