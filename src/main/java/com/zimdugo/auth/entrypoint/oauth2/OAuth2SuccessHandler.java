@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -36,12 +37,21 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     ) throws IOException {
         String callbackUrl = callbackUrlCookieManager.resolveCallbackUrl(request);
 
-        DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
-        Map<String, Object> attributes = oAuth2User.getAttributes();
+        DefaultOAuth2User oAuth2User = extractOAuth2User(authentication);
+        if (oAuth2User == null) {
+            handleInvalidUserInfo(response, callbackUrl, "OAuth2 principal이 DefaultOAuth2User가 아닙니다.");
+            return;
+        }
 
-        Long userId = Long.valueOf(attributes.get("userId").toString());
-        String email = attributes.get("email") != null ? attributes.get("email").toString() : null;
-        String role = attributes.get("role") != null ? attributes.get("role").toString() : "USER";
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+        Long userId = extractUserId(attributes);
+        if (userId == null) {
+            handleInvalidUserInfo(response, callbackUrl, "OAuth2 사용자 식별값(userId)을 가져오지 못했습니다.");
+            return;
+        }
+
+        String email = extractNullableAttribute(attributes, "email");
+        String role = Objects.requireNonNullElse(extractNullableAttribute(attributes, "role"), "USER");
 
         OAuth2LoginSessionResult session = loginSessionService.createSession(userId, email, role);
 
@@ -58,6 +68,49 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         log.info("OAuth 로그인 성공. userId={}, sid={}, callbackUrl={}", userId, session.sid(), callbackUrl);
         response.sendRedirect(appendCode(callbackUrl, "LOGIN_SUCCESS"));
+    }
+
+    private DefaultOAuth2User extractOAuth2User(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof DefaultOAuth2User oAuth2User)) {
+            return null;
+        }
+        return oAuth2User;
+    }
+
+    private Long extractUserId(Map<String, Object> attributes) {
+        if (attributes == null) {
+            return null;
+        }
+
+        Object userIdValue = attributes.get("userId");
+        if (userIdValue == null) {
+            return null;
+        }
+
+        try {
+            return Long.valueOf(userIdValue.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String extractNullableAttribute(Map<String, Object> attributes, String key) {
+        if (attributes == null) {
+            return null;
+        }
+
+        Object value = attributes.get(key);
+        return value == null ? null : value.toString();
+    }
+
+    private void handleInvalidUserInfo(
+        HttpServletResponse response,
+        String callbackUrl,
+        String reason
+    ) throws IOException {
+        callbackUrlCookieManager.clearCallbackUrl(response);
+        log.warn("OAuth 로그인 성공 후 사용자 정보 검증에 실패했습니다. callbackUrl={}, 사유={}", callbackUrl, reason);
+        response.sendRedirect(appendCode(callbackUrl, "LOGIN_FAILED"));
     }
 
     private String appendCode(String callbackUrl, String code) {
