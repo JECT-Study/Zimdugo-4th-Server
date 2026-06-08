@@ -1,11 +1,11 @@
 package com.zimdugo.auth.config;
 
 import com.zimdugo.auth.application.CustomOAuth2UserService;
-import com.zimdugo.auth.application.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.zimdugo.auth.application.OAuth2FailureHandler;
 import com.zimdugo.auth.application.OAuth2SuccessHandler;
 import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
 import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
+import com.zimdugo.auth.entrypoint.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.zimdugo.common.security.CustomAccessDeniedHandler;
 import com.zimdugo.common.security.CustomAuthenticationEntryPoint;
 import java.util.List;

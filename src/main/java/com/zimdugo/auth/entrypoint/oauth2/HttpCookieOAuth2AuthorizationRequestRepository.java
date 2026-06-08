@@ -1,4 +1,4 @@
-package com.zimdugo.auth.application;
+package com.zimdugo.auth.entrypoint.oauth2;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -126,7 +126,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
         String signature = parts[1];
 
         if (!isValidSignature(encodedPayload, signature)) {
-            log.warn("OAuth2 인가 요청 쿠키 서명 검증에 실패했습니다. 쿠키가 변조되었거나 서명 키가 일치하지 않을 수 있습니다.");
+            log.warn("OAuth2 인가 요청 쿠키 서명 검증에 실패했습니다.");
             return null;
         }
 

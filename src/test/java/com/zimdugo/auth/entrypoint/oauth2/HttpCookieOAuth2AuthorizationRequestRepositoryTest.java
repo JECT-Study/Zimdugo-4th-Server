@@ -1,4 +1,4 @@
-package com.zimdugo.auth.application;
+package com.zimdugo.auth.entrypoint.oauth2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimdugo.common.config.JacksonConfig;
