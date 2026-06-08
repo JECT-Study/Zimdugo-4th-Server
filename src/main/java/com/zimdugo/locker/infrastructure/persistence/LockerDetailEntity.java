@@ -19,6 +19,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -69,7 +70,7 @@ public class LockerDetailEntity {
 
     @Convert(converter = LockerSizeTypeConverter.class)
     @Column(length = 100)
-    private LockerSizeType lockerSize;
+    private Set<LockerSizeType> lockerSize;
 
     @Column(length = 1000)
     private String detailInfo;
@@ -97,43 +98,10 @@ public class LockerDetailEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public LockerDetailEntity(LockerEntity locker, CreateSpec createSpec) {
-        this.locker = locker;
-        this.lockerType = createSpec.lockerType();
-        this.indoorOutdoorType = createSpec.indoorOutdoorType();
-        this.groundLevelType = createSpec.groundLevelType();
-        this.floor = createSpec.floor();
-        this.minPrice = createSpec.minPrice();
-        this.maxPrice = createSpec.maxPrice();
-        this.lockerSize = createSpec.lockerSize();
-        this.detailInfo = createSpec.detailInfo();
-        this.startTime = createSpec.startTime();
-        this.endTime = createSpec.endTime();
-        this.imageUrl = createSpec.imageUrl();
-        this.accurateVoteCount = 0;
-        this.inaccurateVoteCount = 0;
-    }
 
-    public record CreateSpec(
-        LockerType lockerType,
-        IndoorOutdoorType indoorOutdoorType,
-        GroundLevelType groundLevelType,
-        Integer floor,
-        Integer minPrice,
-        Integer maxPrice,
-        LockerSizeType lockerSize,
-        String detailInfo,
-        LocalTime startTime,
-        LocalTime endTime,
-        String imageUrl
-    ) {
-    }
 
-    public void voteAccurate() {
-        this.accurateVoteCount++;
-    }
-
-    public void voteInaccurate() {
-        this.inaccurateVoteCount++;
+    public void updateVoteCounts(int accurateVoteCount, int inaccurateVoteCount) {
+        this.accurateVoteCount = accurateVoteCount;
+        this.inaccurateVoteCount = inaccurateVoteCount;
     }
 }
