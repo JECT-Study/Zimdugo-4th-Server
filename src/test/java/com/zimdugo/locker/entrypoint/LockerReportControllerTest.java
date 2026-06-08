@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
 import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
-import com.zimdugo.common.config.SecurityConfig;
+import com.zimdugo.auth.config.SecurityConfig;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.LockerReportCommandService;
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;

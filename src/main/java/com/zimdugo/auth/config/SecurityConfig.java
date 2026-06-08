@@ -1,4 +1,4 @@
-package com.zimdugo.common.config;
+package com.zimdugo.auth.config;
 
 import com.zimdugo.auth.application.CustomOAuth2UserService;
 import com.zimdugo.auth.application.HttpCookieOAuth2AuthorizationRequestRepository;
