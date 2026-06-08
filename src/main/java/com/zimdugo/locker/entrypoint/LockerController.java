@@ -1,5 +1,6 @@
 package com.zimdugo.locker.entrypoint;
 
+import com.zimdugo.common.security.NullableCurrentUser;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.locker.application.LockerDetailQueryService;
@@ -38,8 +39,11 @@ public class LockerController implements LockerApi {
     private final PlaceLockerQueryService placeLockerQueryService;
 
     @Override
-    public ResponseEntity<RestResponse<LockerDetailResponse>> getLockerDetail(Long lockerId) {
-        LockerDetailResult result = lockerDetailQueryService.getDetail(lockerId);
+    public ResponseEntity<RestResponse<LockerDetailResponse>> getLockerDetail(
+        @NullableCurrentUser Long userId,
+        Long lockerId
+    ) {
+        LockerDetailResult result = lockerDetailQueryService.getDetail(userId, lockerId);
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerDetailResponse.from(result)));
     }
 

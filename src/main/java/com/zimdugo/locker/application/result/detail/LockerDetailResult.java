@@ -29,35 +29,29 @@ public record LockerDetailResult(
     int inaccurateVoteCount,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    boolean isFavorite
+    boolean isFavorite,
+    boolean isAccurateVoted,
+    boolean isInaccurateVoted
 ) {
-    public static LockerDetailResult from(LockerDetail detail, boolean isFavorite) {
+    public static LockerDetailResult from(
+        LockerDetail detail,
+        boolean isFavorite,
+        boolean isAccurateVoted,
+        boolean isInaccurateVoted
+    ) {
+        Set<String> sizes = detail.lockerSizes().stream()
+            .map(Enum::name)
+            .collect(Collectors.toUnmodifiableSet());
+
         return new LockerDetailResult(
-            detail.lockerId(),
-            detail.lockerName(),
-            detail.roadAddress(),
-            detail.latitude(),
-            detail.longitude(),
-            detail.placeId(),
-            detail.placeName(),
-            detail.lockerType().name(),
-            detail.indoorOutdoorType().name(),
-            detail.groundLevelType(),
-            detail.floor(),
-            detail.minPrice(),
-            detail.maxPrice(),
-            detail.lockerSizes().stream()
-                .map(Enum::name)
-                .collect(Collectors.toUnmodifiableSet()),
-            detail.detailInfo(),
-            detail.startTime(),
-            detail.endTime(),
-            detail.imageUrl(),
-            detail.accurateVoteCount(),
-            detail.inaccurateVoteCount(),
-            detail.createdAt(),
-            detail.updatedAt(),
-            isFavorite
+            detail.lockerId(), detail.lockerName(), detail.roadAddress(),
+            detail.latitude(), detail.longitude(), detail.placeId(), detail.placeName(),
+            detail.lockerType().name(), detail.indoorOutdoorType().name(), detail.groundLevelType(),
+            detail.floor(), detail.minPrice(), detail.maxPrice(), sizes, detail.detailInfo(),
+            detail.startTime(), detail.endTime(), detail.imageUrl(),
+            detail.accurateVoteCount(), detail.inaccurateVoteCount(),
+            detail.createdAt(), detail.updatedAt(),
+            isFavorite, isAccurateVoted, isInaccurateVoted
         );
     }
 }

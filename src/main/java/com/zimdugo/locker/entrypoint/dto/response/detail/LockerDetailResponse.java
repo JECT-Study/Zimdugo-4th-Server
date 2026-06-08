@@ -30,7 +30,9 @@ public record LockerDetailResponse(
     int inaccurateVoteCount,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    boolean isFavorite
+    boolean isFavorite,
+    boolean isAccurateVoted,
+    boolean isInaccurateVoted
 ) {
     public static LockerDetailResponse from(LockerDetailResult result) {
         return new LockerDetailResponse(
@@ -56,7 +58,9 @@ public record LockerDetailResponse(
             result.inaccurateVoteCount(),
             result.createdAt(),
             result.updatedAt(),
-            result.isFavorite()
+            result.isFavorite(),
+            result.isAccurateVoted(),
+            result.isInaccurateVoted()
         );
     }
 }

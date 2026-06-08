@@ -1,5 +1,6 @@
 package com.zimdugo.locker.entrypoint;
 
+import com.zimdugo.common.security.NullableCurrentUser;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
 import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
@@ -44,6 +45,7 @@ public interface LockerApi {
     @SecurityRequirements
     @GetMapping("/lockers/{lockerId}")
     ResponseEntity<RestResponse<LockerDetailResponse>> getLockerDetail(
+        @NullableCurrentUser Long userId,
         @PathVariable @Positive Long lockerId
     );
 
