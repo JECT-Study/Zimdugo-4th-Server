@@ -26,7 +26,7 @@ public interface LockerVoteApi {
         @ApiResponse(responseCode = "401", description = "로그인 필요"),
         @ApiResponse(responseCode = "404", description = "보관함이 존재하지 않음")
     })
-    @PostMapping("/me/lockers/{lockerId}/votes")
+    @PostMapping("/lockers/{lockerId}/votes")
     ResponseEntity<RestResponse<Void>> toggleVote(
         @CurrentUser Long userId,
         @PathVariable("lockerId") @Positive Long lockerId,
