@@ -1,4 +1,4 @@
-package com.zimdugo.auth.application;
+package com.zimdugo.auth.entrypoint.oauth2;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,4 +37,3 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
             .toUriString();
     }
 }
-

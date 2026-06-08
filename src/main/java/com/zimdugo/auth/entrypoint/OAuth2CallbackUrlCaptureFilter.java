@@ -1,6 +1,6 @@
 package com.zimdugo.auth.entrypoint;
 
-import com.zimdugo.auth.application.OAuth2CallbackUrlCookieManager;
+import com.zimdugo.auth.entrypoint.oauth2.OAuth2CallbackUrlCookieManager;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

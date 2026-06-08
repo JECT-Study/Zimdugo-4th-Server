@@ -1,4 +1,4 @@
-package com.zimdugo.auth.application;
+package com.zimdugo.auth.entrypoint.oauth2;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
@@ -94,7 +94,7 @@ public class OAuth2CallbackUrlCookieManager {
 
         String trimmed = callbackUrl.trim();
         if (trimmed.contains("\r") || trimmed.contains("\n")) {
-            log.warn("안전하지 않은 callbackUrl이 감지되었습니다. 기본값으로 대체합니다. callbackUrl={}", trimmed);
+            log.warn("안전하지 않은 callbackUrl이 감지되었습니다. 기본값으로 대체합니다.");
             return toFrontendUrl(RELATIVE_PATH_DEFAULT);
         }
 
@@ -104,7 +104,7 @@ public class OAuth2CallbackUrlCookieManager {
 
         String origin = extractOrigin(trimmed);
         if (origin == null || !allowedOrigins.contains(origin)) {
-            log.warn("안전하지 않은 callbackUrl이 감지되었습니다. 기본값으로 대체합니다. callbackUrl={}", trimmed);
+            log.warn("안전하지 않은 callbackUrl이 감지되었습니다. 기본값으로 대체합니다.");
             return toFrontendUrl(RELATIVE_PATH_DEFAULT);
         }
 

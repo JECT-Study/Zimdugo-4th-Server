@@ -1,13 +1,11 @@
-package com.zimdugo.auth.application;
+package com.zimdugo.auth.entrypoint.oauth2;
 
-import com.zimdugo.auth.domain.AuthTokens;
-import com.zimdugo.auth.domain.RefreshTokenRepository;
+import com.zimdugo.auth.application.OAuth2LoginSessionResult;
+import com.zimdugo.auth.application.OAuth2LoginSessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -27,9 +25,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private static final String SAME_SITE_POLICY = "Strict";
     private static final String REFRESH_COOKIE_PATH = "/api/auth/refresh";
 
-    private final JwtTokenProvider jwtTokenProvider;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtProperties jwtProperties;
+    private final OAuth2LoginSessionService loginSessionService;
     private final OAuth2CallbackUrlCookieManager callbackUrlCookieManager;
 
     @Override
@@ -46,24 +42,21 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         Long userId = Long.valueOf(attributes.get("userId").toString());
         String email = attributes.get("email") != null ? attributes.get("email").toString() : null;
         String role = attributes.get("role") != null ? attributes.get("role").toString() : "USER";
-        String sid = UUID.randomUUID().toString();
 
-        AuthTokens tokens = jwtTokenProvider.generateTokens(userId, email, role, sid);
-        Duration rtTtl = Duration.ofSeconds(jwtProperties.refreshTokenExpirationSeconds());
-        refreshTokenRepository.save(userId, sid, tokens.refreshToken(), rtTtl);
+        OAuth2LoginSessionResult session = loginSessionService.createSession(userId, email, role);
 
-        ResponseCookie rtCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken())
+        ResponseCookie rtCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, session.refreshToken())
             .httpOnly(true)
             .secure(false)
             .path(REFRESH_COOKIE_PATH)
-            .maxAge(rtTtl)
+            .maxAge(session.refreshTokenTtl())
             .sameSite(SAME_SITE_POLICY)
             .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
         callbackUrlCookieManager.clearCallbackUrl(response);
 
-        log.info("OAuth 로그인 성공. userId={}, sid={}, callbackUrl={}", userId, sid, callbackUrl);
+        log.info("OAuth 로그인 성공. userId={}, sid={}, callbackUrl={}", userId, session.sid(), callbackUrl);
         response.sendRedirect(appendCode(callbackUrl, "LOGIN_SUCCESS"));
     }
 
