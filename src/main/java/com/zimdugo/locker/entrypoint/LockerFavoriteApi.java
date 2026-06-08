@@ -1,5 +1,6 @@
 package com.zimdugo.locker.entrypoint;
 
+import com.zimdugo.common.security.CurrentUser;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.locker.entrypoint.dto.response.favorite.FavoriteLockerListResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,7 +15,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,7 +35,7 @@ public interface LockerFavoriteApi {
     })
     @PostMapping("/me/favorite-lockers/{lockerId}")
     ResponseEntity<RestResponse<Void>> addFavoriteLocker(
-        Authentication authentication,
+        @CurrentUser Long userId,
         @PathVariable("lockerId")
         @Parameter(description = "보관함 ID", example = "10")
         @Positive
@@ -52,7 +52,7 @@ public interface LockerFavoriteApi {
     })
     @DeleteMapping("/me/favorite-lockers/{lockerId}")
     ResponseEntity<RestResponse<Void>> removeFavoriteLocker(
-        Authentication authentication,
+        @CurrentUser Long userId,
         @PathVariable("lockerId")
         @Parameter(description = "보관함 ID", example = "10")
         @Positive
@@ -69,7 +69,7 @@ public interface LockerFavoriteApi {
     })
     @GetMapping("/me/favorite-lockers")
     ResponseEntity<RestResponse<FavoriteLockerListResponse>> getFavoriteLockers(
-        Authentication authentication,
+        @CurrentUser Long userId,
         @RequestParam(name = "lat", required = false)
         @Parameter(description = "사용자 위도", example = "37.498095")
         @Schema(minimum = "-90", maximum = "90")

@@ -1,6 +1,7 @@
 package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.core.response.RestResponse;
+import com.zimdugo.common.security.CurrentUser;
 import com.zimdugo.locker.entrypoint.dto.request.report.LockerReportCreateRequest;
 import com.zimdugo.locker.entrypoint.dto.response.report.LockerReportCreateResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,7 +10,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -27,7 +27,7 @@ public interface LockerReportApi {
     })
     @PostMapping("/locker-reports")
     ResponseEntity<RestResponse<LockerReportCreateResponse>> createLockerReport(
-        Authentication authentication,
+        @CurrentUser Long userId,
         @Valid @RequestBody LockerReportCreateRequest request
     );
 }

@@ -1,6 +1,4 @@
 package com.zimdugo.user.domain;
-
-import com.zimdugo.identity.domain.AuthProvider;
 import java.time.LocalDateTime;
 import lombok.Getter;
 

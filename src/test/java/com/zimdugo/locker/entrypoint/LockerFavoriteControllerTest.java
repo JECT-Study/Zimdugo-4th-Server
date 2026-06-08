@@ -2,7 +2,7 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
 import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
-import com.zimdugo.common.config.SecurityConfig;
+import com.zimdugo.auth.config.SecurityConfig;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.FavoriteLockerCommandService;

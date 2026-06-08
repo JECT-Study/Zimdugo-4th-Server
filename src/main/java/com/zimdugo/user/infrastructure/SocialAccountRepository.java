@@ -1,6 +1,6 @@
 package com.zimdugo.user.infrastructure;
 
-import com.zimdugo.identity.domain.AuthProvider;
+import com.zimdugo.user.domain.AuthProvider;
 import com.zimdugo.user.infrastructure.persistence.SocialAccountEntity;
 import java.util.List;
 import java.util.Optional;

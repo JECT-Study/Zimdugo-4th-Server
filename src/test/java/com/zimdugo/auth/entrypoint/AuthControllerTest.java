@@ -3,7 +3,7 @@ package com.zimdugo.auth.entrypoint;
 import com.zimdugo.auth.application.AccountWithdrawalService;
 import com.zimdugo.auth.application.AuthCommandService;
 import com.zimdugo.auth.application.AuthRefreshResult;
-import com.zimdugo.common.config.SecurityConfig;
+import com.zimdugo.auth.config.SecurityConfig;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import jakarta.servlet.http.Cookie;
