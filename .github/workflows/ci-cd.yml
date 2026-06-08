@@ -110,13 +110,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Copy deployment files to EC2
+      - name: Copy compose file to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.prod.yml,nginx/default.conf"
+          source: docker-compose.prod.yml
           target: /opt/zimdugo
 
       - name: Deploy on EC2 via SSH
@@ -135,11 +135,6 @@ jobs:
           script: |
             set -e
             cd /opt/zimdugo
-            mkdir -p nginx
-            if [ ! -f nginx/service-env.inc ]; then
-              echo "set \$service_url http://app-blue:8080;" | sudo tee nginx/service-env.inc > /dev/null
-            fi
-
             grep -q '^GHCR_OWNER=' .env || echo "GHCR_OWNER=${OWNER_LOWER}" >> .env
             grep -q '^GHCR_REPO=' .env || echo "GHCR_REPO=${REPO_LOWER}" >> .env
             grep -q '^ELASTICSEARCH_URIS=' .env || echo "ELASTICSEARCH_URIS=http://elasticsearch:9200" >> .env
@@ -150,8 +145,7 @@ jobs:
             fi
 
             echo "${GITHUB_TOKEN}" | sudo docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
-            
-            # 1. 인프라 서비스 실행 및 대기
+            sudo docker compose -f docker-compose.prod.yml pull
             sudo docker compose -f docker-compose.prod.yml up -d redis elasticsearch
             for i in {1..60}; do
               if curl -s http://127.0.0.1:9200 >/dev/null; then
@@ -165,46 +159,18 @@ jobs:
               fi
               sleep 2
             done
-
-            # 2. 현재 상태 파악 및 다음 타겟 정의
-            if grep -q "app-blue" nginx/service-env.inc; then
-              CURRENT_COLOR="blue"
-              NEXT_COLOR="green"
-              NEXT_PORT="8082"
-            else
-              CURRENT_COLOR="green"
-              NEXT_COLOR="blue"
-              NEXT_PORT="8081"
-            fi
-            echo "Current active app is app-${CURRENT_COLOR}. Deploying to app-${NEXT_COLOR}..."
-
-            # 3. 신규 애플리케이션 버전 풀 및 시작
-            sudo docker compose -f docker-compose.prod.yml pull app-${NEXT_COLOR}
-            sudo docker compose -f docker-compose.prod.yml up -d app-${NEXT_COLOR}
-
-            # 4. 신규 애플리케이션 헬스 체크
+            sudo docker compose -f docker-compose.prod.yml up -d app
             for i in {1..30}; do
-              status_code="$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:${NEXT_PORT}/actuator/health || true)"
+              status_code="$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/actuator/health || true)"
               if [ "$status_code" = "200" ] || [ "$status_code" = "401" ]; then
-                echo "Health check passed for app-${NEXT_COLOR} with HTTP ${status_code}"
+                echo "Health check passed with HTTP ${status_code}"
                 break
               fi
               if [ "$i" -eq 30 ]; then
-                echo "Health check failed for app-${NEXT_COLOR}. Dumping app logs..."
-                sudo docker compose -f docker-compose.prod.yml logs app-${NEXT_COLOR} --tail=200
+                echo "Health check failed. Dumping app logs..."
+                sudo docker compose -f docker-compose.prod.yml logs app --tail=200
                 exit 1
               fi
               sleep 2
             done
-
-            # 5. Nginx 라우팅 대상을 신규 색상으로 변경 및 리로드
-            echo "set \$service_url http://app-${NEXT_COLOR}:8080;" | sudo tee nginx/service-env.inc > /dev/null
-            sudo docker compose -f docker-compose.prod.yml up -d nginx
-            sudo docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
-            echo "Nginx reloaded. Traffic is now routed to app-${NEXT_COLOR}."
-
-            # 6. 구버전 애플리케이션 종료
-            sudo docker compose -f docker-compose.prod.yml stop app-${CURRENT_COLOR} || true
-            echo "Stopped old application: app-${CURRENT_COLOR}."
-
             sudo docker image prune -f
