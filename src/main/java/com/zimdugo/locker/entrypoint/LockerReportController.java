@@ -1,7 +1,6 @@
 package com.zimdugo.locker.entrypoint;
 
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.common.security.CurrentUser;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.locker.application.LockerReportCommandService;
@@ -10,7 +9,6 @@ import com.zimdugo.locker.entrypoint.dto.request.report.LockerReportCreateReques
 import com.zimdugo.locker.entrypoint.dto.response.report.LockerReportCreateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,22 +23,14 @@ public class LockerReportController implements LockerReportApi {
 
     @Override
     public ResponseEntity<RestResponse<LockerReportCreateResponse>> createLockerReport(
-        Authentication authentication,
+        @CurrentUser Long userId,
         LockerReportCreateRequest request
     ) {
         LockerReportCreateResult result = lockerReportCommandService.create(
-            extractUserId(authentication),
+            userId,
             request.toCommand()
         );
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, toResponse(result)));
-    }
-
-    private Long extractUserId(Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
-            throw new BusinessException(ErrorCode.AUTHENTICATED_USER_NOT_FOUND);
-        }
-
-        return Long.valueOf(authentication.getName());
     }
 
     private LockerReportCreateResponse toResponse(LockerReportCreateResult result) {
