@@ -5,11 +5,13 @@ import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.application.result.LockerItemType;
+import com.zimdugo.locker.domain.FavoriteLockerReader;
 import com.zimdugo.locker.domain.LockerPlaceLocker;
 import com.zimdugo.locker.domain.LockerPlaceLockerReader;
 import com.zimdugo.locker.domain.LockerSearchFilter;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,9 +24,15 @@ public class LockerKeywordQueryService {
 
     private final LockerSearchQueryService lockerSearchQueryService;
     private final LockerPlaceLockerReader lockerPlaceLockerReader;
+    private final FavoriteLockerReader favoriteLockerReader;
 
     public LockerKeywordResult getKeywordResults(LockerKeywordSearchCommand command) {
+        return getKeywordResults(null, command);
+    }
+
+    public LockerKeywordResult getKeywordResults(Long userId, LockerKeywordSearchCommand command) {
         return getKeywordResults(
+            userId,
             command.latitude(),
             command.longitude(),
             command.keyword(),
@@ -33,6 +41,16 @@ public class LockerKeywordQueryService {
     }
 
     public LockerKeywordResult getKeywordResults(
+        double latitude,
+        double longitude,
+        String keyword,
+        LockerSearchFilter filter
+    ) {
+        return getKeywordResults(null, latitude, longitude, keyword, filter);
+    }
+
+    public LockerKeywordResult getKeywordResults(
+        Long userId,
         double latitude,
         double longitude,
         String keyword,
@@ -58,26 +76,55 @@ public class LockerKeywordQueryService {
         Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId = placeIds.isEmpty()
             ? Map.of()
             : lockerPlaceLockerReader.readByPlaceIds(latitude, longitude, placeIds, filter);
+        Set<Long> targetLockerIds = collectTargetLockerIds(suggestItems, placeLockersByPlaceId);
+        Set<Long> favoriteLockerIds = resolveFavoriteLockerIds(userId, targetLockerIds);
 
         List<LockerKeywordItemResult> items = suggestItems.stream()
-            .map(item -> toKeywordItem(item, placeLockersByPlaceId))
+            .map(item -> toKeywordItem(item, placeLockersByPlaceId, favoriteLockerIds))
             .toList();
         return LockerKeywordResult.of(items);
     }
 
     private LockerKeywordItemResult toKeywordItem(
         LockerSuggestItemResult item,
-        Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId
+        Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId,
+        Set<Long> favoriteLockerIds
     ) {
         if (item.type() == LockerItemType.LOCKER) {
-            return LockerKeywordItemResult.locker(item);
+            return LockerKeywordItemResult.locker(item, favoriteLockerIds.contains(item.lockerId()));
         }
 
         List<LockerKeywordLockerResult> lockers = placeLockersByPlaceId
             .getOrDefault(item.placeId(), List.of())
             .stream()
-            .map(LockerKeywordLockerResult::from)
+            .map(locker -> LockerKeywordLockerResult.from(
+                locker,
+                favoriteLockerIds.contains(locker.lockerId())
+            ))
             .toList();
         return LockerKeywordItemResult.place(item, lockers);
+    }
+
+    private Set<Long> collectTargetLockerIds(
+        List<LockerSuggestItemResult> suggestItems,
+        Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId
+    ) {
+        Set<Long> directLockerIds = suggestItems.stream()
+            .filter(item -> item.type() == LockerItemType.LOCKER)
+            .map(LockerSuggestItemResult::lockerId)
+            .collect(java.util.stream.Collectors.toSet());
+        Set<Long> placeLockerIds = placeLockersByPlaceId.values().stream()
+            .flatMap(List::stream)
+            .map(LockerPlaceLocker::lockerId)
+            .collect(java.util.stream.Collectors.toSet());
+        directLockerIds.addAll(placeLockerIds);
+        return directLockerIds;
+    }
+
+    private Set<Long> resolveFavoriteLockerIds(Long userId, Set<Long> lockerIds) {
+        if (userId == null || lockerIds.isEmpty()) {
+            return Set.of();
+        }
+        return favoriteLockerReader.findFavoriteLockerIds(userId, lockerIds);
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.Set;
 
 public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEntity, Long> {
     boolean existsByUserIdAndLockerId(Long userId, Long lockerId);
@@ -20,6 +21,17 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
     int insertIgnoreConflict(@Param("userId") Long userId, @Param("lockerId") Long lockerId);
 
     long deleteByUserIdAndLockerId(Long userId, Long lockerId);
+
+    @Query("""
+        SELECT fl.locker.id
+        FROM FavoriteLockerEntity fl
+        WHERE fl.user.id = :userId
+          AND fl.locker.id IN :lockerIds
+        """)
+    Set<Long> findFavoriteLockerIds(
+        @Param("userId") Long userId,
+        @Param("lockerIds") Set<Long> lockerIds
+    );
 
     @Query(
         value = """

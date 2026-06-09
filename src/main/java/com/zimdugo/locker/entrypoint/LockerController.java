@@ -73,18 +73,20 @@ public class LockerController implements LockerApi {
 
     @Override
     public ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
+        @NullableCurrentUser Long userId,
         LockerKeywordRequest request
     ) {
-        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(request.toCommand());
+        LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(userId, request.toCommand());
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerKeywordResponse.from(result)));
     }
 
     @Override
     public ResponseEntity<RestResponse<PlaceLockerResponse>> getPlaceLockers(
+        @NullableCurrentUser Long userId,
         Long placeId,
         PlaceLockerRequest request
     ) {
-        PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(request.toCommand(placeId));
+        PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(userId, request.toCommand(placeId));
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, PlaceLockerResponse.from(result)));
     }
 }

@@ -29,7 +29,7 @@ public class LockerVoteCommandService {
         try {
             voteType = LockerVoteType.valueOf(voteTypeName);
         } catch (IllegalArgumentException | NullPointerException e) {
-            throw new BusinessException(ErrorCode.LOCKER_NOT_FOUND);
+            throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
 
         LockerDetail lockerDetail = lockerDetailReader.readById(lockerId)
