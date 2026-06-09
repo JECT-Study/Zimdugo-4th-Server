@@ -27,14 +27,19 @@ public record LockerKeywordRequest(
     @Size(max = 100)
     String keyword,
 
-    @Schema(description = "보관함 크기 필터, 복수 선택 가능", example = "[\"SMALL\", \"MEDIUM\", \"BIG\"]")
+    @Schema(description = "보관함 크기 필터, 복수 선택 가능", example = "[\"SMALL\", \"MEDIUM\", \"LARGE\"]")
     Set<String> sizeTypes,
 
-    @Schema(description = "실내/실외 필터", example = "INDOOR")
-    String indoorOutdoorType,
+    @Schema(description = "실내/실외 필터, 복수 선택 가능", example = "[\"INDOOR\", \"OUTDOOR\"]")
+    Set<String> indoorOutdoorTypes,
 
-    @Schema(description = "보관함 유형 필터", example = "SUBWAY_STATION")
-    String lockerType
+    @Schema(
+        description = "보관함 유형 필터 (MUSEUM, SUBWAY_STATION, DEPARTMENT_STORE, CONVENIENCE_STORE, "
+            + "PUBLIC_OFFICE, PRIVATE_LOCKER, TRAIN_STATION, ETC), 복수 선택 가능",
+        example = "[\"MUSEUM\", \"SUBWAY_STATION\", \"DEPARTMENT_STORE\", \"CONVENIENCE_STORE\", "
+            + "\"PUBLIC_OFFICE\", \"PRIVATE_LOCKER\", \"TRAIN_STATION\", \"ETC\"]"
+    )
+    Set<String> lockerTypes
 ) {
 
     public LockerKeywordSearchCommand toCommand() {
@@ -43,8 +48,8 @@ public record LockerKeywordRequest(
             lng,
             keyword,
             sizeTypes,
-            indoorOutdoorType,
-            lockerType
+            indoorOutdoorTypes,
+            lockerTypes
         );
     }
 }
