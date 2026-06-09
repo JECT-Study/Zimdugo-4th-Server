@@ -83,8 +83,16 @@ class LockerSearchFilterTest {
             Set.of(LockerType.SUBWAY_STATION, LockerType.DEPARTMENT_STORE)
         );
 
-        assertThat(filter.matches(LockerSizeType.SMALL, IndoorOutdoorType.INDOOR, LockerType.SUBWAY_STATION)).isTrue();
-        assertThat(filter.matches(LockerSizeType.SMALL, IndoorOutdoorType.INDOOR, LockerType.DEPARTMENT_STORE)).isTrue();
+        assertThat(filter.matches(
+            LockerSizeType.SMALL,
+            IndoorOutdoorType.INDOOR,
+            LockerType.SUBWAY_STATION
+        )).isTrue();
+        assertThat(filter.matches(
+            LockerSizeType.SMALL,
+            IndoorOutdoorType.INDOOR,
+            LockerType.DEPARTMENT_STORE
+        )).isTrue();
         assertThat(filter.matches(LockerSizeType.SMALL, IndoorOutdoorType.INDOOR, LockerType.ETC)).isFalse();
     }
 }
