@@ -14,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class LockerReportCommandService {
 
+    private final ActiveUserValidator activeUserValidator;
     private final LockerReportStore lockerReportStore;
 
     public LockerReportCreateResult create(Long userId, LockerReportCreateCommand command) {
+        activeUserValidator.validate(userId);
         SavedLockerReport report = lockerReportStore.create(toCreateInfo(userId, command));
 
         return new LockerReportCreateResult(
@@ -30,10 +32,12 @@ public class LockerReportCommandService {
     }
 
     public void update(Long userId, Long reportId, LockerReportCreateCommand command) {
+        activeUserValidator.validate(userId);
         lockerReportStore.update(userId, reportId, toUpdateInfo(command));
     }
 
     public void delete(Long userId, Long reportId) {
+        activeUserValidator.validate(userId);
         lockerReportStore.delete(userId, reportId);
     }
 

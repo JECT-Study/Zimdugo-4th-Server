@@ -60,7 +60,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
         LockerReportEntity report = lockerReportRepository.findActiveByIdAndUserId(reportId, userId)
             .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
 
-        report.updateReport(
+        report.updateReport(new LockerReportEntity.UpdateValues(
             updateInfo.name(),
             updateInfo.roadAddress(),
             toGroundLevelType(updateInfo.groundLevelType()),
@@ -78,7 +78,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
             updateInfo.locationConsentAgreed(),
             updateInfo.latitude(),
             updateInfo.longitude()
-        );
+        ));
     }
 
     @Override

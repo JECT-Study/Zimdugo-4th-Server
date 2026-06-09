@@ -118,8 +118,27 @@ public class LockerReportEntity {
     @Column
     private LocalDateTime deletedAt;
 
-    @SuppressWarnings("checkstyle:ParameterNumber")
-    public void updateReport(
+    public void updateReport(UpdateValues values) {
+        this.name = values.name();
+        this.roadAddress = values.roadAddress();
+        this.groundLevelType = values.groundLevelType();
+        this.floor = values.floor();
+        this.indoorOutdoorType = values.indoorOutdoorType();
+        this.lockerType = values.lockerType();
+        this.lockerSize = values.lockerSize();
+        this.isFree = values.isFree();
+        this.minPrice = values.minPrice();
+        this.maxPrice = values.maxPrice();
+        this.additionalInfo = values.additionalInfo();
+        this.startTime = values.startTime();
+        this.endTime = values.endTime();
+        this.imageUrl = values.imageUrl();
+        this.locationConsentAgreed = values.locationConsentAgreed();
+        this.latitude = values.latitude();
+        this.longitude = values.longitude();
+    }
+
+    public record UpdateValues(
         String name,
         String roadAddress,
         GroundLevelType groundLevelType,
@@ -138,23 +157,6 @@ public class LockerReportEntity {
         double latitude,
         double longitude
     ) {
-        this.name = name;
-        this.roadAddress = roadAddress;
-        this.groundLevelType = groundLevelType;
-        this.floor = floor;
-        this.indoorOutdoorType = indoorOutdoorType;
-        this.lockerType = lockerType;
-        this.lockerSize = lockerSize;
-        this.isFree = isFree;
-        this.minPrice = minPrice;
-        this.maxPrice = maxPrice;
-        this.additionalInfo = additionalInfo;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.imageUrl = imageUrl;
-        this.locationConsentAgreed = locationConsentAgreed;
-        this.latitude = latitude;
-        this.longitude = longitude;
     }
 
     public void delete() {
