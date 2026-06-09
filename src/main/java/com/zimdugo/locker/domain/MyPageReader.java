@@ -1,5 +1,7 @@
 package com.zimdugo.locker.domain;
 
+import java.util.Optional;
+
 public interface MyPageReader {
 
     long countFavoriteLockers(Long userId);
@@ -13,4 +15,6 @@ public interface MyPageReader {
         int page,
         int size
     );
+
+    Optional<MyLockerReportDetail> findLockerReport(Long userId, Long reportId);
 }
