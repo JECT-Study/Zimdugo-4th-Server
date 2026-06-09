@@ -25,6 +25,10 @@ public class PlaceLockerQueryService {
     private final LockerPlaceLockerReader lockerPlaceLockerReader;
     private final FavoriteLockerReader favoriteLockerReader;
 
+    public PlaceLockerResult getPlaceLockers(PlaceLockerQueryCommand command) {
+        return getPlaceLockers(null, command);
+    }
+
     public PlaceLockerResult getPlaceLockers(Long userId, PlaceLockerQueryCommand command) {
         LockerPlace place = lockerPlaceReader.readById(command.placeId())
             .orElseThrow(() -> new BusinessException(ErrorCode.PLACE_NOT_FOUND));

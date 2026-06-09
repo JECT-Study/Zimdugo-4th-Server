@@ -41,6 +41,15 @@ public class LockerKeywordQueryService {
     }
 
     public LockerKeywordResult getKeywordResults(
+        double latitude,
+        double longitude,
+        String keyword,
+        LockerSearchFilter filter
+    ) {
+        return getKeywordResults(null, latitude, longitude, keyword, filter);
+    }
+
+    public LockerKeywordResult getKeywordResults(
         Long userId,
         double latitude,
         double longitude,
