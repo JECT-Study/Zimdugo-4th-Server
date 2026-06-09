@@ -38,7 +38,8 @@ public record LockerSearchFilter(
         Set<String> lockerTypes
     ) {
         Set<LockerSizeType> parsedSizeTypes = parseEnumSet(sizeTypes, LockerSizeType::from);
-        Set<IndoorOutdoorType> parsedIndoorOutdoorTypes = parseEnumSet(indoorOutdoorTypes, val -> parse(val, IndoorOutdoorType.class));
+        Set<IndoorOutdoorType> parsedIndoorOutdoorTypes =
+            parseEnumSet(indoorOutdoorTypes, val -> parse(val, IndoorOutdoorType.class));
         Set<LockerType> parsedLockerTypes = parseEnumSet(lockerTypes, val -> parse(val, LockerType.class));
 
         return new LockerSearchFilter(
@@ -62,7 +63,10 @@ public record LockerSearchFilter(
             && (lockerTypes.isEmpty() || lockerTypes.contains(actualLockerType));
     }
 
-    private static <T extends Enum<T>> Set<T> parseEnumSet(Set<String> values, java.util.function.Function<String, T> mapper) {
+    private static <T extends Enum<T>> Set<T> parseEnumSet(
+        Set<String> values,
+        java.util.function.Function<String, T> mapper
+    ) {
         if (values == null) {
             return Set.of();
         }

@@ -73,7 +73,11 @@ class PlaceLockerQueryServiceTest {
             37.55,
             126.93,
             List.of(101L),
-            new LockerSearchFilter(Set.of(LockerSizeType.LARGE), Set.of(IndoorOutdoorType.INDOOR), Set.of(LockerType.SUBWAY_STATION))
+            new LockerSearchFilter(
+                Set.of(LockerSizeType.LARGE),
+                Set.of(IndoorOutdoorType.INDOOR),
+                Set.of(LockerType.SUBWAY_STATION)
+            )
         )).willReturn(Map.of());
 
         PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(command());

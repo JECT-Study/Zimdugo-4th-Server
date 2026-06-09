@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -113,38 +114,31 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         if (filter.isEmpty()) {
             return query;
         }
-
+ 
         return Query.of(q -> q.bool(b -> {
             b.must(query);
-            if (!filter.sizeTypes().isEmpty()) {
-                List<FieldValue> values = filter.sizeTypes().stream()
-                    .map(sizeType -> FieldValue.of(sizeType.name()))
-                    .toList();
-                b.filter(f -> f.terms(t -> t
-                    .field("lockerSize")
-                    .terms(v -> v.value(values))
-                ));
-            }
-            if (!filter.indoorOutdoorTypes().isEmpty()) {
-                List<FieldValue> values = filter.indoorOutdoorTypes().stream()
-                    .map(type -> FieldValue.of(type.name()))
-                    .toList();
-                b.filter(f -> f.terms(t -> t
-                    .field("indoorOutdoorType")
-                    .terms(v -> v.value(values))
-                ));
-            }
-            if (!filter.lockerTypes().isEmpty()) {
-                List<FieldValue> values = filter.lockerTypes().stream()
-                    .map(type -> FieldValue.of(type.name()))
-                    .toList();
-                b.filter(f -> f.terms(t -> t
-                    .field("lockerType")
-                    .terms(v -> v.value(values))
-                ));
-            }
+            addTermsFilter(b, "lockerSize", filter.sizeTypes());
+            addTermsFilter(b, "indoorOutdoorType", filter.indoorOutdoorTypes());
+            addTermsFilter(b, "lockerType", filter.lockerTypes());
             return b;
         }));
+    }
+ 
+    private <T extends Enum<T>> void addTermsFilter(
+        co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder builder,
+        String fieldName,
+        Set<T> filterValues
+    ) {
+        if (filterValues.isEmpty()) {
+            return;
+        }
+        List<FieldValue> values = filterValues.stream()
+            .map(val -> FieldValue.of(val.name()))
+            .toList();
+        builder.filter(f -> f.terms(t -> t
+            .field(fieldName)
+            .terms(v -> v.value(values))
+        ));
     }
 
     private List<LockerSuggestCandidate> convertToCandidates(SearchHits<LockerSuggestDocument> hits) {
