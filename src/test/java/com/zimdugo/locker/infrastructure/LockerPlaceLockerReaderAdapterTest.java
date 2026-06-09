@@ -33,16 +33,16 @@ class LockerPlaceLockerReaderAdapterTest {
     @DisplayName("PLACE 하위 보관함에도 복합 필터를 적용한다")
     void filtersPlaceLockers() {
         List<LockerPlaceLockerQueryProjection> projections = List.of(
-            projection(10L, "BIG", "INDOOR", "SUBWAY_STATION"),
+            projection(10L, "LARGE", "INDOOR", "SUBWAY_STATION"),
             projection(11L, "MEDIUM", "INDOOR", "SUBWAY_STATION"),
-            projection(12L, "BIG", "OUTDOOR", "SUBWAY_STATION")
+            projection(12L, "LARGE", "OUTDOOR", "SUBWAY_STATION")
         );
         given(lockerRepository.findByPlaceIds(37.55, 126.93, List.of(101L)))
             .willReturn(projections);
         LockerSearchFilter filter = new LockerSearchFilter(
-            Set.of(LockerSizeType.BIG),
-            IndoorOutdoorType.INDOOR,
-            LockerType.SUBWAY_STATION
+            Set.of(LockerSizeType.LARGE),
+            Set.of(IndoorOutdoorType.INDOOR),
+            Set.of(LockerType.SUBWAY_STATION)
         );
 
         Map<Long, List<LockerPlaceLocker>> result = lockerPlaceLockerReaderAdapter.readByPlaceIds(

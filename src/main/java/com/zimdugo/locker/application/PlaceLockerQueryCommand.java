@@ -7,7 +7,7 @@ public record PlaceLockerQueryCommand(
     double latitude,
     double longitude,
     Set<String> sizeTypes,
-    String indoorOutdoorType,
-    String lockerType
+    Set<String> indoorOutdoorTypes,
+    Set<String> lockerTypes
 ) {
 }

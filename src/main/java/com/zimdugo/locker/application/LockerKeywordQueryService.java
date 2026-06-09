@@ -36,7 +36,7 @@ public class LockerKeywordQueryService {
             command.latitude(),
             command.longitude(),
             command.keyword(),
-            LockerSearchFilter.from(command.sizeTypes(), command.indoorOutdoorType(), command.lockerType())
+            LockerSearchFilter.from(command.sizeTypes(), command.indoorOutdoorTypes(), command.lockerTypes())
         );
     }
 

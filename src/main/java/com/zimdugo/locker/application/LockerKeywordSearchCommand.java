@@ -7,7 +7,7 @@ public record LockerKeywordSearchCommand(
     double longitude,
     String keyword,
     Set<String> sizeTypes,
-    String indoorOutdoorType,
-    String lockerType
+    Set<String> indoorOutdoorTypes,
+    Set<String> lockerTypes
 ) {
 }

@@ -97,9 +97,9 @@ class LockerSearchCandidateReaderAdapterTest {
         )).willReturn(searchHits, searchHits);
         given(searchHits.getSearchHits()).willReturn(java.util.List.of());
         LockerSearchFilter filter = new LockerSearchFilter(
-            Set.of(LockerSizeType.SMALL, LockerSizeType.BIG),
-            IndoorOutdoorType.INDOOR,
-            LockerType.SUBWAY_STATION
+            Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
+            Set.of(IndoorOutdoorType.INDOOR),
+            Set.of(LockerType.SUBWAY_STATION)
         );
 
         lockerSearchCandidateReaderAdapter.search(37.55, 126.93, "중앙로", filter);
@@ -108,7 +108,7 @@ class LockerSearchCandidateReaderAdapterTest {
         verify(elasticsearchOperations, times(2)).search(captor.capture(), eq(LockerSuggestDocument.class));
         for (NativeQuery query : captor.getAllValues()) {
             String queryText = query.getQuery().toString();
-            assertThat(queryText).contains("lockerSize", "SMALL", "BIG");
+            assertThat(queryText).contains("lockerSize", "SMALL", "LARGE");
             assertThat(queryText).contains("indoorOutdoorType", "INDOOR");
             assertThat(queryText).contains("lockerType", "SUBWAY_STATION");
         }

@@ -57,9 +57,9 @@ class LockerKeywordQueryServiceTest {
     @DisplayName("keyword 요청 필터를 도메인 필터로 변환해 검색에 전달한다")
     void convertsCommandFilters() {
         LockerSearchFilter filter = new LockerSearchFilter(
-            Set.of(LockerSizeType.SMALL, LockerSizeType.BIG),
-            IndoorOutdoorType.INDOOR,
-            LockerType.SUBWAY_STATION
+            Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
+            Set.of(IndoorOutdoorType.INDOOR),
+            Set.of(LockerType.SUBWAY_STATION)
         );
         given(lockerSearchQueryService.search(37.55, 126.93, "신촌", filter))
             .willReturn(List.of());
@@ -67,9 +67,9 @@ class LockerKeywordQueryServiceTest {
             37.55,
             126.93,
             "신촌",
-            Set.of("SMALL", "BIG"),
-            "INDOOR",
-            "SUBWAY_STATION"
+            Set.of("SMALL", "LARGE"),
+            Set.of("INDOOR"),
+            Set.of("SUBWAY_STATION")
         );
 
         LockerKeywordResult result = lockerKeywordQueryService.getKeywordResults(command);
@@ -107,7 +107,7 @@ class LockerKeywordQueryServiceTest {
                     "서울 서대문구 신촌역로 1",
                     LockerType.SUBWAY_STATION,
                     IndoorOutdoorType.INDOOR,
-                    LockerSizeType.BIG,
+                    LockerSizeType.LARGE,
                     1000,
                     37.556,
                     126.923,
@@ -222,7 +222,7 @@ class LockerKeywordQueryServiceTest {
                     "서울 서대문구 신촌역로 1",
                     LockerType.SUBWAY_STATION,
                     IndoorOutdoorType.INDOOR,
-                    LockerSizeType.BIG,
+                    LockerSizeType.LARGE,
                     1000,
                     37.1,
                     126.1,
