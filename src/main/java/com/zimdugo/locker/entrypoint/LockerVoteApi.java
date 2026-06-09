@@ -23,6 +23,7 @@ public interface LockerVoteApi {
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "투표 처리 완료"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
         @ApiResponse(responseCode = "401", description = "로그인 필요"),
         @ApiResponse(responseCode = "404", description = "보관함이 존재하지 않음")
     })

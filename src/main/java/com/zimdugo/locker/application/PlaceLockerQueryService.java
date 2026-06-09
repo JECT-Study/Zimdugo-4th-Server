@@ -4,12 +4,14 @@ import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
 import com.zimdugo.locker.application.result.place.PlaceLockerResult;
+import com.zimdugo.locker.domain.FavoriteLockerReader;
 import com.zimdugo.locker.domain.LockerPlace;
 import com.zimdugo.locker.domain.LockerPlaceLocker;
 import com.zimdugo.locker.domain.LockerPlaceLockerReader;
 import com.zimdugo.locker.domain.LockerPlaceReader;
 import com.zimdugo.locker.domain.LockerSearchFilter;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +23,13 @@ public class PlaceLockerQueryService {
 
     private final LockerPlaceReader lockerPlaceReader;
     private final LockerPlaceLockerReader lockerPlaceLockerReader;
+    private final FavoriteLockerReader favoriteLockerReader;
 
     public PlaceLockerResult getPlaceLockers(PlaceLockerQueryCommand command) {
+        return getPlaceLockers(null, command);
+    }
+
+    public PlaceLockerResult getPlaceLockers(Long userId, PlaceLockerQueryCommand command) {
         LockerPlace place = lockerPlaceReader.readById(command.placeId())
             .orElseThrow(() -> new BusinessException(ErrorCode.PLACE_NOT_FOUND));
         LockerSearchFilter filter = LockerSearchFilter.from(
@@ -36,10 +43,24 @@ public class PlaceLockerQueryService {
             List.of(command.placeId()),
             filter
         ).getOrDefault(command.placeId(), List.of());
+        Set<Long> favoriteLockerIds = resolveFavoriteLockerIds(userId, lockers);
         List<LockerKeywordLockerResult> lockerResults = lockers.stream()
-            .map(LockerKeywordLockerResult::from)
+            .map(locker -> LockerKeywordLockerResult.from(
+                locker,
+                favoriteLockerIds.contains(locker.lockerId())
+            ))
             .toList();
 
         return PlaceLockerResult.of(place, lockerResults);
+    }
+
+    private Set<Long> resolveFavoriteLockerIds(Long userId, List<LockerPlaceLocker> lockers) {
+        if (userId == null || lockers.isEmpty()) {
+            return Set.of();
+        }
+        Set<Long> lockerIds = lockers.stream()
+            .map(LockerPlaceLocker::lockerId)
+            .collect(java.util.stream.Collectors.toSet());
+        return favoriteLockerReader.findFavoriteLockerIds(userId, lockerIds);
     }
 }

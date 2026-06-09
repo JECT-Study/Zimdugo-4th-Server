@@ -116,6 +116,7 @@ public interface LockerApi {
     @SecurityRequirements
     @GetMapping("/lockers/keyword")
     ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
+        @NullableCurrentUser Long userId,
         @Valid @ParameterObject LockerKeywordRequest request
     );
 
@@ -131,6 +132,7 @@ public interface LockerApi {
     @SecurityRequirements
     @GetMapping("/places/{placeId}")
     ResponseEntity<RestResponse<PlaceLockerResponse>> getPlaceLockers(
+        @NullableCurrentUser Long userId,
         @PathVariable Long placeId,
         @Valid @ParameterObject PlaceLockerRequest request
     );
