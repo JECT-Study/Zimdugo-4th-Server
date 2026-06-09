@@ -58,7 +58,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
     @Override
     public void update(Long userId, Long reportId, LockerReportUpdateInfo updateInfo) {
         LockerReportEntity report = lockerReportRepository.findActiveByIdAndUserId(reportId, userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
 
         report.updateReport(
             updateInfo.name(),
@@ -84,7 +84,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
     @Override
     public void delete(Long userId, Long reportId) {
         LockerReportEntity report = lockerReportRepository.findActiveByIdAndUserId(reportId, userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
 
         report.delete();
     }

@@ -70,7 +70,7 @@ public class MyPageQueryService {
         activeUserValidator.validate(userId);
 
         MyLockerReportDetail report = myPageReader.findLockerReport(userId, reportId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
 
         return new MyLockerReportDetailResult(
             report.reportId(),
