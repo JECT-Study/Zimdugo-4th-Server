@@ -1,15 +1,10 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.favorite.FavoriteLockerListItemResult;
 import com.zimdugo.locker.application.result.favorite.FavoriteLockerListResult;
 import com.zimdugo.locker.domain.FavoriteLockerListItem;
 import com.zimdugo.locker.domain.FavoriteLockerListPage;
 import com.zimdugo.locker.domain.FavoriteLockerQueryReader;
-import com.zimdugo.user.domain.User;
-import com.zimdugo.user.domain.UserReader;
-import com.zimdugo.user.domain.UserStatus;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FavoriteLockerQueryService {
 
     private final FavoriteLockerQueryReader favoriteLockerQueryReader;
-    private final UserReader userReader;
+    private final ActiveUserValidator activeUserValidator;
 
     public FavoriteLockerListResult getFavoriteLockers(
         Long userId,
@@ -31,7 +26,7 @@ public class FavoriteLockerQueryService {
         int page,
         int size
     ) {
-        validateUser(userId);
+        activeUserValidator.validate(userId);
         UserLocationResolver.ResolvedLocation resolvedLocation = UserLocationResolver.resolve(latitude, longitude);
 
         FavoriteLockerListPage result = favoriteLockerQueryReader.findAll(
@@ -69,13 +64,5 @@ public class FavoriteLockerQueryService {
             item.updatedAt(),
             true
         );
-    }
-
-    private void validateUser(Long userId) {
-        User user = userReader.findById(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if (user.getStatus() == UserStatus.DELETED) {
-            throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
-        }
     }
 }

@@ -1,16 +1,11 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.mypage.MyLockerReportHistoryItemResult;
 import com.zimdugo.locker.application.result.mypage.MyLockerReportHistoryResult;
 import com.zimdugo.locker.application.result.mypage.MyPageSummaryResult;
 import com.zimdugo.locker.domain.MyLockerReportHistoryItem;
 import com.zimdugo.locker.domain.MyLockerReportHistoryPage;
 import com.zimdugo.locker.domain.MyPageReader;
-import com.zimdugo.user.domain.User;
-import com.zimdugo.user.domain.UserReader;
-import com.zimdugo.user.domain.UserStatus;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class MyPageQueryService {
 
     private final MyPageReader myPageReader;
-    private final UserReader userReader;
+    private final ActiveUserValidator activeUserValidator;
 
     public MyPageSummaryResult getSummary(Long userId) {
-        validateUser(userId);
+        activeUserValidator.validate(userId);
 
         return new MyPageSummaryResult(
             myPageReader.countFavoriteLockers(userId),
@@ -41,7 +36,7 @@ public class MyPageQueryService {
         int page,
         int size
     ) {
-        validateUser(userId);
+        activeUserValidator.validate(userId);
         UserLocationResolver.ResolvedLocation resolvedLocation = UserLocationResolver.resolve(latitude, longitude);
 
         MyLockerReportHistoryPage result = myPageReader.findLockerReports(
@@ -65,15 +60,6 @@ public class MyPageQueryService {
             .toList();
 
         return MyLockerReportHistoryResult.of(items, result.totalCount(), result.hasNext());
-    }
-
-    private void validateUser(Long userId) {
-        User user = userReader.findById(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        if (user.getStatus() == UserStatus.DELETED) {
-            throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
-        }
     }
 
     private MyLockerReportHistoryItemResult toLockerReportHistoryItemResult(MyLockerReportHistoryItem item) {
