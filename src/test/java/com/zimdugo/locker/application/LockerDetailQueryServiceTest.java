@@ -99,7 +99,7 @@ class LockerDetailQueryServiceTest {
             -1,
             1000,
             3000,
-            Set.of(LockerSizeType.SMALL, LockerSizeType.BIG),
+            Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
             "개찰구 옆",
             LocalTime.of(9, 0),
             LocalTime.of(22, 0),

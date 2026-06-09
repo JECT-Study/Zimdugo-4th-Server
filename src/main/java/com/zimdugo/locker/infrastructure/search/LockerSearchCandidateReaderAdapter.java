@@ -125,16 +125,22 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
                     .terms(v -> v.value(values))
                 ));
             }
-            if (filter.indoorOutdoorType() != null) {
-                b.filter(f -> f.term(t -> t
+            if (!filter.indoorOutdoorTypes().isEmpty()) {
+                List<FieldValue> values = filter.indoorOutdoorTypes().stream()
+                    .map(type -> FieldValue.of(type.name()))
+                    .toList();
+                b.filter(f -> f.terms(t -> t
                     .field("indoorOutdoorType")
-                    .value(filter.indoorOutdoorType().name())
+                    .terms(v -> v.value(values))
                 ));
             }
-            if (filter.lockerType() != null) {
-                b.filter(f -> f.term(t -> t
+            if (!filter.lockerTypes().isEmpty()) {
+                List<FieldValue> values = filter.lockerTypes().stream()
+                    .map(type -> FieldValue.of(type.name()))
+                    .toList();
+                b.filter(f -> f.terms(t -> t
                     .field("lockerType")
-                    .value(filter.lockerType().name())
+                    .terms(v -> v.value(values))
                 ));
             }
             return b;

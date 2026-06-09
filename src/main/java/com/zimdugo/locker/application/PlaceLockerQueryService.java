@@ -34,8 +34,8 @@ public class PlaceLockerQueryService {
             .orElseThrow(() -> new BusinessException(ErrorCode.PLACE_NOT_FOUND));
         LockerSearchFilter filter = LockerSearchFilter.from(
             command.sizeTypes(),
-            command.indoorOutdoorType(),
-            command.lockerType()
+            command.indoorOutdoorTypes(),
+            command.lockerTypes()
         );
         List<LockerPlaceLocker> lockers = lockerPlaceLockerReader.readByPlaceIds(
             command.latitude(),

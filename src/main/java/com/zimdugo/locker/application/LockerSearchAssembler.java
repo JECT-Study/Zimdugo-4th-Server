@@ -1,13 +1,14 @@
 package com.zimdugo.locker.application;
 
 import com.zimdugo.common.util.HangulUtils;
+import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.domain.LockerSearchMatchType;
 import com.zimdugo.locker.domain.LockerSuggestCandidate;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,21 +21,21 @@ public class LockerSearchAssembler {
     ) {
         String normalizedKeyword = normalize(keyword);
         String decomposedKeyword = HangulUtils.decompose(normalizedKeyword);
-        Map<Long, LockerSuggestCandidate> bestCandidateByPlace = getBestCandidates(candidates);
 
-        List<LockerSuggestItemResult> suggestions = new ArrayList<>(bestCandidateByPlace.size());
-        for (LockerSuggestCandidate candidate : bestCandidateByPlace.values()) {
-            suggestions.add(toItemResult(candidate, normalizedKeyword, decomposedKeyword, matchType));
+        List<LockerSuggestItemResult> suggestions = new ArrayList<>(candidates.size());
+        Set<Long> seenPlaceIdsForPlaceType = new HashSet<>();
+
+        for (LockerSuggestCandidate candidate : candidates) {
+            LockerSuggestItemResult item = toItemResult(candidate, normalizedKeyword, decomposedKeyword, matchType);
+            if (item.type() == LockerItemType.LOCKER) {
+                suggestions.add(item);
+            } else if (item.type() == LockerItemType.PLACE) {
+                if (seenPlaceIdsForPlaceType.add(candidate.placeId())) {
+                    suggestions.add(item);
+                }
+            }
         }
         return suggestions;
-    }
-
-    private Map<Long, LockerSuggestCandidate> getBestCandidates(List<LockerSuggestCandidate> candidates) {
-        Map<Long, LockerSuggestCandidate> bestCandidateByPlace = new LinkedHashMap<>();
-        for (LockerSuggestCandidate candidate : candidates) {
-            bestCandidateByPlace.putIfAbsent(candidate.placeId(), candidate);
-        }
-        return bestCandidateByPlace;
     }
 
     private LockerSuggestItemResult toItemResult(

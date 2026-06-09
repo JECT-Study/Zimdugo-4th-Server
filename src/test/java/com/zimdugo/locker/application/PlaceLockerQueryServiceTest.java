@@ -45,9 +45,9 @@ class PlaceLockerQueryServiceTest {
     void returnsPlaceLockersWithKeywordFilter() {
         PlaceLockerQueryCommand command = command();
         LockerSearchFilter filter = new LockerSearchFilter(
-            Set.of(LockerSizeType.BIG),
-            IndoorOutdoorType.INDOOR,
-            LockerType.SUBWAY_STATION
+            Set.of(LockerSizeType.LARGE),
+            Set.of(IndoorOutdoorType.INDOOR),
+            Set.of(LockerType.SUBWAY_STATION)
         );
         given(lockerPlaceReader.readById(101L)).willReturn(Optional.of(place()));
         given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), filter))
@@ -73,7 +73,7 @@ class PlaceLockerQueryServiceTest {
             37.55,
             126.93,
             List.of(101L),
-            new LockerSearchFilter(Set.of(LockerSizeType.BIG), IndoorOutdoorType.INDOOR, LockerType.SUBWAY_STATION)
+            new LockerSearchFilter(Set.of(LockerSizeType.LARGE), Set.of(IndoorOutdoorType.INDOOR), Set.of(LockerType.SUBWAY_STATION))
         )).willReturn(Map.of());
 
         PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(command());
@@ -101,9 +101,9 @@ class PlaceLockerQueryServiceTest {
             101L,
             37.55,
             126.93,
-            Set.of("BIG"),
-            "INDOOR",
-            "SUBWAY_STATION"
+            Set.of("LARGE"),
+            Set.of("INDOOR"),
+            Set.of("SUBWAY_STATION")
         );
     }
 
@@ -119,7 +119,7 @@ class PlaceLockerQueryServiceTest {
             "서울 서대문구",
             LockerType.SUBWAY_STATION,
             IndoorOutdoorType.INDOOR,
-            LockerSizeType.BIG,
+            LockerSizeType.LARGE,
             1000,
             37.556,
             126.923,

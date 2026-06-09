@@ -116,6 +116,60 @@ class LockerSearchQueryServiceTest {
         verify(lockerSearchCandidateReader).search(37.55, 126.93, "대구광역시", EMPTY_FILTER);
     }
 
+    @Test
+    @DisplayName("동일한 장소의 여러 보관함이 LOCKER 타입으로 매칭되면 중복 제거 없이 모두 반환한다")
+    void returnsAllLockersWithoutDeduplicationWhenMatchedAsLockerType() {
+        LockerSuggestCandidate candidate1 = new LockerSuggestCandidate(
+            10L,
+            "신촌역 1번 출구 b1 A",
+            "서울 서대문구 신촌역로 1",
+            LockerType.SUBWAY_STATION,
+            1000,
+            LocalDateTime.now(),
+            101L,
+            "신촌역 1번 출구",
+            2,
+            100L,
+            37.556,
+            126.923,
+            37.557,
+            126.924,
+            10.0F
+        );
+        LockerSuggestCandidate candidate2 = new LockerSuggestCandidate(
+            11L,
+            "신촌역 1번 출구 b1 B",
+            "서울 서대문구 신촌역로 1",
+            LockerType.SUBWAY_STATION,
+            2000,
+            LocalDateTime.now(),
+            101L,
+            "신촌역 1번 출구",
+            2,
+            100L,
+            37.556,
+            126.923,
+            37.557,
+            126.924,
+            10.0F
+        );
+        List<LockerSuggestCandidate> candidates = List.of(candidate1, candidate2);
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌역1번출구b1", EMPTY_FILTER))
+            .willReturn(LockerSearchCandidateResult.name(candidates));
+
+        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(
+            37.55,
+            126.93,
+            "신촌역1번출구b1"
+        );
+
+        assertThat(items).hasSize(2);
+        assertThat(items.get(0).type()).isEqualTo(LockerItemType.LOCKER);
+        assertThat(items.get(0).lockerId()).isEqualTo(10L);
+        assertThat(items.get(1).type()).isEqualTo(LockerItemType.LOCKER);
+        assertThat(items.get(1).lockerId()).isEqualTo(11L);
+    }
+
     private LockerSuggestCandidate sampleCandidate() {
         return sampleCandidate(2);
     }
