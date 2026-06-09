@@ -11,7 +11,16 @@ import org.springframework.data.repository.query.Param;
 public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEntity, Long> {
     boolean existsByUserIdAndLockerId(Long userId, Long lockerId);
 
-    @Query("SELECT COUNT(fl) FROM FavoriteLockerEntity fl WHERE fl.user.id = :userId")
+    @Query(
+        value = """
+            SELECT COUNT(*)
+            FROM favorite_lockers fl
+            JOIN lockers l ON l.id = fl.locker_id
+            JOIN locker_details ld ON ld.locker_id = l.id
+            WHERE fl.user_id = :userId
+            """,
+        nativeQuery = true
+    )
     long countFavoriteLockersByUserId(@Param("userId") Long userId);
 
     @Modifying

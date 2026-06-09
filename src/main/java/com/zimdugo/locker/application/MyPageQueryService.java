@@ -22,9 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class MyPageQueryService {
 
-    static final double DEFAULT_LATITUDE = 37.498095;
-    static final double DEFAULT_LONGITUDE = 127.027610;
-
     private final MyPageReader myPageReader;
     private final UserReader userReader;
 
@@ -45,15 +42,12 @@ public class MyPageQueryService {
         int size
     ) {
         validateUser(userId);
-        validateLocation(latitude, longitude);
-
-        double resolvedLatitude = latitude == null ? DEFAULT_LATITUDE : latitude;
-        double resolvedLongitude = longitude == null ? DEFAULT_LONGITUDE : longitude;
+        UserLocationResolver.ResolvedLocation resolvedLocation = UserLocationResolver.resolve(latitude, longitude);
 
         MyLockerReportHistoryPage result = myPageReader.findLockerReports(
             userId,
-            resolvedLatitude,
-            resolvedLongitude,
+            resolvedLocation.latitude(),
+            resolvedLocation.longitude(),
             page,
             size
         );
@@ -79,12 +73,6 @@ public class MyPageQueryService {
 
         if (user.getStatus() == UserStatus.DELETED) {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
-        }
-    }
-
-    private void validateLocation(Double latitude, Double longitude) {
-        if ((latitude == null) != (longitude == null)) {
-            throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
     }
 

@@ -6,6 +6,7 @@ import com.zimdugo.locker.entrypoint.dto.response.mypage.MyLockerReportHistoryRe
 import com.zimdugo.locker.entrypoint.dto.response.mypage.MyPageSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,17 +47,21 @@ public interface MyPageApi {
         @CurrentUser Long userId,
         @RequestParam(name = "lat", required = false)
         @Parameter(description = "사용자 위도", example = "37.498095")
+        @Schema(minimum = "-90", maximum = "90")
         @DecimalMin(value = "-90.0")
         @DecimalMax(value = "90.0") Double latitude,
         @RequestParam(name = "lng", required = false)
         @Parameter(description = "사용자 경도", example = "127.027610")
+        @Schema(minimum = "-180", maximum = "180")
         @DecimalMin(value = "-180.0")
         @DecimalMax(value = "180.0") Double longitude,
         @RequestParam(name = "page", defaultValue = "0")
         @Parameter(description = "페이지 번호", example = "0")
+        @Schema(minimum = "0")
         @Min(0) int page,
         @RequestParam(name = "size", defaultValue = "20")
         @Parameter(description = "조회 개수", example = "20")
+        @Schema(minimum = "1", maximum = "20")
         @Min(1)
         @Max(20) int size
     );
