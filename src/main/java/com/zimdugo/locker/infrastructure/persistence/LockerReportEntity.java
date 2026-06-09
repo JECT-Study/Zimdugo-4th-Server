@@ -22,6 +22,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -113,6 +114,52 @@ public class LockerReportEntity {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column
+    private LocalDateTime deletedAt;
+
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    public void updateReport(
+        String name,
+        String roadAddress,
+        GroundLevelType groundLevelType,
+        Integer floor,
+        IndoorOutdoorType indoorOutdoorType,
+        LockerType lockerType,
+        Set<LockerSizeType> lockerSize,
+        Boolean isFree,
+        Integer minPrice,
+        Integer maxPrice,
+        String additionalInfo,
+        LocalTime startTime,
+        LocalTime endTime,
+        String imageUrl,
+        boolean locationConsentAgreed,
+        double latitude,
+        double longitude
+    ) {
+        this.name = name;
+        this.roadAddress = roadAddress;
+        this.groundLevelType = groundLevelType;
+        this.floor = floor;
+        this.indoorOutdoorType = indoorOutdoorType;
+        this.lockerType = lockerType;
+        this.lockerSize = lockerSize;
+        this.isFree = isFree;
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
+        this.additionalInfo = additionalInfo;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.imageUrl = imageUrl;
+        this.locationConsentAgreed = locationConsentAgreed;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
 
     @PrePersist
     protected void onCreate() {

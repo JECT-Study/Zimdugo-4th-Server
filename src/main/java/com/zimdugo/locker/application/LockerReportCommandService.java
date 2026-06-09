@@ -3,6 +3,7 @@ package com.zimdugo.locker.application;
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
+import com.zimdugo.locker.domain.LockerReportUpdateInfo;
 import com.zimdugo.locker.domain.SavedLockerReport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,9 +29,39 @@ public class LockerReportCommandService {
         );
     }
 
+    public void update(Long userId, Long reportId, LockerReportCreateCommand command) {
+        lockerReportStore.update(userId, reportId, toUpdateInfo(command));
+    }
+
+    public void delete(Long userId, Long reportId) {
+        lockerReportStore.delete(userId, reportId);
+    }
+
     private LockerReportCreateInfo toCreateInfo(Long userId, LockerReportCreateCommand command) {
         return new LockerReportCreateInfo(
             userId,
+            command.name(),
+            command.roadAddress(),
+            command.hasFloor() ? command.floorType() : null,
+            command.floorNumber(),
+            command.indoorOutdoorType(),
+            command.lockerType(),
+            command.sizeTypes(),
+            command.isFree(),
+            command.minPrice(),
+            command.maxPrice(),
+            command.startTime(),
+            command.endTime(),
+            command.additionalInfo(),
+            command.imageUrl(),
+            command.locationConsentAgreed(),
+            command.latitude(),
+            command.longitude()
+        );
+    }
+
+    private LockerReportUpdateInfo toUpdateInfo(LockerReportCreateCommand command) {
+        return new LockerReportUpdateInfo(
             command.name(),
             command.roadAddress(),
             command.hasFloor() ? command.floorType() : null,

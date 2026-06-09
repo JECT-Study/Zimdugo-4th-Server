@@ -1,6 +1,7 @@
 package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,8 +10,20 @@ import org.springframework.data.repository.query.Param;
 
 public interface LockerReportRepository extends JpaRepository<LockerReportEntity, Long> {
 
-    @Query("SELECT COUNT(lr) FROM LockerReportEntity lr WHERE lr.user.id = :userId")
+    @Query("SELECT COUNT(lr) FROM LockerReportEntity lr WHERE lr.user.id = :userId AND lr.deletedAt IS NULL")
     long countLockerReportsByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        SELECT lr
+        FROM LockerReportEntity lr
+        WHERE lr.id = :reportId
+            AND lr.user.id = :userId
+            AND lr.deletedAt IS NULL
+        """)
+    Optional<LockerReportEntity> findActiveByIdAndUserId(
+        @Param("reportId") Long reportId,
+        @Param("userId") Long userId
+    );
 
     @Query(
         value = """
@@ -32,12 +45,14 @@ public interface LockerReportRepository extends JpaRepository<LockerReportEntity
             FROM locker_reports lr
             CROSS JOIN target
             WHERE lr.user_id = :userId
+                AND lr.deleted_at IS NULL
             ORDER BY lr.created_at DESC, lr.id DESC
             """,
         countQuery = """
             SELECT COUNT(*)
             FROM locker_reports lr
             WHERE lr.user_id = :userId
+                AND lr.deleted_at IS NULL
             """,
         nativeQuery = true
     )
