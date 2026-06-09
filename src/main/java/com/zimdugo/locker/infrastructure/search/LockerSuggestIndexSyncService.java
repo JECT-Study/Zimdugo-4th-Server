@@ -42,6 +42,9 @@ public class LockerSuggestIndexSyncService {
                 indexOperations.putMapping(LockerSuggestDocument.class);
             }
 
+            log.info("기존 검색 인덱스 데이터를 삭제합니다.");
+            lockerSuggestSearchRepository.deleteAll();
+
             List<LockerSuggestDocument> documents = toDocuments(lockerRepository.findAllForSuggestIndex());
             if (documents.isEmpty()) {
                 log.warn("동기화할 보관함 데이터가 없습니다.");
