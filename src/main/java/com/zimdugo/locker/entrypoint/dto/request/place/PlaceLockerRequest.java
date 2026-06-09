@@ -20,14 +20,19 @@ public record PlaceLockerRequest(
     @DecimalMax(value = "180.0")
     Double lng,
 
-    @Schema(description = "보관함 크기 필터, 복수 선택 가능", example = "[\"SMALL\", \"MEDIUM\", \"BIG\"]")
+    @Schema(description = "보관함 크기 필터, 복수 선택 가능", example = "[\"SMALL\", \"MEDIUM\", \"LARGE\"]")
     Set<String> sizeTypes,
 
-    @Schema(description = "실내/실외 필터", example = "INDOOR")
-    String indoorOutdoorType,
+    @Schema(description = "실내/실외 필터, 복수 선택 가능", example = "[\"INDOOR\", \"OUTDOOR\"]")
+    Set<String> indoorOutdoorTypes,
 
-    @Schema(description = "보관함 유형 필터", example = "SUBWAY_STATION")
-    String lockerType
+    @Schema(
+        description = "보관함 유형 필터 (MUSEUM, SUBWAY_STATION, DEPARTMENT_STORE, CONVENIENCE_STORE, "
+            + "PUBLIC_OFFICE, PRIVATE_LOCKER, TRAIN_STATION, ETC), 복수 선택 가능",
+        example = "[\"MUSEUM\", \"SUBWAY_STATION\", \"DEPARTMENT_STORE\", \"CONVENIENCE_STORE\", "
+            + "\"PUBLIC_OFFICE\", \"PRIVATE_LOCKER\", \"TRAIN_STATION\", \"ETC\"]"
+    )
+    Set<String> lockerTypes
 ) {
 
     public PlaceLockerQueryCommand toCommand(Long placeId) {
@@ -36,8 +41,8 @@ public record PlaceLockerRequest(
             lat,
             lng,
             sizeTypes,
-            indoorOutdoorType,
-            lockerType
+            indoorOutdoorTypes,
+            lockerTypes
         );
     }
 }
