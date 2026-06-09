@@ -1,5 +1,12 @@
 {
   "analysis": {
+    "char_filter": {
+      "whitespace_remove_filter": {
+        "type": "pattern_replace",
+        "pattern": "\\s+",
+        "replacement": ""
+      }
+    },
     "tokenizer": {
       "standard_tokenizer": {
         "type": "standard"
@@ -16,6 +23,9 @@
       "autocomplete_analyzer": {
         "type": "custom",
         "tokenizer": "standard",
+        "char_filter": [
+          "whitespace_remove_filter"
+        ],
         "filter": [
           "lowercase",
           "autocomplete_filter"
@@ -24,6 +34,9 @@
       "suggest_search_analyzer": {
         "type": "custom",
         "tokenizer": "standard",
+        "char_filter": [
+          "whitespace_remove_filter"
+        ],
         "filter": [
           "lowercase"
         ]
