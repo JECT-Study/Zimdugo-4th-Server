@@ -7,7 +7,7 @@ import java.util.Locale;
 public enum LockerSizeType {
     SMALL,
     MEDIUM,
-    BIG;
+    LARGE;
 
     public static LockerSizeType from(String value) {
         if (value == null || value.isBlank()) {
@@ -15,10 +15,6 @@ public enum LockerSizeType {
         }
 
         String normalized = value.trim().toUpperCase(Locale.ROOT);
-
-        if ("LARGE".equals(normalized)) {
-            return BIG;
-        }
 
         try {
             return valueOf(normalized);

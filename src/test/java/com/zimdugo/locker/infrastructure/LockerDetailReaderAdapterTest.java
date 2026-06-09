@@ -37,7 +37,7 @@ class LockerDetailReaderAdapterTest {
         assertThat(result.orElseThrow().lockerId()).isEqualTo(10L);
         assertThat(result.orElseThrow().lockerSizes()).containsExactlyInAnyOrder(
             LockerSizeType.SMALL,
-            LockerSizeType.BIG
+            LockerSizeType.LARGE
         );
         assertThat(result.orElseThrow().placeName()).isEqualTo("신촌역");
     }
@@ -70,7 +70,7 @@ class LockerDetailReaderAdapterTest {
         given(projection.getFloor()).willReturn(-1);
         given(projection.getMinPrice()).willReturn(1000);
         given(projection.getMaxPrice()).willReturn(3000);
-        given(projection.getLockerSizes()).willReturn("SMALL,BIG");
+        given(projection.getLockerSizes()).willReturn("SMALL,LARGE");
         given(projection.getDetailInfo()).willReturn("개찰구 옆");
         given(projection.getStartTime()).willReturn(LocalTime.of(9, 0));
         given(projection.getEndTime()).willReturn(LocalTime.of(22, 0));

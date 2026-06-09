@@ -14,25 +14,25 @@ class LockerSizeTypeConverterTest {
     @Test
     @DisplayName("복수 LockerSize를 DB 문자열로 저장한다")
     void convertToDatabaseColumnWithMultipleValues() {
-        String result = converter.convertToDatabaseColumn(Set.of(LockerSizeType.SMALL, LockerSizeType.BIG));
+        String result = converter.convertToDatabaseColumn(Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE));
 
-        assertThat(result).isEqualTo("BIG,SMALL");
+        assertThat(result).isEqualTo("LARGE,SMALL");
     }
 
     @Test
     @DisplayName("DB의 복수 LockerSize 문자열을 모두 복원한다")
     void convertToEntityAttributeWithMultipleValues() {
-        Set<LockerSizeType> result = converter.convertToEntityAttribute("SMALL,BIG");
+        Set<LockerSizeType> result = converter.convertToEntityAttribute("SMALL,LARGE");
 
-        assertThat(result).containsExactly(LockerSizeType.SMALL, LockerSizeType.BIG);
+        assertThat(result).containsExactly(LockerSizeType.SMALL, LockerSizeType.LARGE);
     }
 
     @Test
-    @DisplayName("LARGE 별칭과 중복값을 허용하고 정규화한다")
-    void convertToEntityAttributeWithAliasAndDuplicate() {
-        Set<LockerSizeType> result = converter.convertToEntityAttribute("LARGE,SMALL,BIG,SMALL");
+    @DisplayName("중복값을 허용하고 정규화한다")
+    void convertToEntityAttributeWithDuplicate() {
+        Set<LockerSizeType> result = converter.convertToEntityAttribute("LARGE,SMALL,LARGE,SMALL");
 
-        assertThat(result).containsExactly(LockerSizeType.SMALL, LockerSizeType.BIG);
+        assertThat(result).containsExactly(LockerSizeType.SMALL, LockerSizeType.LARGE);
     }
 
     @Test
