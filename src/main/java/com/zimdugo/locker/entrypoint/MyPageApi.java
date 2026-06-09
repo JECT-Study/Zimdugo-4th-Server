@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@Tag(name = "My Page", description = "마이페이지 요약 정보 조회 API")
+@Tag(name = "My Page", description = "마이페이지 요약 및 제보 히스토리 관리 API")
 public interface MyPageApi {
 
     @Operation(
