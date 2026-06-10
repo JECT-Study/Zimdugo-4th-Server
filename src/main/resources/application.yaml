@@ -70,6 +70,8 @@ jwt:
 springdoc:
   swagger-ui:
     display-request-duration: true
+  paths-to-exclude:
+    - /admin/**
 
 auth:
   callback:

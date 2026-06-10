@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title th:text="${isEdit} ? '문서 수정' : '새 문서 등록'">문서 양식</title>
+</head>
+<body>
+<main>
+    <style>
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.4rem;
+        }
+
+        .form-control {
+            width: 100%;
+            background: #fff;
+            border: 1px solid #d4d4d4;
+            border-radius: 6px;
+            padding: 0.6rem 0.85rem;
+            color: #1a1a1a;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.15s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            display: block;
+        }
+
+        .section-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-card {
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 1.25rem;
+            position: relative;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .section-title i { color: #4f46e5; font-size: 0.8rem; }
+
+        .btn-remove-section {
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: color 0.15s;
+        }
+
+        .btn-remove-section:hover { color: #dc2626; }
+
+        .btn-order {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.4rem;
+            border-radius: 4px;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-order:hover {
+            color: #4f46e5;
+            background: #eae9fc;
+        }
+
+        .add-section-trigger {
+            border: 2px dashed #d4d4d4;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #888;
+            font-weight: 600;
+            font-size: 0.85rem;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .add-section-trigger:hover {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background: #f8f7ff;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            border-top: 1px solid #e5e5e5;
+            padding-top: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .section-heading {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #333;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .section-heading i { color: #4f46e5; }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="page-header type-label" th:text="${form.type.description}">TYPE</div>
+            <h1 th:text="${isEdit} ? '문서 수정' : '새 문서 등록'">문서 편집</h1>
+        </div>
+        <a th:href="@{/admin/documents(type=${form.type.name()})}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> 목록으로
+        </a>
+    </div>
+
+    <div class="card">
+        <form th:action="${isEdit} ? @{/admin/documents/{id}/edit(id=${documentId})} : @{/admin/documents}"
+              th:object="${form}" method="post" id="documentForm">
+
+            <!-- 문서 타입 히든 필드 -->
+            <input type="hidden" th:field="*{type}">
+
+            <!-- 대표 제목 입력 -->
+            <div class="form-group">
+                <label for="titleInput" class="form-label">대표 제목</label>
+                <input type="text" id="titleInput" th:field="*{title}" class="form-control"
+                       placeholder="예: 서비스 정기 점검 안내, 개인정보처리방침 개정 공지" required>
+                <span class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">제목 에러</span>
+            </div>
+
+            <!-- 소제목 & 내용 섹션 영역 -->
+            <div class="section-heading">
+                <i class="fa-solid fa-layer-group"></i> 소제목 &amp; 내용
+            </div>
+
+            <div class="section-list" id="sectionListContainer">
+                <!-- 기존 섹션 루프 렌더링 -->
+                <div class="section-card" th:each="sec, iterStat : *{sections}">
+                    <div class="section-header">
+                        <span class="section-title">
+                            <i class="fa-solid fa-cube"></i>
+                            <span class="section-index-label" th:text="'섹션 ' + ${iterStat.count}">섹션 1</span>
+                        </span>
+                        <div class="section-actions" style="display: flex; gap: 0.25rem; align-items: center;">
+                            <button type="button" class="btn-order" onclick="moveUp(this)" title="위로 이동">
+                                <i class="fa-solid fa-chevron-up"></i>
+                            </button>
+                            <button type="button" class="btn-order" onclick="moveDown(this)" title="아래로 이동">
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <button type="button" class="btn-remove-section" onclick="removeSectionCard(this)">
+                                <i class="fa-solid fa-trash-can"></i> 삭제
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">소제목</label>
+                        <input type="text" th:field="*{sections[__${iterStat.index}__].subtitle}" class="form-control subtitle-input"
+                               placeholder="예: 점검 일시, 수집 항목 (생략 가능)">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">내용</label>
+                        <textarea th:field="*{sections[__${iterStat.index}__].content}" class="form-control content-input" rows="4"
+                                  placeholder="상세 내용을 입력해 주세요." required></textarea>
+                        <span class="error-message" th:if="${#fields.hasErrors('sections[__${iterStat.index}__].content')}" th:errors="*{sections[__${iterStat.index}__].content}">내용 에러</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 섹션 추가 버튼 -->
+            <div class="add-section-trigger" onclick="addSectionCard()">
+                <i class="fa-solid fa-square-plus"></i> 섹션 추가하기
+            </div>
+
+            <!-- 하단 액션 버튼 -->
+            <div class="form-actions">
+                <a th:href="@{/admin/documents(type=${form.type.name()})}" class="btn btn-secondary">취소</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> 저장하기
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- JavaScript for Dynamic List Handling -->
+    <script>
+        function addSectionCard() {
+            const container = document.getElementById('sectionListContainer');
+            const currentCount = container.children.length;
+
+            const card = document.createElement('div');
+            card.className = 'section-card';
+
+            card.innerHTML = `
+                <div class="section-header">
+                    <span class="section-title">
+                        <i class="fa-solid fa-cube"></i>
+                        <span class="section-index-label">섹션 ${currentCount + 1}</span>
+                    </span>
+                    <div class="section-actions" style="display: flex; gap: 0.25rem; align-items: center;">
+                        <button type="button" class="btn-order" onclick="moveUp(this)" title="위로 이동">
+                            <i class="fa-solid fa-chevron-up"></i>
+                        </button>
+                        <button type="button" class="btn-order" onclick="moveDown(this)" title="아래로 이동">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <button type="button" class="btn-remove-section" onclick="removeSectionCard(this)">
+                            <i class="fa-solid fa-trash-can"></i> 삭제
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">소제목</label>
+                    <input type="text" name="sections[${currentCount}].subtitle" class="form-control subtitle-input"
+                           placeholder="예: 점검 일시, 수집 항목 (생략 가능)">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">내용</label>
+                    <textarea name="sections[${currentCount}].content" class="form-control content-input" rows="4"
+                              placeholder="상세 내용을 입력해 주세요." required></textarea>
+                </div>
+            `;
+
+            container.appendChild(card);
+            reindexSections();
+        }
+
+        function removeSectionCard(button) {
+            const card = button.closest('.section-card');
+            const container = document.getElementById('sectionListContainer');
+
+            if (container.children.length <= 1) {
+                alert("최소 하나의 섹션은 포함해야 합니다.");
+                return;
+            }
+
+            card.style.opacity = '0';
+            card.style.transition = 'opacity 0.15s';
+
+            setTimeout(() => {
+                card.remove();
+                reindexSections();
+            }, 150);
+        }
+
+        function moveUp(button) {
+            const card = button.closest('.section-card');
+            const prevCard = card.previousElementSibling;
+            if (prevCard && prevCard.classList.contains('section-card')) {
+                card.parentNode.insertBefore(card, prevCard);
+                reindexSections();
+            }
+        }
+
+        function moveDown(button) {
+            const card = button.closest('.section-card');
+            const nextCard = card.nextElementSibling;
+            if (nextCard && nextCard.classList.contains('section-card')) {
+                card.parentNode.insertBefore(card, nextCard.nextSibling);
+                reindexSections();
+            }
+        }
+
+        function reindexSections() {
+            const container = document.getElementById('sectionListContainer');
+            const cards = container.getElementsByClassName('section-card');
+
+            Array.from(cards).forEach((card, index) => {
+                const label = card.querySelector('.section-index-label');
+                if (label) {
+                    label.textContent = `섹션 ${index + 1}`;
+                }
+
+                const subtitleInput = card.querySelector('.subtitle-input');
+                if (subtitleInput) {
+                    subtitleInput.name = `sections[${index}].subtitle`;
+                    if (subtitleInput.id) subtitleInput.id = `sections${index}.subtitle`;
+                }
+
+                const contentInput = card.querySelector('.content-input');
+                if (contentInput) {
+                    contentInput.name = `sections[${index}].content`;
+                    if (contentInput.id) contentInput.id = `sections${index}.content`;
+                }
+            });
+        }
+    </script>
+</main>
+</body>
+</html>

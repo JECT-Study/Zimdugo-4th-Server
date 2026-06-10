@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>문서 상세 보기</title>
+</head>
+<body>
+<main>
+    <style>
+        .doc-meta {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            color: #888;
+            font-size: 0.82rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .doc-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .doc-meta strong { color: #333; }
+
+        .detail-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-section-card {
+            background: #fafafa;
+            border-left: 3px solid #4f46e5;
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .detail-subtitle {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .detail-subtitle i {
+            font-size: 0.8rem;
+            color: #4f46e5;
+        }
+
+        .detail-subtitle-muted {
+            opacity: 0.4;
+            font-size: 0.9rem;
+        }
+
+        .detail-content {
+            font-size: 0.9rem;
+            line-height: 1.75;
+            color: #555;
+            white-space: pre-wrap;
+        }
+
+        .footer-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            border-top: 1px solid #e5e5e5;
+            padding-top: 1.25rem;
+        }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="page-header type-label" th:text="${document.type.description}">TYPE</div>
+            <h1 th:text="${document.title}">문서 제목</h1>
+        </div>
+        <a th:href="@{/admin/documents(type=${document.type.name()})}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> 목록으로
+        </a>
+    </div>
+
+    <div class="card">
+        <!-- 메타 정보 -->
+        <div class="doc-meta">
+            <span>
+                <i class="fa-regular fa-calendar-plus"></i> 등록일:
+                <strong th:text="${#temporals.format(document.createdAt, 'yyyy-MM-dd HH:mm')}">2026-06-10 12:00</strong>
+            </span>
+            <span>
+                <i class="fa-regular fa-pen-to-square"></i> 최근 수정:
+                <strong th:text="${#temporals.format(document.updatedAt, 'yyyy-MM-dd HH:mm')}">2026-06-10 12:00</strong>
+            </span>
+            <span>
+                <i class="fa-regular fa-calendar-check"></i> 최근 적용:
+                <strong th:text="${document.appliedAt != null} ? ${#temporals.format(document.appliedAt, 'yyyy-MM-dd HH:mm')} : '-'">2026-06-10 12:00</strong>
+            </span>
+            <span>
+                <i class="fa-solid fa-layer-group"></i> 섹션:
+                <strong th:text="${document.sections.size()} + '개'">섹션 3개</strong>
+            </span>
+            <span>
+                <i class="fa-solid" th:classappend="${document.active} ? 'fa-circle-check' : 'fa-circle-minus'" th:style="${document.active} ? 'color: #10b981;' : 'color: #9ca3af;'"></i> 적용 상태:
+                <strong th:text="${document.active} ? '적용 중' : '미적용'" th:style="${document.active} ? 'color: #10b981;' : 'color: #9ca3af;'">적용 중</strong>
+            </span>
+        </div>
+
+        <!-- 섹션 내용 -->
+        <div class="detail-sections">
+            <div class="detail-section-card" th:each="sec, iterStat : ${document.sections}">
+                <!-- 소제목이 있을 때 -->
+                <div class="detail-subtitle" th:if="${sec.subtitle != null and !sec.subtitle.isBlank()}">
+                    <i class="fa-solid fa-hashtag"></i>
+                    <span th:text="${sec.subtitle}">소제목 내용</span>
+                </div>
+                <!-- 소제목이 없으면 번호 표시 -->
+                <div class="detail-subtitle detail-subtitle-muted" th:if="${sec.subtitle == null or sec.subtitle.isBlank()}">
+                    <i class="fa-solid fa-hashtag"></i>
+                    <span th:text="'섹션 ' + ${iterStat.count}">섹션 1</span>
+                </div>
+                <!-- 본문 -->
+                <div class="detail-content" th:text="${sec.content}">
+                    상세 본문 내용입니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단 액션 -->
+        <div class="footer-actions" style="justify-content: space-between;">
+            <div>
+                <form th:action="@{/admin/documents/{id}/toggle-active/detail(id=${document.id})}" method="post" style="display: inline;">
+                    <button type="submit" class="btn" th:classappend="${document.active} ? 'btn-secondary' : 'btn-primary'">
+                        <i class="fa-solid" th:classappend="${document.active} ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+                        <span th:text="${document.active} ? '적용 해제' : '적용하기'">적용하기</span>
+                    </button>
+                </form>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <form th:action="@{/admin/documents/{id}/delete(id=${document.id}, type=${document.type.name()})}" method="post"
+                      style="display: inline;" th:onsubmit="return confirm('정말 이 문서를 삭제하시겠습니까?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa-solid fa-trash-can"></i> 삭제하기
+                    </button>
+                </form>
+                <a th:href="@{/admin/documents/{id}/edit(id=${document.id})}" class="btn btn-primary">
+                    <i class="fa-solid fa-pen"></i> 수정하기
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
