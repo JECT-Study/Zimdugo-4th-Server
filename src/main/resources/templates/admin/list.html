@@ -238,8 +238,14 @@
 
     <script>
         function toggleActive(id) {
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
             fetch('/admin/documents/' + id + '/toggle-active', {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
             })
             .then(response => {
                 if (response.ok) {
@@ -252,6 +258,53 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('적용 상태 변경 중 오류가 발생했습니다.');
+                location.reload();
+            });
+        }
+
+        function moveRowUp(button) {
+            const row = button.closest('tr');
+            const prevRow = row.previousElementSibling;
+            if (prevRow) {
+                row.parentNode.insertBefore(row, prevRow);
+                saveDocumentsOrder();
+            }
+        }
+
+        function moveRowDown(button) {
+            const row = button.closest('tr');
+            const nextRow = row.nextElementSibling;
+            if (nextRow) {
+                row.parentNode.insertBefore(row, nextRow.nextSibling);
+                saveDocumentsOrder();
+            }
+        }
+
+        function saveDocumentsOrder() {
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            const rows = document.querySelectorAll('.admin-table tbody tr');
+            const ids = Array.from(rows).map(row => row.getAttribute('data-id'));
+            
+            fetch('/admin/documents/reorder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(ids)
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('순서 변경 저장에 실패했습니다.');
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('순서 변경 중 오류가 발생했습니다.');
                 location.reload();
             });
         }
