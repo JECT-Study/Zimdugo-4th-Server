@@ -257,4 +257,20 @@ class AdminDocumentServiceTest {
         assertThat(sortedList.get(2).getTitle()).isEqualTo("문서 2");
         assertThat(sortedList.get(2).getListOrder()).isEqualTo(2);
     }
+
+    @Test
+    @DisplayName("공지사항이 아닌 다른 타입(TERMS 등)의 문서를 재배치하려고 하면 IllegalArgumentException이 발생한다")
+    void reorderNonNoticeDocumentsThrowsException() {
+        // given
+        AdminDocument terms = adminDocumentRepository.save(AdminDocument.builder()
+            .title("이용약관")
+            .type(DocumentType.TERMS)
+            .active(true)
+            .build());
+
+        // when & then
+        assertThatThrownBy(() -> adminDocumentService.reorderDocuments(List.of(terms.getId())))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("공지사항 타입의 문서만 순서를 변경할 수 있습니다");
+    }
 }

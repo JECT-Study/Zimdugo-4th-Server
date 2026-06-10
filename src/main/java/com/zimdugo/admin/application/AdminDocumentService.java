@@ -88,6 +88,9 @@ public class AdminDocumentService {
     public void reorderDocuments(List<Long> documentIds) {
         for (int i = 0; i < documentIds.size(); i++) {
             AdminDocument document = getById(documentIds.get(i));
+            if (document.getType() != DocumentType.NOTICE) {
+                throw new IllegalArgumentException("공지사항 타입의 문서만 순서를 변경할 수 있습니다. ID: " + document.getId());
+            }
             document.updateListOrder(i);
         }
     }
