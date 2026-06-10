@@ -79,8 +79,6 @@ public record LockerReportCreateRequest(
     String imageUrl,
 
     @Schema(description = "위치정보 수집 및 이용 동의", example = "true")
-    @NotNull
-    @AssertTrue
     Boolean locationConsentAgreed
 ) {
     @AssertTrue(message = "validation.invalid_floor")
@@ -153,6 +151,14 @@ public record LockerReportCreateRequest(
 
         Set<String> allowedSizeTypes = Set.of("SMALL", "MEDIUM", "LARGE");
         return sizeTypes.stream().allMatch(allowedSizeTypes::contains);
+    }
+
+    @AssertTrue(message = "validation.invalid_location_consent")
+    public boolean isLocationConsentValid() {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return true;
+        }
+        return Boolean.TRUE.equals(locationConsentAgreed);
     }
 
     public LockerReportCreateCommand toCommand() {
