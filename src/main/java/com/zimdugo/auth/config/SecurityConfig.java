@@ -38,7 +38,41 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    }
+
+    @Bean
+    @org.springframework.core.annotation.Order(1)
+    public SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher("/admin/**")
+            .csrf(AbstractHttpConfigurer::disable)
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin/login", "/admin/css/**", "/admin/js/**").permitAll()
+                .anyRequest().hasRole("ADMIN")
+            )
+            .formLogin(form -> form
+                .loginPage("/admin/login")
+                .loginProcessingUrl("/admin/login")
+                .defaultSuccessUrl("/admin/documents", true)
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/admin/logout")
+                .logoutSuccessUrl("/admin/login?logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
+            );
+        return http.build();
+    }
+
+    @Bean
+    @org.springframework.core.annotation.Order(2)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher(request -> !request.getRequestURI().startsWith("/admin/"));
         configureBasicSecurity(http);
         configureAuthorization(http);
         configureOauth2Login(http);
