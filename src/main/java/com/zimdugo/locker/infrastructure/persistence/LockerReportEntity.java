@@ -22,6 +22,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -113,6 +114,54 @@ public class LockerReportEntity {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column
+    private LocalDateTime deletedAt;
+
+    public void updateReport(UpdateValues values) {
+        this.name = values.name();
+        this.roadAddress = values.roadAddress();
+        this.groundLevelType = values.groundLevelType();
+        this.floor = values.floor();
+        this.indoorOutdoorType = values.indoorOutdoorType();
+        this.lockerType = values.lockerType();
+        this.lockerSize = values.lockerSize();
+        this.isFree = values.isFree();
+        this.minPrice = values.minPrice();
+        this.maxPrice = values.maxPrice();
+        this.additionalInfo = values.additionalInfo();
+        this.startTime = values.startTime();
+        this.endTime = values.endTime();
+        this.imageUrl = values.imageUrl();
+        this.locationConsentAgreed = values.locationConsentAgreed();
+        this.latitude = values.latitude();
+        this.longitude = values.longitude();
+    }
+
+    public record UpdateValues(
+        String name,
+        String roadAddress,
+        GroundLevelType groundLevelType,
+        Integer floor,
+        IndoorOutdoorType indoorOutdoorType,
+        LockerType lockerType,
+        Set<LockerSizeType> lockerSize,
+        Boolean isFree,
+        Integer minPrice,
+        Integer maxPrice,
+        String additionalInfo,
+        LocalTime startTime,
+        LocalTime endTime,
+        String imageUrl,
+        boolean locationConsentAgreed,
+        double latitude,
+        double longitude
+    ) {
+    }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
 
     @PrePersist
     protected void onCreate() {

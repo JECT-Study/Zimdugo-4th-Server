@@ -4,6 +4,7 @@ import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
+import com.zimdugo.locker.domain.LockerReportUpdateInfo;
 import com.zimdugo.locker.domain.SavedLockerReport;
 import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
 import com.zimdugo.locker.domain.IndoorOutdoorType;
@@ -52,6 +53,40 @@ public class LockerReportStoreAdapter implements LockerReportStore {
             .build());
 
         return new SavedLockerReport(report.getId(), report.getStatus().name());
+    }
+
+    @Override
+    public void update(Long userId, Long reportId, LockerReportUpdateInfo updateInfo) {
+        LockerReportEntity report = lockerReportRepository.findActiveByIdAndUserId(reportId, userId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
+
+        report.updateReport(new LockerReportEntity.UpdateValues(
+            updateInfo.name(),
+            updateInfo.roadAddress(),
+            toGroundLevelType(updateInfo.groundLevelType()),
+            updateInfo.floorNumber(),
+            IndoorOutdoorType.valueOf(updateInfo.indoorOutdoorType()),
+            LockerType.valueOf(updateInfo.lockerType()),
+            toLockerSize(updateInfo.sizeTypes()),
+            updateInfo.isFree(),
+            updateInfo.minPrice(),
+            updateInfo.maxPrice(),
+            updateInfo.additionalInfo(),
+            updateInfo.startTime(),
+            updateInfo.endTime(),
+            updateInfo.imageUrl(),
+            updateInfo.locationConsentAgreed(),
+            updateInfo.latitude(),
+            updateInfo.longitude()
+        ));
+    }
+
+    @Override
+    public void delete(Long userId, Long reportId) {
+        LockerReportEntity report = lockerReportRepository.findActiveByIdAndUserId(reportId, userId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
+
+        report.delete();
     }
 
     private GroundLevelType toGroundLevelType(String groundLevelType) {

@@ -88,6 +88,7 @@ class LayerDependencyTest {
 
         @Test
         @DisplayName("@Entity는 infrastructure 패키지에 위치한다. (어드민 제외!!)")
+
         void entities_should_reside_in_infrastructure_or_admin() {
             classes()
                 .that().areAnnotatedWith("jakarta.persistence.Entity")

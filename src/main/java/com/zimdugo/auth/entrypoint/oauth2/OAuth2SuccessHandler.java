@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -23,11 +24,16 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    private static final String SAME_SITE_POLICY = "Strict";
     private static final String REFRESH_COOKIE_PATH = "/api/auth/refresh";
 
     private final OAuth2LoginSessionService loginSessionService;
     private final OAuth2CallbackUrlCookieManager callbackUrlCookieManager;
+
+    @Value("${auth.cookie.refresh.same-site:Strict}")
+    private String refreshTokenCookieSameSite;
+
+    @Value("${auth.cookie.refresh.secure:false}")
+    private boolean refreshTokenCookieSecure;
 
     @Override
     public void onAuthenticationSuccess(
@@ -57,10 +63,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         ResponseCookie rtCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, session.refreshToken())
             .httpOnly(true)
-            .secure(false)
+            .secure(refreshTokenCookieSecure)
             .path(REFRESH_COOKIE_PATH)
             .maxAge(session.refreshTokenTtl())
-            .sameSite(SAME_SITE_POLICY)
+            .sameSite(refreshTokenCookieSameSite)
             .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());

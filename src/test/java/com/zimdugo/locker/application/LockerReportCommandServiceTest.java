@@ -30,6 +30,9 @@ class LockerReportCommandServiceTest {
     @Mock
     private LockerReportStore lockerReportStore;
 
+    @Mock
+    private ActiveUserValidator activeUserValidator;
+
     @InjectMocks
     private LockerReportCommandService lockerReportCommandService;
 

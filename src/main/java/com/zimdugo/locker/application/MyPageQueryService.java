@@ -1,8 +1,12 @@
 package com.zimdugo.locker.application;
 
 import com.zimdugo.locker.application.result.mypage.MyLockerReportHistoryItemResult;
+import com.zimdugo.locker.application.result.mypage.MyLockerReportDetailResult;
 import com.zimdugo.locker.application.result.mypage.MyLockerReportHistoryResult;
 import com.zimdugo.locker.application.result.mypage.MyPageSummaryResult;
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.locker.domain.MyLockerReportDetail;
 import com.zimdugo.locker.domain.MyLockerReportHistoryItem;
 import com.zimdugo.locker.domain.MyLockerReportHistoryPage;
 import com.zimdugo.locker.domain.MyPageReader;
@@ -60,6 +64,35 @@ public class MyPageQueryService {
             .toList();
 
         return MyLockerReportHistoryResult.of(items, result.totalCount(), result.hasNext());
+    }
+
+    public MyLockerReportDetailResult getLockerReport(Long userId, Long reportId) {
+        activeUserValidator.validate(userId);
+
+        MyLockerReportDetail report = myPageReader.findLockerReport(userId, reportId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
+
+        return new MyLockerReportDetailResult(
+            report.reportId(),
+            report.lockerName(),
+            report.roadAddress(),
+            report.latitude(),
+            report.longitude(),
+            report.hasFloor(),
+            report.floorType(),
+            report.floorNumber(),
+            report.indoorOutdoorType(),
+            report.lockerType(),
+            report.sizeTypes(),
+            report.isFree(),
+            report.minPrice(),
+            report.maxPrice(),
+            report.startTime(),
+            report.endTime(),
+            report.additionalInfo(),
+            report.imageUrl(),
+            report.locationConsentAgreed()
+        );
     }
 
     private MyLockerReportHistoryItemResult toLockerReportHistoryItemResult(MyLockerReportHistoryItem item) {
