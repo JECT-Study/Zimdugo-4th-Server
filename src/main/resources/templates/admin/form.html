@@ -93,6 +93,25 @@
 
         .btn-remove-section:hover { color: #dc2626; }
 
+        .btn-order {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.4rem;
+            border-radius: 4px;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-order:hover {
+            color: #4f46e5;
+            background: #eae9fc;
+        }
+
         .add-section-trigger {
             border: 2px dashed #d4d4d4;
             border-radius: 8px;
@@ -179,9 +198,17 @@
                             <i class="fa-solid fa-cube"></i>
                             <span class="section-index-label" th:text="'섹션 ' + ${iterStat.count}">섹션 1</span>
                         </span>
-                        <button type="button" class="btn-remove-section" onclick="removeSectionCard(this)">
-                            <i class="fa-solid fa-trash-can"></i> 삭제
-                        </button>
+                        <div class="section-actions" style="display: flex; gap: 0.25rem; align-items: center;">
+                            <button type="button" class="btn-order" onclick="moveUp(this)" title="위로 이동">
+                                <i class="fa-solid fa-chevron-up"></i>
+                            </button>
+                            <button type="button" class="btn-order" onclick="moveDown(this)" title="아래로 이동">
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <button type="button" class="btn-remove-section" onclick="removeSectionCard(this)">
+                                <i class="fa-solid fa-trash-can"></i> 삭제
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -230,9 +257,17 @@
                         <i class="fa-solid fa-cube"></i>
                         <span class="section-index-label">섹션 ${currentCount + 1}</span>
                     </span>
-                    <button type="button" class="btn-remove-section" onclick="removeSectionCard(this)">
-                        <i class="fa-solid fa-trash-can"></i> 삭제
-                    </button>
+                    <div class="section-actions" style="display: flex; gap: 0.25rem; align-items: center;">
+                        <button type="button" class="btn-order" onclick="moveUp(this)" title="위로 이동">
+                            <i class="fa-solid fa-chevron-up"></i>
+                        </button>
+                        <button type="button" class="btn-order" onclick="moveDown(this)" title="아래로 이동">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <button type="button" class="btn-remove-section" onclick="removeSectionCard(this)">
+                            <i class="fa-solid fa-trash-can"></i> 삭제
+                        </button>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -268,6 +303,24 @@
                 card.remove();
                 reindexSections();
             }, 150);
+        }
+
+        function moveUp(button) {
+            const card = button.closest('.section-card');
+            const prevCard = card.previousElementSibling;
+            if (prevCard && prevCard.classList.contains('section-card')) {
+                card.parentNode.insertBefore(card, prevCard);
+                reindexSections();
+            }
+        }
+
+        function moveDown(button) {
+            const card = button.closest('.section-card');
+            const nextCard = card.nextElementSibling;
+            if (nextCard && nextCard.classList.contains('section-card')) {
+                card.parentNode.insertBefore(card, nextCard.nextSibling);
+                reindexSections();
+            }
         }
 
         function reindexSections() {
