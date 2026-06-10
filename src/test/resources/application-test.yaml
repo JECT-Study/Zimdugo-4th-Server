@@ -58,3 +58,8 @@ jwt:
   secret: test-secret-key-must-be-32-bytes!!
   access-token-expiration-seconds: 900
   refresh-token-expiration-seconds: 2592000
+
+storage:
+  s3:
+    bucket: test-bucket
+    public-base-url: https://test-cdn.example.com
