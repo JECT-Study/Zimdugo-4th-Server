@@ -9,10 +9,12 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AdminDocumentRepository extends JpaRepository<AdminDocument, Long> {
-    @Query("select d from AdminDocument d join fetch d.sections where d.type = :type order by d.listOrder asc, d.createdAt desc")
+    @Query("select d from AdminDocument d join fetch d.sections "
+        + "where d.type = :type order by d.listOrder asc, d.createdAt desc")
     List<AdminDocument> findByType(@Param("type") DocumentType type);
 
-    @Query("select d from AdminDocument d join fetch d.sections where d.type = :type and d.active = :active order by d.listOrder asc, d.createdAt desc")
+    @Query("select d from AdminDocument d join fetch d.sections "
+        + "where d.type = :type and d.active = :active order by d.listOrder asc, d.createdAt desc")
     List<AdminDocument> findByTypeAndActive(@Param("type") DocumentType type, @Param("active") boolean active);
 
     @Override

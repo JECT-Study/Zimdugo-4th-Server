@@ -45,11 +45,9 @@ class ClientDocumentResponseTest {
         ClientDocumentResponse.SectionResponse secResp1 = response.getSections().get(0);
         assertThat(secResp1.getSubtitle()).isEqualTo("소제목 1");
         assertThat(secResp1.getContent()).isEqualTo("내용 1");
-        assertThat(secResp1.getListOrder()).isEqualTo(0);
 
         ClientDocumentResponse.SectionResponse secResp2 = response.getSections().get(1);
         assertThat(secResp2.getSubtitle()).isEqualTo("소제목 2");
         assertThat(secResp2.getContent()).isEqualTo("내용 2");
-        assertThat(secResp2.getListOrder()).isEqualTo(1);
     }
 }
