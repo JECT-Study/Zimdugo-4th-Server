@@ -218,4 +218,43 @@ class AdminDocumentServiceTest {
         // then: updatedAt이 새롭게 갱신되어 초기 수정 시점보다 미래여야 함
         assertThat(doc.getUpdatedAt()).isAfter(initialUpdatedAt);
     }
+
+    @Test
+    @DisplayName("문서 목록의 정렬 순서를 재배치하고 조회 시 listOrder ASC 및 createdAt DESC 순서로 정렬되어 반환된다")
+    void reorderDocumentsAndSort() {
+        // given
+        AdminDocument doc1 = adminDocumentRepository.save(AdminDocument.builder()
+            .title("문서 1")
+            .type(DocumentType.NOTICE)
+            .active(true)
+            .build());
+        AdminDocument doc2 = adminDocumentRepository.save(AdminDocument.builder()
+            .title("문서 2")
+            .type(DocumentType.NOTICE)
+            .active(true)
+            .build());
+        AdminDocument doc3 = adminDocumentRepository.save(AdminDocument.builder()
+            .title("문서 3")
+            .type(DocumentType.NOTICE)
+            .active(true)
+            .build());
+
+        // 기본 상태에서는 listOrder가 모두 0이므로 최신 생성된 순서로 나옵니다 (doc3 -> doc2 -> doc1)
+        List<AdminDocument> initialList = adminDocumentService.getDocumentsByType(DocumentType.NOTICE);
+        assertThat(initialList.get(0).getTitle()).isEqualTo("문서 3");
+        assertThat(initialList.get(1).getTitle()).isEqualTo("문서 2");
+        assertThat(initialList.get(2).getTitle()).isEqualTo("문서 1");
+
+        // when: 순서를 doc1 -> doc3 -> doc2 순서대로 지정하여 재배치
+        adminDocumentService.reorderDocuments(List.of(doc1.getId(), doc3.getId(), doc2.getId()));
+
+        // then: 조회 결과가 재배치한 listOrder 오름차순 기준으로 정렬되어 반환된다 (doc1 -> doc3 -> doc2)
+        List<AdminDocument> sortedList = adminDocumentService.getDocumentsByType(DocumentType.NOTICE);
+        assertThat(sortedList.get(0).getTitle()).isEqualTo("문서 1");
+        assertThat(sortedList.get(0).getListOrder()).isEqualTo(0);
+        assertThat(sortedList.get(1).getTitle()).isEqualTo("문서 3");
+        assertThat(sortedList.get(1).getListOrder()).isEqualTo(1);
+        assertThat(sortedList.get(2).getTitle()).isEqualTo("문서 2");
+        assertThat(sortedList.get(2).getListOrder()).isEqualTo(2);
+    }
 }

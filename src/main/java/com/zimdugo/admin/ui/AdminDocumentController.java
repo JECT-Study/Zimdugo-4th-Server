@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 @RequestMapping("/admin/documents")
@@ -128,5 +129,12 @@ public class AdminDocumentController {
     public String toggleActiveForDetail(@PathVariable(name = "id") Long id) {
         adminDocumentService.toggleActive(id);
         return "redirect:/admin/documents/" + id;
+    }
+
+    @PostMapping("/reorder")
+    @ResponseBody
+    public ResponseEntity<Void> reorder(@RequestBody List<Long> documentIds) {
+        adminDocumentService.reorderDocuments(documentIds);
+        return ResponseEntity.ok().build();
     }
 }

@@ -44,6 +44,9 @@ public class AdminDocument {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean active = false;
 
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int listOrder = 0;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -91,6 +94,10 @@ public class AdminDocument {
     public void addSection(AdminDocumentSection section) {
         this.sections.add(section);
         section.setAdminDocument(this);
+    }
+
+    public void updateListOrder(int listOrder) {
+        this.listOrder = listOrder;
     }
 
     @PrePersist

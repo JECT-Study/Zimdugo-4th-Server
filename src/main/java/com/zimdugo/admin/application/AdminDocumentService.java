@@ -19,11 +19,11 @@ public class AdminDocumentService {
     private final AdminDocumentRepository adminDocumentRepository;
 
     public List<AdminDocument> getDocumentsByType(DocumentType type) {
-        return adminDocumentRepository.findByTypeOrderByCreatedAtDesc(type);
+        return adminDocumentRepository.findByTypeOrderByListOrderAscCreatedAtDesc(type);
     }
 
     public List<AdminDocument> getActiveDocumentsByType(DocumentType type) {
-        return adminDocumentRepository.findByTypeAndActive(type, true);
+        return adminDocumentRepository.findByTypeAndActiveOrderByListOrderAscCreatedAtDesc(type, true);
     }
 
     public AdminDocument getById(Long id) {
@@ -72,7 +72,8 @@ public class AdminDocumentService {
         
         if (nextActiveState) {
             if (document.getType() == DocumentType.TERMS || document.getType() == DocumentType.PRIVACY) {
-                List<AdminDocument> activeDocs = adminDocumentRepository.findByTypeAndActive(document.getType(), true);
+                List<AdminDocument> activeDocs = adminDocumentRepository
+                    .findByTypeAndActiveOrderByListOrderAscCreatedAtDesc(document.getType(), true);
                 for (AdminDocument doc : activeDocs) {
                     doc.deactivate();
                 }
@@ -80,6 +81,14 @@ public class AdminDocumentService {
             document.activate();
         } else {
             document.deactivate();
+        }
+    }
+
+    @Transactional
+    public void reorderDocuments(List<Long> documentIds) {
+        for (int i = 0; i < documentIds.size(); i++) {
+            AdminDocument document = getById(documentIds.get(i));
+            document.updateListOrder(i);
         }
     }
 }

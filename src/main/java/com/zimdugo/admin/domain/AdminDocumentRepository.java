@@ -9,10 +9,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AdminDocumentRepository extends JpaRepository<AdminDocument, Long> {
     @EntityGraph(attributePaths = {"sections"})
-    List<AdminDocument> findByTypeOrderByCreatedAtDesc(DocumentType type);
+    List<AdminDocument> findByTypeOrderByListOrderAscCreatedAtDesc(DocumentType type);
 
     @EntityGraph(attributePaths = {"sections"})
-    List<AdminDocument> findByTypeAndActive(DocumentType type, boolean active);
+    List<AdminDocument> findByTypeAndActiveOrderByListOrderAscCreatedAtDesc(DocumentType type, boolean active);
 
     @Override
     @EntityGraph(attributePaths = {"sections"})
