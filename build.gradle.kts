@@ -31,6 +31,7 @@ dependencies {
     // Web / Actuator
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 
     // Spring Boot Admin
     implementation("de.codecentric:spring-boot-admin-starter-server")
