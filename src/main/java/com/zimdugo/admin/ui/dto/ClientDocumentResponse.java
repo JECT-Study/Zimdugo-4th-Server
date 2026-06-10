@@ -37,12 +37,10 @@ public class ClientDocumentResponse {
     public static class SectionResponse {
         private String subtitle;
         private String content;
-        private int listOrder;
 
         public SectionResponse(AdminDocumentSection section) {
             this.subtitle = section.getSubtitle();
             this.content = section.getContent();
-            this.listOrder = section.getListOrder();
         }
     }
 }
