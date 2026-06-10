@@ -22,6 +22,10 @@ public class AdminDocumentService {
         return adminDocumentRepository.findByTypeOrderByCreatedAtDesc(type);
     }
 
+    public List<AdminDocument> getActiveDocumentsByType(DocumentType type) {
+        return adminDocumentRepository.findByTypeAndActive(type, true);
+    }
+
     public AdminDocument getById(Long id) {
         return adminDocumentRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 관리자 문서입니다. ID: " + id));

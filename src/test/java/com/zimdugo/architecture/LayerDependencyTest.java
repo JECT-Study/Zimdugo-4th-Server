@@ -77,11 +77,11 @@ class LayerDependencyTest {
     class ClassLocationRules {
 
         @Test
-        @DisplayName("@RestController는 entrypoint 패키지에 위치한다")
-        void rest_controllers_should_reside_in_entrypoint() {
+        @DisplayName("@RestController는 entrypoint 패키지 혹은 admin 패키지에 위치한다")
+        void rest_controllers_should_reside_in_entrypoint_or_admin() {
             classes()
                 .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
-                .should().resideInAPackage("..entrypoint..")
+                .should().resideInAnyPackage("..entrypoint..", "..admin..")
                 .allowEmptyShould(true)
                 .check(importedClasses);
         }
