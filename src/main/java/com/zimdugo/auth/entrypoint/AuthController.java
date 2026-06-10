@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -26,12 +27,17 @@ public class AuthController {
     private static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 60L * 60L * 24L * 30L;
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
     private static final String REFRESH_TOKEN_HEADER_NAME = "X-Refresh-Token";
-    private static final String SAME_SITE_POLICY = "Strict";
     private static final String REFRESH_TOKEN_COOKIE_PATH = "/api/auth/refresh";
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final AuthCommandService authCommandService;
     private final AccountWithdrawalService accountWithdrawalService;
+
+    @Value("${auth.cookie.refresh.same-site:Strict}")
+    private String refreshTokenCookieSameSite;
+
+    @Value("${auth.cookie.refresh.secure:false}")
+    private boolean refreshTokenCookieSecure;
 
     @PostMapping("/refresh")
     public ResponseEntity<RestResponse<Map<String, Object>>> refresh(
@@ -85,20 +91,20 @@ public class AuthController {
     private ResponseCookie createRefreshTokenCookie(String refreshToken) {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
             .httpOnly(true)
-            .secure(false)
+            .secure(refreshTokenCookieSecure)
             .path(REFRESH_TOKEN_COOKIE_PATH)
             .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE)
-            .sameSite(SAME_SITE_POLICY)
+            .sameSite(refreshTokenCookieSameSite)
             .build();
     }
 
     private ResponseCookie createLogoutCookie() {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
             .httpOnly(true)
-            .secure(false)
+            .secure(refreshTokenCookieSecure)
             .path(REFRESH_TOKEN_COOKIE_PATH)
             .maxAge(0)
-            .sameSite(SAME_SITE_POLICY)
+            .sameSite(refreshTokenCookieSameSite)
             .build();
     }
 
