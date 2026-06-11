@@ -67,6 +67,11 @@ jwt:
   access-token-expiration-seconds: 900
   refresh-token-expiration-seconds: 2592000
 
+kakao:
+  local:
+    base-url: https://dapi.kakao.com
+    rest-api-key: ${KAKAO_CLIENT_ID:dummy-kakao-rest-api-key}
+
 springdoc:
   swagger-ui:
     display-request-duration: true

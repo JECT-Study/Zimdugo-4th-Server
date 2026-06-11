@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
+import com.zimdugo.locker.domain.LockerReportNameResolver;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.SavedLockerReport;
 import java.time.LocalTime;
@@ -25,13 +26,16 @@ class LockerReportCommandServiceTest {
 
     private static final String LOCKER_NAME = "물품보관함";
     private static final String ROAD_ADDRESS = "서울 마포구 양화로 160";
-    private static final String ADDITIONAL_INFO = "B2 화장실 옆";
+    private static final String ADDITIONAL_INFO = "B2 저장소 근처";
 
     @Mock
     private LockerReportStore lockerReportStore;
 
     @Mock
     private ActiveUserValidator activeUserValidator;
+
+    @Mock
+    private LockerReportNameResolver lockerReportNameResolver;
 
     @InjectMocks
     private LockerReportCommandService lockerReportCommandService;
@@ -43,6 +47,8 @@ class LockerReportCommandServiceTest {
         @Test
         @DisplayName("신규 제보면 report를 저장한다")
         void createNewReport() {
+            given(lockerReportNameResolver.resolve(ROAD_ADDRESS, "SUBWAY_STATION", 37.556, 126.923))
+                .willReturn(LOCKER_NAME);
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
                 .willReturn(testReport());
 
@@ -57,6 +63,8 @@ class LockerReportCommandServiceTest {
         @Test
         @DisplayName("제보 입력 typed field를 그대로 전달한다")
         void saveReportWithTypedFields() {
+            given(lockerReportNameResolver.resolve(ROAD_ADDRESS, "SUBWAY_STATION", 37.556, 126.923))
+                .willReturn(LOCKER_NAME);
             given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
                 .willReturn(testReport());
 

@@ -2,6 +2,7 @@ package com.zimdugo.locker.application;
 
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
+import com.zimdugo.locker.domain.LockerReportNameResolver;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.LockerReportUpdateInfo;
 import com.zimdugo.locker.domain.SavedLockerReport;
@@ -14,16 +15,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class LockerReportCommandService {
 
+    private static final String DEFAULT_REPORT_NAME = "물품보관함";
+
     private final ActiveUserValidator activeUserValidator;
     private final LockerReportStore lockerReportStore;
+    private final LockerReportNameResolver lockerReportNameResolver;
 
     public LockerReportCreateResult create(Long userId, LockerReportCreateCommand command) {
         activeUserValidator.validate(userId);
-        SavedLockerReport report = lockerReportStore.create(toCreateInfo(userId, command));
+        String reportName = resolveReportName(command);
+        SavedLockerReport report = lockerReportStore.create(toCreateInfo(userId, command, reportName));
 
         return new LockerReportCreateResult(
             report.id(),
-            command.name(),
+            reportName,
             command.roadAddress(),
             command.latitude(),
             command.longitude(),
@@ -33,7 +38,7 @@ public class LockerReportCommandService {
 
     public void update(Long userId, Long reportId, LockerReportCreateCommand command) {
         activeUserValidator.validate(userId);
-        lockerReportStore.update(userId, reportId, toUpdateInfo(command));
+        lockerReportStore.update(userId, reportId, toUpdateInfo(command, resolveReportName(command)));
     }
 
     public void delete(Long userId, Long reportId) {
@@ -41,10 +46,14 @@ public class LockerReportCommandService {
         lockerReportStore.delete(userId, reportId);
     }
 
-    private LockerReportCreateInfo toCreateInfo(Long userId, LockerReportCreateCommand command) {
+    private LockerReportCreateInfo toCreateInfo(
+        Long userId,
+        LockerReportCreateCommand command,
+        String reportName
+    ) {
         return new LockerReportCreateInfo(
             userId,
-            command.name(),
+            reportName,
             command.roadAddress(),
             command.hasFloor() ? command.floorType() : null,
             command.floorNumber(),
@@ -64,9 +73,9 @@ public class LockerReportCommandService {
         );
     }
 
-    private LockerReportUpdateInfo toUpdateInfo(LockerReportCreateCommand command) {
+    private LockerReportUpdateInfo toUpdateInfo(LockerReportCreateCommand command, String reportName) {
         return new LockerReportUpdateInfo(
-            command.name(),
+            reportName,
             command.roadAddress(),
             command.hasFloor() ? command.floorType() : null,
             command.floorNumber(),
@@ -84,5 +93,18 @@ public class LockerReportCommandService {
             command.latitude(),
             command.longitude()
         );
+    }
+
+    private String resolveReportName(LockerReportCreateCommand command) {
+        String resolvedName = lockerReportNameResolver.resolve(
+            command.roadAddress(),
+            command.lockerType(),
+            command.latitude(),
+            command.longitude()
+        );
+        if (resolvedName == null || resolvedName.isBlank()) {
+            return DEFAULT_REPORT_NAME;
+        }
+        return resolvedName;
     }
 }

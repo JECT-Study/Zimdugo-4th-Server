@@ -35,6 +35,7 @@ public interface LockerReportRepository extends JpaRepository<LockerReportEntity
                 lr.name AS lockerName,
                 lr.road_address AS roadAddress,
                 lr.locker_type AS lockerType,
+                lr.image_url AS imageUrl,
                 lr.latitude AS latitude,
                 lr.longitude AS longitude,
                 ST_Distance(
