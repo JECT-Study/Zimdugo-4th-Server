@@ -1,5 +1,7 @@
 package com.zimdugo.locker.application;
 
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.domain.LockerSearchCandidateResult;
@@ -18,7 +20,9 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -168,6 +172,17 @@ class LockerSearchQueryServiceTest {
         assertThat(items.get(0).lockerId()).isEqualTo(10L);
         assertThat(items.get(1).type()).isEqualTo(LockerItemType.LOCKER);
         assertThat(items.get(1).lockerId()).isEqualTo(11L);
+    }
+
+    @Test
+    @DisplayName("좌표가 범위를 벗어나면 검색 후보를 조회하지 않는다")
+    void doesNotReadCandidatesWhenLocationIsOutOfRange() {
+        assertThatThrownBy(() -> lockerSearchQueryService.search(37.55, 180.1, "신촌"))
+            .isInstanceOf(BusinessException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.INVALID_LOCATION_RANGE);
+
+        verify(lockerSearchCandidateReader, never()).search(37.55, 180.1, "신촌", EMPTY_FILTER);
     }
 
     private LockerSuggestCandidate sampleCandidate() {

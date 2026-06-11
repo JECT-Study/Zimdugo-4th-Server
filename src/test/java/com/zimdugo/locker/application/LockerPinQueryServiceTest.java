@@ -1,5 +1,7 @@
 package com.zimdugo.locker.application;
 
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.pin.LockerPinItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
 import com.zimdugo.locker.domain.NearbyLocker;
@@ -13,7 +15,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +59,17 @@ class LockerPinQueryServiceTest {
         assertThat(result.count()).isEqualTo(1);
         assertThat(result.items()).hasSize(1);
         verify(lockerPinAssembler).assemble(nearbyLockers);
+    }
+
+    @Test
+    @DisplayName("좌표가 범위를 벗어나면 주변 보관함을 조회하지 않는다")
+    void doesNotReadNearbyLockersWhenLocationIsOutOfRange() {
+        assertThatThrownBy(() -> lockerPinQueryService.getPins(90.1, 126.93, 500))
+            .isInstanceOf(BusinessException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.INVALID_LOCATION_RANGE);
+
+        verify(nearbyLockerPlaceReader, never()).findNearby(90.1, 126.93, 500);
     }
 
     private NearbyLocker sampleLocker() {
