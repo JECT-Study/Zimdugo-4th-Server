@@ -1,13 +1,14 @@
 package com.zimdugo.locker.application;
 
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
-import com.zimdugo.locker.domain.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.LockerSearchCandidateReader;
+import com.zimdugo.locker.domain.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.LockerSearchFilter;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -52,4 +53,6 @@ public class LockerSearchQueryService {
             candidateResult.matchType()
         );
     }
+
+
 }
