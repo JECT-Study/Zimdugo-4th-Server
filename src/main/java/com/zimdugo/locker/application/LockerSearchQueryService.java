@@ -16,11 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class LockerSearchQueryService {
 
-    private static final double MIN_LATITUDE = -90.0;
-    private static final double MAX_LATITUDE = 90.0;
-    private static final double MIN_LONGITUDE = -180.0;
-    private static final double MAX_LONGITUDE = 180.0;
-
     private final LockerSearchCandidateReader lockerSearchCandidateReader;
     private final LockerSearchAssembler lockerSearchAssembler;
 
@@ -61,9 +56,7 @@ public class LockerSearchQueryService {
     }
 
     private void validateInputs(double lat, double lon, String keyword) {
-        if (lat < MIN_LATITUDE || lat > MAX_LATITUDE || lon < MIN_LONGITUDE || lon > MAX_LONGITUDE) {
-            throw new BusinessException(ErrorCode.INVALID_LOCATION_RANGE);
-        }
+        LocationValidator.validate(lat, lon);
 
         if (keyword == null || keyword.trim().length() < 2) {
             throw new BusinessException(ErrorCode.SEARCH_KEYWORD_TOO_SHORT);
