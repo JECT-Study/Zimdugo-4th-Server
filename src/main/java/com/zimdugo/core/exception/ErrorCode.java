@@ -36,7 +36,6 @@ public enum ErrorCode implements BaseCode {
     PLACE_NOT_FOUND("LOCKER-404-2", "장소를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     LOCKER_REPORT_NOT_FOUND("LOCKER-404-3", "보관함 제보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     INVALID_LOCATION_RANGE("LOCKER-400-1", "좌표 범위가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-    SEARCH_KEYWORD_TOO_SHORT("LOCKER-400-2", "검색어는 최소 2글자 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_LOCKER_SIZE_TYPE("LOCKER-400-3", "보관함 크기 타입이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INDEX_SYNC_FAILED("LOCKER-500-1", "검색 인덱스 동기화에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 

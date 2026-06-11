@@ -1,7 +1,5 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.domain.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.LockerSearchCandidateReader;
@@ -33,7 +31,7 @@ public class LockerSearchQueryService {
         String keyword,
         LockerSearchFilter filter
     ) {
-        validateInputs(latitude, longitude, keyword);
+        LocationValidator.validate(latitude, longitude);
 
         if (filter == null) {
             filter = LockerSearchFilter.empty();
@@ -53,13 +51,5 @@ public class LockerSearchQueryService {
             keyword,
             candidateResult.matchType()
         );
-    }
-
-    private void validateInputs(double lat, double lon, String keyword) {
-        LocationValidator.validate(lat, lon);
-
-        if (keyword == null || keyword.trim().length() < 2) {
-            throw new BusinessException(ErrorCode.SEARCH_KEYWORD_TOO_SHORT);
-        }
     }
 }
