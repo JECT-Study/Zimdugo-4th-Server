@@ -7,6 +7,7 @@ public record MyLockerReportHistoryItem(
     String lockerName,
     String roadAddress,
     String lockerType,
+    String imageUrl,
     double latitude,
     double longitude,
     long distanceMeters,

@@ -22,9 +22,4 @@ public record LockerReportCreateCommand(
     String imageUrl,
     boolean locationConsentAgreed
 ) {
-    private static final String DEFAULT_REPORT_NAME = "물품보관함";
-
-    public String name() {
-        return DEFAULT_REPORT_NAME;
-    }
 }

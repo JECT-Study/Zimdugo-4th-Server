@@ -11,6 +11,8 @@ public interface MyLockerReportHistoryQueryProjection {
 
     String getLockerType();
 
+    String getImageUrl();
+
     double getLatitude();
 
     double getLongitude();

@@ -101,6 +101,7 @@ public class MyPageQueryService {
             item.lockerName(),
             item.roadAddress(),
             item.lockerType(),
+            item.imageUrl(),
             item.latitude(),
             item.longitude(),
             item.distanceMeters(),

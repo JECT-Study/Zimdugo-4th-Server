@@ -87,6 +87,7 @@ public class MyPageReaderAdapter implements MyPageReader {
             projection.getLockerName(),
             projection.getRoadAddress(),
             projection.getLockerType(),
+            projection.getImageUrl(),
             projection.getLatitude(),
             projection.getLongitude(),
             projection.getDistanceMeters(),
