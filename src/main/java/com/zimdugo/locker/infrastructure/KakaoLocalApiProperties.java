@@ -1,6 +1,7 @@
 package com.zimdugo.locker.infrastructure;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -10,6 +11,10 @@ public record KakaoLocalApiProperties(
     @NotBlank
     String baseUrl,
     @NotBlank
-    String restApiKey
+    String restApiKey,
+    @Positive
+    int connectTimeoutMillis,
+    @Positive
+    int readTimeoutMillis
 ) {
 }

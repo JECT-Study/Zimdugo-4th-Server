@@ -26,7 +26,7 @@ class LockerReportCommandServiceTest {
 
     private static final String LOCKER_NAME = "물품보관함";
     private static final String ROAD_ADDRESS = "서울 마포구 양화로 160";
-    private static final String ADDITIONAL_INFO = "B2 저장소 근처";
+    private static final String ADDITIONAL_INFO = "B2 출구 근처";
 
     @Mock
     private LockerReportStore lockerReportStore;

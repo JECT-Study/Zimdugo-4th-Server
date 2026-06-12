@@ -5,6 +5,7 @@ import com.zimdugo.locker.domain.LockerReportNameResolver;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -19,8 +20,13 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
     private final RestClient restClient;
 
     public KakaoLocalLockerReportNameResolver(KakaoLocalApiProperties properties) {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(properties.connectTimeoutMillis());
+        requestFactory.setReadTimeout(properties.readTimeoutMillis());
+
         this.restClient = RestClient.builder()
             .baseUrl(properties.baseUrl())
+            .requestFactory(requestFactory)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + properties.restApiKey())
             .build();
     }
