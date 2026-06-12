@@ -169,7 +169,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
 
 server:
   forward-headers-strategy: framework
