@@ -33,7 +33,7 @@ class LockerPlaceLockerReaderAdapterTest {
     @DisplayName("PLACE 하위 보관함에도 복합 필터를 적용한다")
     void filtersPlaceLockers() {
         List<LockerPlaceLockerQueryProjection> projections = List.of(
-            projection(10L, "LARGE", "INDOOR", "SUBWAY_STATION"),
+            projection(10L, "SMALL,LARGE", "INDOOR", "SUBWAY_STATION"),
             projection(11L, "MEDIUM", "INDOOR", "SUBWAY_STATION"),
             projection(12L, "LARGE", "OUTDOOR", "SUBWAY_STATION")
         );

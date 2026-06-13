@@ -17,10 +17,11 @@ class LockerSearchFilterTest {
             Set.of()
         );
 
-        assertThat(filter.matches(LockerSizeType.SMALL, IndoorOutdoorType.OUTDOOR, LockerType.ETC)).isTrue();
-        assertThat(filter.matches(LockerSizeType.LARGE, IndoorOutdoorType.INDOOR, LockerType.SUBWAY_STATION)).isTrue();
+        assertThat(filter.matches(Set.of(LockerSizeType.SMALL), IndoorOutdoorType.OUTDOOR, LockerType.ETC)).isTrue();
+        assertThat(filter.matches(Set.of(LockerSizeType.LARGE), IndoorOutdoorType.INDOOR, LockerType.SUBWAY_STATION))
+            .isTrue();
         assertThat(filter.matches(
-            LockerSizeType.MEDIUM,
+            Set.of(LockerSizeType.MEDIUM),
             IndoorOutdoorType.INDOOR,
             LockerType.SUBWAY_STATION
         )).isFalse();
@@ -36,12 +37,12 @@ class LockerSearchFilterTest {
         );
 
         assertThat(filter.matches(
-            LockerSizeType.LARGE,
+            Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
             IndoorOutdoorType.INDOOR,
             LockerType.SUBWAY_STATION
         )).isTrue();
         assertThat(filter.matches(
-            LockerSizeType.LARGE,
+            Set.of(LockerSizeType.LARGE),
             IndoorOutdoorType.OUTDOOR,
             LockerType.SUBWAY_STATION
         )).isFalse();
@@ -70,8 +71,8 @@ class LockerSearchFilterTest {
             Set.of()
         );
 
-        assertThat(filter.matches(LockerSizeType.SMALL, IndoorOutdoorType.INDOOR, LockerType.ETC)).isTrue();
-        assertThat(filter.matches(LockerSizeType.SMALL, IndoorOutdoorType.OUTDOOR, LockerType.ETC)).isTrue();
+        assertThat(filter.matches(Set.of(LockerSizeType.SMALL), IndoorOutdoorType.INDOOR, LockerType.ETC)).isTrue();
+        assertThat(filter.matches(Set.of(LockerSizeType.SMALL), IndoorOutdoorType.OUTDOOR, LockerType.ETC)).isTrue();
     }
 
     @Test
@@ -84,15 +85,15 @@ class LockerSearchFilterTest {
         );
 
         assertThat(filter.matches(
-            LockerSizeType.SMALL,
+            Set.of(LockerSizeType.SMALL),
             IndoorOutdoorType.INDOOR,
             LockerType.SUBWAY_STATION
         )).isTrue();
         assertThat(filter.matches(
-            LockerSizeType.SMALL,
+            Set.of(LockerSizeType.SMALL),
             IndoorOutdoorType.INDOOR,
             LockerType.DEPARTMENT_STORE
         )).isTrue();
-        assertThat(filter.matches(LockerSizeType.SMALL, IndoorOutdoorType.INDOOR, LockerType.ETC)).isFalse();
+        assertThat(filter.matches(Set.of(LockerSizeType.SMALL), IndoorOutdoorType.INDOOR, LockerType.ETC)).isFalse();
     }
 }

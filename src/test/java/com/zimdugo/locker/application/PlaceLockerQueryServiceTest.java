@@ -123,7 +123,7 @@ class PlaceLockerQueryServiceTest {
             "서울 서대문구",
             LockerType.SUBWAY_STATION,
             IndoorOutdoorType.INDOOR,
-            LockerSizeType.LARGE,
+            Set.of(LockerSizeType.LARGE),
             1000,
             37.556,
             126.923,

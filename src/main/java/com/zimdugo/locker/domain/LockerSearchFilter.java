@@ -54,11 +54,11 @@ public record LockerSearchFilter(
     }
 
     public boolean matches(
-        LockerSizeType lockerSize,
+        Set<LockerSizeType> lockerSizes,
         IndoorOutdoorType lockerIndoorOutdoorType,
         LockerType actualLockerType
     ) {
-        return (sizeTypes.isEmpty() || sizeTypes.contains(lockerSize))
+        return (sizeTypes.isEmpty() || lockerSizes.stream().anyMatch(sizeTypes::contains))
             && (indoorOutdoorTypes.isEmpty() || indoorOutdoorTypes.contains(lockerIndoorOutdoorType))
             && (lockerTypes.isEmpty() || lockerTypes.contains(actualLockerType));
     }

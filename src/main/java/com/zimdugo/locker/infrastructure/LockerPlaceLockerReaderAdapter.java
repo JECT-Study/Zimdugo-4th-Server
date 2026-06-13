@@ -7,9 +7,12 @@ import com.zimdugo.locker.domain.LockerSearchFilter;
 import com.zimdugo.locker.domain.LockerSizeType;
 import com.zimdugo.locker.domain.LockerType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -40,12 +43,12 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
         for (LockerPlaceLockerQueryProjection projection : projections) {
             LockerType lockerType = LockerType.valueOf(projection.getLockerType());
             IndoorOutdoorType indoorOutdoorType = IndoorOutdoorType.valueOf(projection.getIndoorOutdoorType());
-            LockerSizeType lockerSize = LockerSizeType.from(projection.getLockerSize());
-            if (!filter.matches(lockerSize, indoorOutdoorType, lockerType)) {
+            Set<LockerSizeType> lockerSizes = parseLockerSizes(projection.getLockerSize());
+            if (!filter.matches(lockerSizes, indoorOutdoorType, lockerType)) {
                 continue;
             }
             lockersByPlace.computeIfAbsent(projection.getPlaceId(), ignored -> new ArrayList<>())
-                .add(toDomain(projection, lockerType, indoorOutdoorType, lockerSize));
+                .add(toDomain(projection, lockerType, indoorOutdoorType, lockerSizes));
         }
 
         return lockersByPlace;
@@ -55,7 +58,7 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
         LockerPlaceLockerQueryProjection projection,
         LockerType lockerType,
         IndoorOutdoorType indoorOutdoorType,
-        LockerSizeType lockerSize
+        Set<LockerSizeType> lockerSizes
     ) {
         return new LockerPlaceLocker(
             projection.getPlaceId(),
@@ -64,12 +67,21 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
             projection.getRoadAddress(),
             lockerType,
             indoorOutdoorType,
-            lockerSize,
+            lockerSizes,
             projection.getMinPrice(),
             projection.getLockerLatitude(),
             projection.getLockerLongitude(),
             (long) projection.getDistanceMeters(),
             projection.getUpdatedAt()
         );
+    }
+
+    private Set<LockerSizeType> parseLockerSizes(String lockerSizes) {
+        if (lockerSizes == null || lockerSizes.isBlank()) {
+            return Set.of();
+        }
+        return Arrays.stream(lockerSizes.split(","))
+            .map(LockerSizeType::from)
+            .collect(Collectors.toUnmodifiableSet());
     }
 }
