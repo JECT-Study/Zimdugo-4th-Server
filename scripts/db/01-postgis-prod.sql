@@ -1,4 +1,4 @@
-CREATE EXTENSION IF NOT EXISTS postgis;;
+CREATE EXTENSION IF NOT EXISTS postgis;
 
 CREATE OR REPLACE FUNCTION public.set_lockers_location_from_lat_lng()
 RETURNS trigger
@@ -9,7 +9,7 @@ BEGIN
     NEW.location := ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326)::geography;
     RETURN NEW;
 END;
-$$;;
+$$;
 
 CREATE OR REPLACE FUNCTION public.apply_lockers_postgis()
 RETURNS void
@@ -67,6 +67,6 @@ BEGIN
         ON public.lockers
         USING GIST (location);
 END;
-$$;;
+$$;
 
-SELECT public.apply_lockers_postgis();;
+SELECT public.apply_lockers_postgis();
