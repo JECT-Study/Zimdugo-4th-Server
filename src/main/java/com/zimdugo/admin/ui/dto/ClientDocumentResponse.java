@@ -3,6 +3,7 @@ package com.zimdugo.admin.ui.dto;
 import com.zimdugo.admin.domain.AdminDocument;
 import com.zimdugo.admin.domain.AdminDocumentSection;
 import com.zimdugo.admin.domain.DocumentType;
+import com.zimdugo.common.i18n.SupportedLanguage;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +22,17 @@ public class ClientDocumentResponse {
     private List<SectionResponse> sections = new ArrayList<>();
 
     public ClientDocumentResponse(AdminDocument document) {
+        this(document, SupportedLanguage.KOREAN);
+    }
+
+    public ClientDocumentResponse(AdminDocument document, SupportedLanguage requestedLanguage) {
         this.id = document.getId();
         this.type = document.getType();
-        this.title = document.getTitle();
+        this.title = document.localizedTitle(requestedLanguage);
         this.appliedAt = document.getAppliedAt();
         if (document.getSections() != null) {
             this.sections = document.getSections().stream()
-                .map(SectionResponse::new)
+                .map(section -> new SectionResponse(section, requestedLanguage))
                 .collect(Collectors.toList());
         }
     }
@@ -39,8 +44,12 @@ public class ClientDocumentResponse {
         private String content;
 
         public SectionResponse(AdminDocumentSection section) {
-            this.subtitle = section.getSubtitle();
-            this.content = section.getContent();
+            this(section, SupportedLanguage.KOREAN);
+        }
+
+        public SectionResponse(AdminDocumentSection section, SupportedLanguage requestedLanguage) {
+            this.subtitle = section.localizedSubtitle(requestedLanguage);
+            this.content = section.localizedContent(requestedLanguage);
         }
     }
 }
