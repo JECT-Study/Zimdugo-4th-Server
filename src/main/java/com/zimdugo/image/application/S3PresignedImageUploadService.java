@@ -105,17 +105,17 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
 
     private void validateConfiguration() {
         if (properties.bucket() == null || properties.bucket().isBlank()) {
-            throw new BusinessException(ErrorCode.IMAGE_STORAGE_CONFIGURATION_MISSING);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "S3 bucket is not configured.");
         }
         if (properties.publicBaseUrl() == null || properties.publicBaseUrl().isBlank()) {
-            throw new BusinessException(ErrorCode.IMAGE_STORAGE_CONFIGURATION_MISSING);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "S3 public base URL is not configured.");
         }
     }
 
     private String extractExtension(String originalFileName) {
         int extensionIndex = originalFileName.lastIndexOf('.');
         if (extensionIndex < 0 || extensionIndex == originalFileName.length() - 1) {
-            throw new BusinessException(ErrorCode.INVALID_IMAGE_EXTENSION);
+            throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
 
         return originalFileName.substring(extensionIndex + 1).toLowerCase(Locale.ROOT);
