@@ -2,7 +2,6 @@ package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.domain.LockerPlace;
 import com.zimdugo.locker.domain.LockerPlaceReader;
-import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,17 +13,17 @@ public class LockerPlaceReaderAdapter implements LockerPlaceReader {
     private final PlaceRepository placeRepository;
 
     @Override
-    public Optional<LockerPlace> readById(Long placeId) {
-        return placeRepository.findById(placeId).map(this::toDomain);
+    public Optional<LockerPlace> readById(Long placeId, String languageCode) {
+        return placeRepository.findPlaceDetailById(placeId, languageCode).map(this::toDomain);
     }
 
-    private LockerPlace toDomain(PlaceEntity place) {
+    private LockerPlace toDomain(PlaceDetailQueryProjection projection) {
         return new LockerPlace(
-            place.getId(),
-            place.getName(),
-            place.getRoadAddress(),
-            place.getLatitude(),
-            place.getLongitude()
+            projection.getPlaceId(),
+            projection.getPlaceName(),
+            projection.getRoadAddress(),
+            projection.getLatitude(),
+            projection.getLongitude()
         );
     }
 }
