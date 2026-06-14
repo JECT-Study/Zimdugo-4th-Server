@@ -116,7 +116,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: docker-compose.deploy.yml
+          source: docker-compose.prod.yml
           target: /opt/zimdugo
 
       - name: Deploy on EC2 via SSH
@@ -145,8 +145,8 @@ jobs:
             fi
 
             echo "${GITHUB_TOKEN}" | sudo docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
-            sudo docker compose -f docker-compose.deploy.yml pull
-            sudo docker compose -f docker-compose.deploy.yml up -d redis elasticsearch
+            sudo docker compose -f docker-compose.prod.yml pull
+            sudo docker compose -f docker-compose.prod.yml up -d redis elasticsearch
             for i in {1..60}; do
               if curl -s http://127.0.0.1:9200 >/dev/null; then
                 echo "Elasticsearch is ready"
@@ -154,12 +154,12 @@ jobs:
               fi
               if [ "$i" -eq 60 ]; then
                 echo "Elasticsearch startup failed. Dumping elasticsearch logs..."
-                sudo docker compose -f docker-compose.deploy.yml logs elasticsearch --tail=200
+                sudo docker compose -f docker-compose.prod.yml logs elasticsearch --tail=200
                 exit 1
               fi
               sleep 2
             done
-            sudo docker compose -f docker-compose.deploy.yml up -d app
+            sudo docker compose -f docker-compose.prod.yml up -d app
             for i in {1..30}; do
               status_code="$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/actuator/health || true)"
               if [ "$status_code" = "200" ] || [ "$status_code" = "401" ]; then
@@ -168,7 +168,7 @@ jobs:
               fi
               if [ "$i" -eq 30 ]; then
                 echo "Health check failed. Dumping app logs..."
-                sudo docker compose -f docker-compose.deploy.yml logs app --tail=200
+                sudo docker compose -f docker-compose.prod.yml logs app --tail=200
                 exit 1
               fi
               sleep 2
