@@ -110,6 +110,17 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build and push Elasticsearch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/elasticsearch/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ steps.image.outputs.owner_lower }}/zimdugo-elasticsearch:9.2.6-nori
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Copy compose file to EC2
         uses: appleboy/scp-action@v0.1.7
         with:

@@ -187,6 +187,14 @@
                 </a>
             </li>
         </ul>
+        <div class="sidebar-label">제보 관리</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item" th:classappend="${activeMenu == 'locker-reports'} ? 'active'">
+                <a th:href="@{/admin/locker-reports}">
+                    <i class="fa-solid fa-location-dot"></i> 보관함 제보
+                </a>
+            </li>
+        </ul>
         <div class="sidebar-footer" style="margin-top: auto; padding: 1rem 0.75rem 0; border-top: 1px solid #e5e5e5;">
             <form th:action="@{/admin/logout}" method="post">
                 <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;">

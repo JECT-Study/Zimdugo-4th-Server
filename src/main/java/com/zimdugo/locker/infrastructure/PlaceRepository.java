@@ -1,6 +1,7 @@
 package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +24,6 @@ public interface PlaceRepository extends JpaRepository<PlaceEntity, Long> {
         @Param("placeId") Long placeId,
         @Param("languageCode") String languageCode
     );
+
+    List<PlaceEntity> findAllByRoadAddressOrderByNameAscIdAsc(String roadAddress);
 }

@@ -6,9 +6,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
+import jakarta.persistence.LockModeType;
 
 public interface LockerReportRepository extends JpaRepository<LockerReportEntity, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT lr FROM LockerReportEntity lr WHERE lr.id = :reportId AND lr.deletedAt IS NULL")
+    Optional<LockerReportEntity> findByIdForUpdate(@Param("reportId") Long reportId);
+
+    @Query("SELECT lr FROM LockerReportEntity lr WHERE lr.id = :reportId AND lr.deletedAt IS NULL")
+    Optional<LockerReportEntity> findActiveById(@Param("reportId") Long reportId);
+
+    Page<LockerReportEntity> findAllByDeletedAtIsNull(Pageable pageable);
+
+    Page<LockerReportEntity> findAllByStatusAndDeletedAtIsNull(
+        com.zimdugo.locker.domain.LockerReportStatus status,
+        Pageable pageable
+    );
 
     @Query("SELECT COUNT(lr) FROM LockerReportEntity lr WHERE lr.user.id = :userId AND lr.deletedAt IS NULL")
     long countLockerReportsByUserId(@Param("userId") Long userId);

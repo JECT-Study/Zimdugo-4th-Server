@@ -118,7 +118,23 @@ public class LockerReportEntity {
     @Column
     private LocalDateTime deletedAt;
 
+    @Column
+    private Long appliedPlaceId;
+
+    @Column
+    private Long appliedLockerId;
+
+    @Column(length = 100)
+    private String reviewedBy;
+
+    @Column(length = 1000)
+    private String reviewNote;
+
+    @Column
+    private LocalDateTime reviewedAt;
+
     public void updateReport(UpdateValues values) {
+        ensureUserEditable();
         this.name = values.name();
         this.roadAddress = values.roadAddress();
         this.groundLevelType = values.groundLevelType();
@@ -157,10 +173,86 @@ public class LockerReportEntity {
         double latitude,
         double longitude
     ) {
+        @SuppressWarnings("checkstyle:ParameterNumber")
+        public UpdateValues(
+            String name,
+            String roadAddress,
+            GroundLevelType groundLevelType,
+            Integer floor,
+            IndoorOutdoorType indoorOutdoorType,
+            LockerType lockerType,
+            Set<LockerSizeType> lockerSize,
+            Boolean isFree,
+            Integer minPrice,
+            Integer maxPrice,
+            String additionalInfo,
+            LocalTime startTime,
+            LocalTime endTime,
+            boolean locationConsentAgreed,
+            double latitude,
+            double longitude
+        ) {
+            this(
+                name,
+                roadAddress,
+                groundLevelType,
+                floor,
+                indoorOutdoorType,
+                lockerType,
+                lockerSize,
+                isFree,
+                minPrice,
+                maxPrice,
+                additionalInfo,
+                startTime,
+                endTime,
+                null,
+                locationConsentAgreed,
+                latitude,
+                longitude
+            );
+        }
     }
 
     public void delete() {
+        ensureUserEditable();
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public void approve(Long placeId, Long lockerId, String reviewer, String reviewNote) {
+        ensureReviewable();
+        this.status = LockerReportStatus.APPROVED;
+        this.appliedPlaceId = placeId;
+        this.appliedLockerId = lockerId;
+        recordReview(reviewer, reviewNote);
+    }
+
+    public void reject(String reviewer, String reviewNote) {
+        ensureReviewable();
+        this.status = LockerReportStatus.REJECTED;
+        recordReview(reviewer, reviewNote);
+    }
+
+    private void ensureUserEditable() {
+        if (status == LockerReportStatus.APPROVED) {
+            throw new com.zimdugo.core.exception.BusinessException(
+                com.zimdugo.core.exception.ErrorCode.LOCKER_REPORT_APPROVED_NOT_EDITABLE
+            );
+        }
+    }
+
+    private void ensureReviewable() {
+        if (status == LockerReportStatus.APPROVED || status == LockerReportStatus.REJECTED) {
+            throw new com.zimdugo.core.exception.BusinessException(
+                com.zimdugo.core.exception.ErrorCode.LOCKER_REPORT_ALREADY_REVIEWED
+            );
+        }
+    }
+
+    private void recordReview(String reviewer, String reviewNote) {
+        this.reviewedBy = reviewer;
+        this.reviewNote = reviewNote;
+        this.reviewedAt = LocalDateTime.now();
     }
 
     @PrePersist

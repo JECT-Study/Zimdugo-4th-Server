@@ -56,16 +56,16 @@ public class LockerDetailEntity {
     private IndoorOutdoorType indoorOutdoorType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private GroundLevelType groundLevelType;
 
     @Column
     private Integer floor;
 
-    @Column(nullable = false)
+    @Column
     private Integer minPrice;
 
-    @Column(nullable = false)
+    @Column
     private Integer maxPrice;
 
     @Convert(converter = LockerSizeTypeConverter.class)
@@ -98,7 +98,34 @@ public class LockerDetailEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    public LockerDetailEntity(
+        LockerEntity locker,
+        LockerType lockerType,
+        IndoorOutdoorType indoorOutdoorType,
+        GroundLevelType groundLevelType,
+        Integer floor,
+        Integer minPrice,
+        Integer maxPrice,
+        Set<LockerSizeType> lockerSize,
+        String detailInfo,
+        LocalTime startTime,
+        LocalTime endTime,
+        String imageUrl
+    ) {
+        this.locker = locker;
+        this.lockerType = lockerType;
+        this.indoorOutdoorType = indoorOutdoorType;
+        this.groundLevelType = groundLevelType;
+        this.floor = floor;
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
+        this.lockerSize = lockerSize;
+        this.detailInfo = detailInfo;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.imageUrl = imageUrl;
+    }
 
     public void updateVoteCounts(int accurateVoteCount, int inaccurateVoteCount) {
         this.accurateVoteCount = accurateVoteCount;
