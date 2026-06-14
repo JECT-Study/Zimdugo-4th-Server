@@ -3,21 +3,10 @@ package com.zimdugo.admin.application;
 import com.zimdugo.admin.domain.AdminDocument;
 import com.zimdugo.admin.domain.AdminDocumentRepository;
 import com.zimdugo.admin.domain.AdminDocumentSection;
-import com.zimdugo.admin.domain.DocumentLanguage;
 import com.zimdugo.admin.domain.DocumentType;
 import com.zimdugo.admin.ui.dto.AdminDocumentForm;
-import com.zimdugo.admin.ui.dto.AdminDocumentTranslationRequest;
-import com.zimdugo.admin.ui.dto.AdminDocumentTranslationsResponse;
-import com.zimdugo.admin.ui.dto.ClientDocumentResponse;
-import com.zimdugo.common.i18n.SupportedLanguage;
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,28 +26,9 @@ public class AdminDocumentService {
         return adminDocumentRepository.findByTypeAndActive(type, true);
     }
 
-    public List<ClientDocumentResponse> getLocalizedActiveDocumentsByType(
-        DocumentType type,
-        SupportedLanguage requestedLanguage
-    ) {
-        List<AdminDocument> documents = adminDocumentRepository.findByTypeAndActive(type, true);
-        boolean hasMissingTranslation = documents.stream()
-            .anyMatch(document -> !document.hasCompleteTranslation(requestedLanguage.languageTag()));
-        if (hasMissingTranslation) {
-            throw new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING);
-        }
-        return documents.stream()
-            .map(document -> new ClientDocumentResponse(document, requestedLanguage))
-            .toList();
-    }
-
     public AdminDocument getById(Long id) {
         return adminDocumentRepository.findById(id)
-            .orElseThrow(() -> new BusinessException(ErrorCode.ADMIN_DOCUMENT_NOT_FOUND));
-    }
-
-    public AdminDocumentTranslationsResponse getTranslations(Long id) {
-        return AdminDocumentTranslationsResponse.from(getById(id));
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 관리자 문서입니다. ID: " + id));
     }
 
     @Transactional
@@ -86,44 +56,7 @@ public class AdminDocumentService {
         }
         
         document.update(form.getTitle(), newSections);
-        if (document.isActive()) {
-            document.deactivate();
-        }
         return document;
-    }
-
-    @Transactional
-    public AdminDocumentTranslationsResponse putTranslation(Long id, AdminDocumentTranslationRequest request) {
-        AdminDocument document = getById(id);
-        String language = DocumentLanguage.normalize(request.getLanguage());
-        document.upsertTranslation(language, request.getTitle());
-
-        Map<Long, AdminDocumentSection> sectionsById = new HashMap<>();
-        for (AdminDocumentSection section : document.getSections()) {
-            sectionsById.put(section.getId(), section);
-        }
-
-        Set<Long> translatedSectionIds = new HashSet<>();
-        List<AdminDocumentTranslationRequest.SectionTranslationRequest> sectionRequests =
-            request.getSections() == null ? List.of() : request.getSections();
-        for (AdminDocumentTranslationRequest.SectionTranslationRequest sectionRequest : sectionRequests) {
-            AdminDocumentSection section = sectionsById.get(sectionRequest.getSectionId());
-            if (section == null) {
-                throw new BusinessException(ErrorCode.INVALID_ADMIN_DOCUMENT_TRANSLATION);
-            }
-            if (!translatedSectionIds.add(sectionRequest.getSectionId())) {
-                throw new BusinessException(ErrorCode.INVALID_ADMIN_DOCUMENT_TRANSLATION);
-            }
-            section.upsertTranslation(language, sectionRequest.getSubtitle(), sectionRequest.getContent());
-        }
-
-        document.getSections().stream()
-            .filter(section -> !translatedSectionIds.contains(section.getId()))
-            .forEach(section -> section.removeTranslation(language));
-        if (document.isActive() && !document.hasAllRequiredTranslations()) {
-            throw new BusinessException(ErrorCode.CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS);
-        }
-        return AdminDocumentTranslationsResponse.from(document);
     }
 
     @Transactional
@@ -138,9 +71,6 @@ public class AdminDocumentService {
         boolean nextActiveState = !document.isActive();
         
         if (nextActiveState) {
-            if (!document.hasAllRequiredTranslations()) {
-                throw new BusinessException(ErrorCode.CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS);
-            }
             if (document.getType() == DocumentType.TERMS || document.getType() == DocumentType.PRIVACY) {
                 List<AdminDocument> activeDocs = adminDocumentRepository
                     .findByTypeAndActive(document.getType(), true);
@@ -159,7 +89,7 @@ public class AdminDocumentService {
         for (int i = 0; i < documentIds.size(); i++) {
             AdminDocument document = getById(documentIds.get(i));
             if (document.getType() != DocumentType.NOTICE) {
-                throw new BusinessException(ErrorCode.INVALID_ADMIN_DOCUMENT_ORDER);
+                throw new IllegalArgumentException("공지사항 타입의 문서만 순서를 변경할 수 있습니다. ID: " + document.getId());
             }
             document.updateListOrder(i);
         }
