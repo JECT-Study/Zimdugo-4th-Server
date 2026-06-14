@@ -1,6 +1,5 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordItemResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
@@ -26,7 +25,6 @@ public class LockerKeywordQueryService {
     private final LockerSearchQueryService lockerSearchQueryService;
     private final LockerPlaceLockerReader lockerPlaceLockerReader;
     private final FavoriteLockerReader favoriteLockerReader;
-    private final CurrentRequestLanguage currentRequestLanguage;
 
     public LockerKeywordResult getKeywordResults(LockerKeywordSearchCommand command) {
         return getKeywordResults(null, command);
@@ -75,8 +73,9 @@ public class LockerKeywordQueryService {
             .filter(item -> item.type() == LockerItemType.PLACE)
             .map(LockerSuggestItemResult::placeId)
             .toList();
-        Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId =
-            readPlaceLockers(latitude, longitude, placeIds, filter);
+        Map<Long, List<LockerPlaceLocker>> placeLockersByPlaceId = placeIds.isEmpty()
+            ? Map.of()
+            : lockerPlaceLockerReader.readByPlaceIds(latitude, longitude, placeIds, filter);
         Set<Long> targetLockerIds = collectTargetLockerIds(suggestItems, placeLockersByPlaceId);
         Set<Long> favoriteLockerIds = resolveFavoriteLockerIds(userId, targetLockerIds);
 
@@ -84,24 +83,6 @@ public class LockerKeywordQueryService {
             .map(item -> toKeywordItem(item, placeLockersByPlaceId, favoriteLockerIds))
             .toList();
         return LockerKeywordResult.of(items);
-    }
-
-    private Map<Long, List<LockerPlaceLocker>> readPlaceLockers(
-        double latitude,
-        double longitude,
-        List<Long> placeIds,
-        LockerSearchFilter filter
-    ) {
-        if (placeIds.isEmpty()) {
-            return Map.of();
-        }
-        return lockerPlaceLockerReader.readByPlaceIds(
-            latitude,
-            longitude,
-            placeIds,
-            filter,
-            currentRequestLanguage.resolve().languageTag()
-        );
     }
 
     private LockerKeywordItemResult toKeywordItem(
