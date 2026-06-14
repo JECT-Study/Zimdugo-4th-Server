@@ -6,6 +6,9 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,5 +40,26 @@ public class OpenApiConfig {
                     .type(SecurityScheme.Type.HTTP)
                     .scheme("bearer")
                     .bearerFormat("JWT")));
+    }
+
+    @Bean
+    public OperationCustomizer customizeAcceptLanguageHeader() {
+        return (operation, handlerMethod) -> {
+            Parameter acceptLanguageHeader = new Parameter()
+                .in("header")
+                .name("Accept-Language")
+                .description("다국어 처리를 위한 언어 설정")
+                .required(false)
+                .schema(new StringSchema()
+                    ._default("ko-KR")
+                    .addEnumItem("ko-KR")
+                    .addEnumItem("ja-JP")
+                    .addEnumItem("en-US")
+                    .addEnumItem("zh-CN")
+                    .addEnumItem("zh-TW"));
+
+            operation.addParametersItem(acceptLanguageHeader);
+            return operation;
+        };
     }
 }
