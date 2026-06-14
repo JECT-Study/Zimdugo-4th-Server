@@ -1,8 +1,6 @@
 package com.zimdugo.locker.infrastructure.search;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +17,7 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
-@Document(indexName = "locker_suggest", createIndex = false)
+@Document(indexName = "locker_suggest")
 @Setting(settingPath = "/elasticsearch/locker-suggest-settings.json")
 @Getter
 @Builder
@@ -42,11 +40,7 @@ public class LockerSuggestDocument {
                 analyzer = "autocomplete_analyzer",
                 searchAnalyzer = "suggest_search_analyzer"
             ),
-            @InnerField(suffix = "keyword", type = FieldType.Keyword),
-            @InnerField(suffix = "ko", type = FieldType.Text, analyzer = "nori_analyzer"),
-            @InnerField(suffix = "en", type = FieldType.Text, analyzer = "english_analyzer"),
-            @InnerField(suffix = "ja", type = FieldType.Text, analyzer = "kuromoji_analyzer"),
-            @InnerField(suffix = "zh", type = FieldType.Text, analyzer = "smartcn_analyzer")
+            @InnerField(suffix = "keyword", type = FieldType.Keyword)
         }
     )
     private String lockerName;
@@ -63,36 +57,6 @@ public class LockerSuggestDocument {
         }
     )
     private String lockerNameDecomposed;
-
-    @MultiField(
-        mainField = @Field(type = FieldType.Text),
-        otherFields = {
-            @InnerField(
-                suffix = "autocomplete",
-                type = FieldType.Text,
-                analyzer = "autocomplete_analyzer",
-                searchAnalyzer = "suggest_search_analyzer"
-            ),
-            @InnerField(suffix = "ko", type = FieldType.Text, analyzer = "nori_analyzer"),
-            @InnerField(suffix = "en", type = FieldType.Text, analyzer = "english_analyzer"),
-            @InnerField(suffix = "ja", type = FieldType.Text, analyzer = "kuromoji_analyzer"),
-            @InnerField(suffix = "zh", type = FieldType.Text, analyzer = "smartcn_analyzer")
-        }
-    )
-    private List<String> lockerSearchNames;
-
-    @MultiField(
-        mainField = @Field(type = FieldType.Text),
-        otherFields = {
-            @InnerField(
-                suffix = "autocomplete",
-                type = FieldType.Text,
-                analyzer = "autocomplete_analyzer",
-                searchAnalyzer = "suggest_search_analyzer"
-            )
-        }
-    )
-    private List<String> lockerSearchNamesDecomposed;
 
     @MultiField(
         mainField = @Field(type = FieldType.Text),
@@ -120,32 +84,6 @@ public class LockerSuggestDocument {
     )
     private String roadAddressDecomposed;
 
-    @MultiField(
-        mainField = @Field(type = FieldType.Text),
-        otherFields = {
-            @InnerField(
-                suffix = "autocomplete",
-                type = FieldType.Text,
-                analyzer = "autocomplete_analyzer",
-                searchAnalyzer = "suggest_search_analyzer"
-            )
-        }
-    )
-    private List<String> searchAddresses;
-
-    @MultiField(
-        mainField = @Field(type = FieldType.Text),
-        otherFields = {
-            @InnerField(
-                suffix = "autocomplete",
-                type = FieldType.Text,
-                analyzer = "autocomplete_analyzer",
-                searchAnalyzer = "suggest_search_analyzer"
-            )
-        }
-    )
-    private List<String> searchAddressesDecomposed;
-
     @Field(type = FieldType.Keyword)
     private String lockerType;
 
@@ -153,7 +91,7 @@ public class LockerSuggestDocument {
     private String indoorOutdoorType;
 
     @Field(type = FieldType.Keyword)
-    private List<String> lockerSize;
+    private String lockerSize;
 
     @Field(type = FieldType.Integer)
     private Integer minPrice;
@@ -176,11 +114,7 @@ public class LockerSuggestDocument {
                 analyzer = "autocomplete_analyzer",
                 searchAnalyzer = "suggest_search_analyzer"
             ),
-            @InnerField(suffix = "keyword", type = FieldType.Keyword),
-            @InnerField(suffix = "ko", type = FieldType.Text, analyzer = "nori_analyzer"),
-            @InnerField(suffix = "en", type = FieldType.Text, analyzer = "english_analyzer"),
-            @InnerField(suffix = "ja", type = FieldType.Text, analyzer = "kuromoji_analyzer"),
-            @InnerField(suffix = "zh", type = FieldType.Text, analyzer = "smartcn_analyzer")
+            @InnerField(suffix = "keyword", type = FieldType.Keyword)
         }
     )
     private String placeName;
@@ -198,48 +132,9 @@ public class LockerSuggestDocument {
     )
     private String placeNameDecomposed;
 
-    @MultiField(
-        mainField = @Field(type = FieldType.Text),
-        otherFields = {
-            @InnerField(
-                suffix = "autocomplete",
-                type = FieldType.Text,
-                analyzer = "autocomplete_analyzer",
-                searchAnalyzer = "suggest_search_analyzer"
-            ),
-            @InnerField(suffix = "ko", type = FieldType.Text, analyzer = "nori_analyzer"),
-            @InnerField(suffix = "en", type = FieldType.Text, analyzer = "english_analyzer"),
-            @InnerField(suffix = "ja", type = FieldType.Text, analyzer = "kuromoji_analyzer"),
-            @InnerField(suffix = "zh", type = FieldType.Text, analyzer = "smartcn_analyzer")
-        }
-    )
-    private List<String> placeSearchNames;
-
-    @MultiField(
-        mainField = @Field(type = FieldType.Text),
-        otherFields = {
-            @InnerField(
-                suffix = "autocomplete",
-                type = FieldType.Text,
-                analyzer = "autocomplete_analyzer",
-                searchAnalyzer = "suggest_search_analyzer"
-            )
-        }
-    )
-    private List<String> placeSearchNamesDecomposed;
-
     @GeoPointField
     private GeoPoint location;
 
     @GeoPointField
     private GeoPoint placeLocation;
-
-    @Field(type = FieldType.Object)
-    private Map<String, String> localizedLockerNames;
-
-    @Field(type = FieldType.Object)
-    private Map<String, String> localizedPlaceNames;
-
-    @Field(type = FieldType.Object)
-    private Map<String, String> localizedRoadAddresses;
 }
