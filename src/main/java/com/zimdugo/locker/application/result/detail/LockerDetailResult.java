@@ -33,7 +33,12 @@ public record LockerDetailResult(
     boolean isAccurateVoted,
     boolean isInaccurateVoted
 ) {
-    public static LockerDetailResult from(LockerDetail detail) {
+    public static LockerDetailResult from(
+        LockerDetail detail,
+        boolean isFavorite,
+        boolean isAccurateVoted,
+        boolean isInaccurateVoted
+    ) {
         Set<String> sizes = detail.lockerSizes().stream()
             .map(Enum::name)
             .collect(Collectors.toUnmodifiableSet());
@@ -46,7 +51,7 @@ public record LockerDetailResult(
             detail.startTime(), detail.endTime(), detail.imageUrl(),
             detail.accurateVoteCount(), detail.inaccurateVoteCount(),
             detail.createdAt(), detail.updatedAt(),
-            detail.isFavorite(), detail.isAccurateVoted(), detail.isInaccurateVoted()
+            isFavorite, isAccurateVoted, isInaccurateVoted
         );
     }
 }
