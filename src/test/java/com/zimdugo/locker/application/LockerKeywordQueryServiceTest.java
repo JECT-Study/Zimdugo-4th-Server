@@ -1,5 +1,7 @@
 package com.zimdugo.locker.application;
 
+import com.zimdugo.common.i18n.CurrentRequestLanguage;
+import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordItemResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.LockerItemType;
@@ -35,6 +37,9 @@ class LockerKeywordQueryServiceTest {
 
     @Mock
     private LockerPlaceLockerReader lockerPlaceLockerReader;
+
+    @Mock
+    private CurrentRequestLanguage currentRequestLanguage;
 
     @InjectMocks
     private LockerKeywordQueryService lockerKeywordQueryService;
@@ -97,7 +102,8 @@ class LockerKeywordQueryServiceTest {
         );
         given(lockerSearchQueryService.search(37.55, 126.93, "신촌", EMPTY_FILTER))
             .willReturn(List.of(placeItem));
-        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER))
+        given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.JAPANESE);
+        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER, "ja"))
             .willReturn(Map.of(
                 101L,
                 List.of(new LockerPlaceLocker(
@@ -134,6 +140,8 @@ class LockerKeywordQueryServiceTest {
         assertThat(item.lockers().getFirst().latitude()).isEqualTo(37.556);
         assertThat(item.lockers().getFirst().longitude()).isEqualTo(126.923);
         assertThat(item.lockers().getFirst().isFavorite()).isFalse();
+        then(lockerPlaceLockerReader).should()
+            .readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER, "ja");
     }
 
     @Test
@@ -212,7 +220,8 @@ class LockerKeywordQueryServiceTest {
         );
         given(lockerSearchQueryService.search(37.55, 126.93, "역", EMPTY_FILTER))
             .willReturn(List.of(placeItem, lockerItem));
-        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER))
+        given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
+        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), EMPTY_FILTER, "ko"))
             .willReturn(Map.of(
                 101L,
                 List.of(new LockerPlaceLocker(
