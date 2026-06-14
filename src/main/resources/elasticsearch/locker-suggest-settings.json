@@ -17,14 +17,6 @@
         "type": "edge_ngram",
         "min_gram": 1,
         "max_gram": 20
-      },
-      "icu_normalizer_filter": {
-        "type": "icu_normalizer",
-        "name": "nfkc_cf"
-      },
-      "english_stemmer": {
-        "type": "stemmer",
-        "language": "english"
       }
     },
     "analyzer": {
@@ -35,7 +27,6 @@
           "whitespace_remove_filter"
         ],
         "filter": [
-          "icu_normalizer_filter",
           "lowercase",
           "autocomplete_filter"
         ]
@@ -46,39 +37,6 @@
         "char_filter": [
           "whitespace_remove_filter"
         ],
-        "filter": [
-          "icu_normalizer_filter",
-          "lowercase"
-        ]
-      },
-      "nori_analyzer": {
-        "type": "custom",
-        "tokenizer": "nori_tokenizer",
-        "filter": [
-          "lowercase",
-          "nori_part_of_speech"
-        ]
-      },
-      "english_analyzer": {
-        "type": "custom",
-        "tokenizer": "standard",
-        "filter": [
-          "lowercase",
-          "english_stemmer"
-        ]
-      },
-      "kuromoji_analyzer": {
-        "type": "custom",
-        "tokenizer": "kuromoji_tokenizer",
-        "filter": [
-          "lowercase",
-          "kuromoji_baseform",
-          "kuromoji_part_of_speech"
-        ]
-      },
-      "smartcn_analyzer": {
-        "type": "custom",
-        "tokenizer": "smartcn_tokenizer",
         "filter": [
           "lowercase"
         ]
