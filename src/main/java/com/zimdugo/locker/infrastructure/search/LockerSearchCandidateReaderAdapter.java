@@ -252,6 +252,23 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         return candidates;
     }
 
+    private String getLocalizedValue(
+        Map<String, String> localizedMap,
+        String defaultVal,
+        String langKey
+    ) {
+        return localizedMap != null && localizedMap.containsKey(langKey)
+            ? localizedMap.get(langKey)
+            : defaultVal;
+    }
+
+    private double parseDistance(List<Object> sortValues) {
+        if (sortValues.size() > 1) {
+            return Double.parseDouble(sortValues.get(1).toString());
+        }
+        return 0;
+    }
+
     private LockerSuggestCandidate toCandidate(
         SearchHit<LockerSuggestDocument> hit,
         SupportedLanguage requestedLanguage
@@ -259,38 +276,18 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         LockerSuggestDocument doc = hit.getContent();
         GeoPoint lockerPoint = requireIndexLocation(doc.getLocation());
         GeoPoint placePoint = requireIndexLocation(doc.getPlaceLocation());
-
-        double distanceMeters = 0;
-        if (hit.getSortValues().size() > 1) {
-            distanceMeters = Double.parseDouble(hit.getSortValues().get(1).toString());
-        }
-
+        double distanceMeters = parseDistance(hit.getSortValues());
         String langKey = requestedLanguage.name().toLowerCase();
-        String lockerName = doc.getLocalizedLockerNames() != null && doc.getLocalizedLockerNames().containsKey(langKey)
-            ? doc.getLocalizedLockerNames().get(langKey)
-            : doc.getLockerName();
-
-        String roadAddress = doc.getLocalizedRoadAddresses() != null && doc.getLocalizedRoadAddresses().containsKey(langKey)
-            ? doc.getLocalizedRoadAddresses().get(langKey)
-            : doc.getRoadAddress();
-
-        String placeName = doc.getLocalizedPlaceNames() != null && doc.getLocalizedPlaceNames().containsKey(langKey)
-            ? doc.getLocalizedPlaceNames().get(langKey)
-            : doc.getPlaceName();
-
+        String lockerName = getLocalizedValue(doc.getLocalizedLockerNames(), doc.getLockerName(), langKey);
+        String roadAddress = getLocalizedValue(doc.getLocalizedRoadAddresses(), doc.getRoadAddress(), langKey);
+        String placeName = getLocalizedValue(doc.getLocalizedPlaceNames(), doc.getPlaceName(), langKey);
         return new LockerSuggestCandidate(
-            doc.getLockerId(),
-            lockerName,
-            roadAddress,
-            LockerType.valueOf(doc.getLockerType()), doc.getMinPrice(), doc.getUpdatedAt(), doc.getPlaceId(),
-            placeName, Set.copyOf(hit.getMatchedQueries().keySet()),
-            doc.getLockerCount(),
-            (long) distanceMeters,
-            lockerPoint.getLat(),
-            lockerPoint.getLon(),
-            placePoint.getLat(),
-            placePoint.getLon(),
-            hit.getScore()
+            doc.getLockerId(), lockerName, roadAddress,
+            LockerType.valueOf(doc.getLockerType()), doc.getMinPrice(), doc.getUpdatedAt(),
+            doc.getPlaceId(), placeName, Set.copyOf(hit.getMatchedQueries().keySet()),
+            doc.getLockerCount(), (long) distanceMeters,
+            lockerPoint.getLat(), lockerPoint.getLon(),
+            placePoint.getLat(), placePoint.getLon(), hit.getScore()
         );
     }
 

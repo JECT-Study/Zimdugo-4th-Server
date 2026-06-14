@@ -7,7 +7,8 @@ import com.zimdugo.locker.infrastructure.PlaceAliasRepository;
 import com.zimdugo.locker.infrastructure.LockerTranslationRepository;
 import com.zimdugo.locker.infrastructure.PlaceTranslationRepository;
 import com.zimdugo.locker.infrastructure.LockerSuggestIndexQueryProjection;
-import com.zimdugo.locker.infrastructure.persistence.LockerAliasEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
+import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationEntity;
@@ -198,7 +199,7 @@ class LockerSuggestIndexSyncServiceTest {
         given(lockerRepository.findAllForSuggestIndexByPlaceIds(List.of(101L))).willReturn(List.of(projection));
 
         LockerTranslationEntity lt = org.mockito.Mockito.mock(LockerTranslationEntity.class);
-        com.zimdugo.locker.infrastructure.persistence.LockerEntity locker = org.mockito.Mockito.mock(com.zimdugo.locker.infrastructure.persistence.LockerEntity.class);
+        LockerEntity locker = org.mockito.Mockito.mock(LockerEntity.class);
         given(lt.getLocker()).willReturn(locker);
         given(locker.getId()).willReturn(10L);
         given(lt.getName()).willReturn("Locker A");
@@ -207,7 +208,7 @@ class LockerSuggestIndexSyncServiceTest {
         given(lockerTranslationRepository.findByLockerIdIn(any())).willReturn(List.of(lt));
 
         PlaceTranslationEntity pt1 = org.mockito.Mockito.mock(PlaceTranslationEntity.class);
-        com.zimdugo.locker.infrastructure.persistence.PlaceEntity place = org.mockito.Mockito.mock(com.zimdugo.locker.infrastructure.persistence.PlaceEntity.class);
+        PlaceEntity place = org.mockito.Mockito.mock(PlaceEntity.class);
         given(pt1.getPlace()).willReturn(place);
         given(place.getId()).willReturn(101L);
         given(pt1.getName()).willReturn("Sinchon Station Exit 1");
