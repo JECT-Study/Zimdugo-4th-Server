@@ -3,6 +3,7 @@ package com.zimdugo.admin.ui.dto;
 import com.zimdugo.admin.domain.AdminDocument;
 import com.zimdugo.admin.domain.AdminDocumentSection;
 import com.zimdugo.admin.domain.DocumentType;
+import com.zimdugo.common.i18n.SupportedLanguage;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,9 +33,12 @@ class ClientDocumentResponseTest {
             .active(true)
             .sections(List.of(section1, section2))
             .build();
+        document.upsertTranslation("ko", "테스트 문서 제목");
+        section1.upsertTranslation("ko", "소제목 1", "내용 1");
+        section2.upsertTranslation("ko", "소제목 2", "내용 2");
 
         // when
-        ClientDocumentResponse response = new ClientDocumentResponse(document);
+        ClientDocumentResponse response = new ClientDocumentResponse(document, SupportedLanguage.KOREAN);
 
         // then
         assertThat(response.getId()).isNull();
