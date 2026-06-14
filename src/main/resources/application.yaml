@@ -116,11 +116,19 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+    defer-datasource-initialization: true
     show-sql: false
     properties:
       hibernate:
         format_sql: true
+
+  sql:
+    init:
+      mode: always
+      separator: ';;'
+      data-locations:
+        - file:scripts/db/01-postgis.sql
 
 management:
   endpoints:
