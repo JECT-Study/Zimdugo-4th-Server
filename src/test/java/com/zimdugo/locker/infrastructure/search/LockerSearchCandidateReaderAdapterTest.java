@@ -1,8 +1,5 @@
 package com.zimdugo.locker.infrastructure.search;
 
-import co.elastic.clients.elasticsearch._types.SortOrder;
-import com.zimdugo.common.i18n.CurrentRequestLanguage;
-import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.locker.domain.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.IndoorOutdoorType;
 import com.zimdugo.locker.domain.LockerSearchFilter;
@@ -32,7 +29,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class LockerSearchCandidateReaderAdapterTest {
@@ -42,9 +38,6 @@ class LockerSearchCandidateReaderAdapterTest {
 
     @Mock
     private SearchHits<LockerSuggestDocument> searchHits;
-
-    @Mock
-    private CurrentRequestLanguage currentRequestLanguage;
 
     @InjectMocks
     private LockerSearchCandidateReaderAdapter lockerSearchCandidateReaderAdapter;
@@ -57,7 +50,6 @@ class LockerSearchCandidateReaderAdapterTest {
             eq(LockerSuggestDocument.class)
         )).willReturn(searchHits, searchHits);
         given(searchHits.getSearchHits()).willReturn(java.util.List.of());
-        given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
 
         LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(
             37.55, 126.93, "중앙로", LockerSearchFilter.empty()
@@ -68,11 +60,10 @@ class LockerSearchCandidateReaderAdapterTest {
 
         assertThat(result.matchType()).isEqualTo(LockerSearchMatchType.ADDRESS);
         List<NativeQuery> queries = captor.getAllValues();
-        assertThat(queries.get(0).getQuery().toString()).contains("placeSearchNames.autocomplete");
-        assertThat(queries.get(0).getQuery().toString()).doesNotContain("searchAddresses.autocomplete");
-        assertThat(queries.get(1).getQuery().toString()).contains("searchAddresses.autocomplete");
-        assertThat(queries.get(1).getQuery().toString()).contains("searchAddressesDecomposed.autocomplete");
-        assertThat(queries).allSatisfy(this::assertRelevanceFirstSort);
+        assertThat(queries.get(0).getQuery().toString()).contains("placeName.autocomplete");
+        assertThat(queries.get(0).getQuery().toString()).doesNotContain("roadAddress.autocomplete");
+        assertThat(queries.get(1).getQuery().toString()).contains("roadAddress.autocomplete");
+        assertThat(queries.get(1).getQuery().toString()).contains("roadAddressDecomposed.autocomplete");
     }
 
     @Test
@@ -84,7 +75,6 @@ class LockerSearchCandidateReaderAdapterTest {
             eq(LockerSuggestDocument.class)
         )).willReturn(searchHits);
         given(searchHits.getSearchHits()).willReturn(searchHitList);
-        given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
 
         LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(
             37.55, 126.93, "신촌", LockerSearchFilter.empty()
@@ -94,22 +84,8 @@ class LockerSearchCandidateReaderAdapterTest {
         verify(elasticsearchOperations).search(captor.capture(), eq(LockerSuggestDocument.class));
         assertThat(result.matchType()).isEqualTo(LockerSearchMatchType.NAME);
         assertThat(result.candidates()).hasSize(1);
-        assertThat(result.candidates().getFirst().distanceMeters()).isEqualTo(100L);
-        assertThat(result.candidates().getFirst().matchedQueries())
-            .containsExactly(com.zimdugo.locker.domain.LockerSuggestCandidate.PLACE_NAME_QUERY);
-        assertRelevanceFirstSort(captor.getValue());
-        String query = captor.getValue().getQuery().toString();
-        assertThat(query)
-            .contains(
-                "placeSearchNames.autocomplete",
-                "lockerSearchNames.autocomplete",
-                "placeSearchNamesDecomposed.autocomplete",
-                "lockerSearchNamesDecomposed.autocomplete"
-            )
-            .doesNotContain("searchAddresses.autocomplete");
-        assertThat(query)
-            .containsOnlyOnce(com.zimdugo.locker.domain.LockerSuggestCandidate.PLACE_NAME_QUERY)
-            .containsOnlyOnce(com.zimdugo.locker.domain.LockerSuggestCandidate.LOCKER_NAME_QUERY);
+        assertThat(captor.getValue().getQuery().toString()).contains("placeName.autocomplete");
+        assertThat(captor.getValue().getQuery().toString()).doesNotContain("roadAddress.autocomplete");
     }
 
     @Test
@@ -120,7 +96,6 @@ class LockerSearchCandidateReaderAdapterTest {
             eq(LockerSuggestDocument.class)
         )).willReturn(searchHits, searchHits);
         given(searchHits.getSearchHits()).willReturn(java.util.List.of());
-        given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
         LockerSearchFilter filter = new LockerSearchFilter(
             Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
             Set.of(IndoorOutdoorType.INDOOR),
@@ -139,53 +114,6 @@ class LockerSearchCandidateReaderAdapterTest {
         }
     }
 
-    @Test
-    @DisplayName("검색어에 NFKC, 소문자화, 공백 제거 정규화를 적용한다")
-    void normalizesKeywordBeforeSearching() {
-        given(elasticsearchOperations.search(
-            any(NativeQuery.class),
-            eq(LockerSuggestDocument.class)
-        )).willReturn(searchHits, searchHits);
-        given(searchHits.getSearchHits()).willReturn(List.of());
-        given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
-
-        lockerSearchCandidateReaderAdapter.search(37.55, 126.93, " Ｓｅｏｕｌ\tStation ", LockerSearchFilter.empty());
-
-        ArgumentCaptor<NativeQuery> captor = ArgumentCaptor.forClass(NativeQuery.class);
-        verify(elasticsearchOperations, times(2)).search(captor.capture(), eq(LockerSuggestDocument.class));
-        assertThat(captor.getAllValues())
-            .allSatisfy(query -> assertThat(query.getQuery().toString()).contains("seoulstation"));
-    }
-
-    @Test
-    @DisplayName("정규화 후 빈 검색어이면 Elasticsearch를 호출하지 않는다")
-    void doesNotSearchWhenNormalizedKeywordIsBlank() {
-        LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(
-            37.55,
-            126.93,
-            " \t\u00a0",
-            LockerSearchFilter.empty()
-        );
-
-        assertThat(result.candidates()).isEmpty();
-        verifyNoInteractions(elasticsearchOperations, currentRequestLanguage);
-    }
-
-    private void assertRelevanceFirstSort(NativeQuery query) {
-        assertThat(query.getPageable().getPageSize()).isEqualTo(200);
-        assertThat(query.getSortOptions()).satisfiesExactly(
-            sort -> {
-                assertThat(sort.isScore()).isTrue();
-                assertThat(sort.score().order()).isEqualTo(SortOrder.Desc);
-            },
-            sort -> {
-                assertThat(sort.isGeoDistance()).isTrue();
-                assertThat(sort.geoDistance().field()).isEqualTo("placeLocation");
-                assertThat(sort.geoDistance().order()).isEqualTo(SortOrder.Asc);
-            }
-        );
-    }
-
     private SearchHit<LockerSuggestDocument> searchHit() {
         LockerSuggestDocument document = LockerSuggestDocument.builder()
             .lockerId(10L)
@@ -196,23 +124,19 @@ class LockerSearchCandidateReaderAdapterTest {
             .updatedAt(LocalDateTime.of(2026, 5, 31, 12, 0))
             .placeId(101L)
             .placeName("신촌역 1번 출구")
-            .placeSearchNames(List.of("신촌역 1번 출구", "Sinchon Station Exit 1", "신촌 출구"))
             .lockerCount(1)
             .location(new GeoPoint(37.556, 126.923))
             .placeLocation(new GeoPoint(37.557, 126.924))
             .build();
         Map<String, List<String>> highlightFields = Map.of();
         Map<String, SearchHits<?>> innerHits = Map.of();
-        Map<String, Double> matchedQueries = Map.of(
-            com.zimdugo.locker.domain.LockerSuggestCandidate.PLACE_NAME_QUERY,
-            10.0
-        );
+        Map<String, Double> matchedQueries = Map.of();
         return new SearchHit<LockerSuggestDocument>(
             "locker_suggest",
             "10",
             null,
             10.0F,
-            new Object[] {10.0, 100.0},
+            new Object[] {100.0},
             highlightFields,
             innerHits,
             null,
