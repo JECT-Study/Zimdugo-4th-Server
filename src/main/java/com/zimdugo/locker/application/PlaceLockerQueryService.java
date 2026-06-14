@@ -1,6 +1,5 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
@@ -25,16 +24,13 @@ public class PlaceLockerQueryService {
     private final LockerPlaceReader lockerPlaceReader;
     private final LockerPlaceLockerReader lockerPlaceLockerReader;
     private final FavoriteLockerReader favoriteLockerReader;
-    private final CurrentRequestLanguage currentRequestLanguage;
 
     public PlaceLockerResult getPlaceLockers(PlaceLockerQueryCommand command) {
         return getPlaceLockers(null, command);
     }
 
     public PlaceLockerResult getPlaceLockers(Long userId, PlaceLockerQueryCommand command) {
-        String languageCode = currentRequestLanguage.resolve().languageTag();
-
-        LockerPlace place = lockerPlaceReader.readById(command.placeId(), languageCode)
+        LockerPlace place = lockerPlaceReader.readById(command.placeId())
             .orElseThrow(() -> new BusinessException(ErrorCode.PLACE_NOT_FOUND));
         LockerSearchFilter filter = LockerSearchFilter.from(
             command.sizeTypes(),
@@ -45,8 +41,7 @@ public class PlaceLockerQueryService {
             command.latitude(),
             command.longitude(),
             List.of(command.placeId()),
-            filter,
-            languageCode
+            filter
         ).getOrDefault(command.placeId(), List.of());
         Set<Long> favoriteLockerIds = resolveFavoriteLockerIds(userId, lockers);
         List<LockerKeywordLockerResult> lockerResults = lockers.stream()
