@@ -11,6 +11,7 @@ import com.zimdugo.locker.domain.LockerSearchFilter;
 import com.zimdugo.locker.domain.LockerType;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,9 +68,43 @@ class LockerSearchQueryServiceTest {
     }
 
     @Test
+    @DisplayName("장소 alias 키워드는 PLACE 결과로 변환한다")
+    void returnsPlaceSuggestionWhenPlaceAliasMatched() {
+        List<LockerSuggestCandidate> candidates = List.of(sampleCandidate());
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌 출구", EMPTY_FILTER))
+            .willReturn(LockerSearchCandidateResult.name(candidates));
+
+        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "신촌 출구");
+
+        assertThat(items).hasSize(1);
+        assertThat(items.getFirst().type()).isEqualTo(LockerItemType.PLACE);
+        assertThat(items.getFirst().placeId()).isEqualTo(101L);
+    }
+
+    @Test
+    @DisplayName("NFKC 정규화된 장소 alias 키워드는 PLACE 결과로 변환한다")
+    void returnsPlaceSuggestionWhenNfkcNormalizedAliasMatched() {
+        List<LockerSuggestCandidate> candidates = List.of(sampleCandidate());
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "Ｓｉｎｃｈｏｎ　Ｓｔａｔｉｏｎ　Ｅｘｉｔ　１", EMPTY_FILTER))
+            .willReturn(LockerSearchCandidateResult.name(candidates));
+
+        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(
+            37.55,
+            126.93,
+            "Ｓｉｎｃｈｏｎ　Ｓｔａｔｉｏｎ　Ｅｘｉｔ　１"
+        );
+
+        assertThat(items).hasSize(1);
+        assertThat(items.getFirst().type()).isEqualTo(LockerItemType.PLACE);
+    }
+
+    @Test
     @DisplayName("상세 키워드는 LOCKER 결과로 변환한다")
     void returnsLockerSuggestionWhenDetailKeywordMatched() {
-        List<LockerSuggestCandidate> candidates = List.of(sampleCandidate());
+        List<LockerSuggestCandidate> candidates = List.of(sampleCandidate(
+            2,
+            Set.of(LockerSuggestCandidate.LOCKER_NAME_QUERY)
+        ));
         given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌역1번출구b1", EMPTY_FILTER))
             .willReturn(LockerSearchCandidateResult.name(candidates));
 
@@ -85,6 +120,22 @@ class LockerSearchQueryServiceTest {
         assertThat(item.lockerId()).isEqualTo(10L);
         assertThat(item.lockerName()).isEqualTo("신촌역 1번 출구 b1 관리사무소 옆");
         verify(lockerSearchCandidateReader).search(37.55, 126.93, "신촌역1번출구b1", EMPTY_FILTER);
+    }
+
+    @Test
+    @DisplayName("장소명과 보관함명이 모두 매칭되면 PLACE 결과를 우선한다")
+    void returnsPlaceSuggestionWhenBothNameQueriesMatched() {
+        List<LockerSuggestCandidate> candidates = List.of(sampleCandidate(
+            2,
+            Set.of(LockerSuggestCandidate.PLACE_NAME_QUERY, LockerSuggestCandidate.LOCKER_NAME_QUERY)
+        ));
+        given(lockerSearchCandidateReader.search(37.55, 126.93, "신촌역 1번 출구", EMPTY_FILTER))
+            .willReturn(LockerSearchCandidateResult.name(candidates));
+
+        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(37.55, 126.93, "신촌역 1번 출구");
+
+        assertThat(items).hasSize(1);
+        assertThat(items.getFirst().type()).isEqualTo(LockerItemType.PLACE);
     }
 
     @Test
@@ -132,6 +183,7 @@ class LockerSearchQueryServiceTest {
             LocalDateTime.now(),
             101L,
             "신촌역 1번 출구",
+            Set.of(LockerSuggestCandidate.LOCKER_NAME_QUERY),
             2,
             100L,
             37.556,
@@ -149,6 +201,7 @@ class LockerSearchQueryServiceTest {
             LocalDateTime.now(),
             101L,
             "신촌역 1번 출구",
+            Set.of(LockerSuggestCandidate.LOCKER_NAME_QUERY),
             2,
             100L,
             37.556,
@@ -190,6 +243,10 @@ class LockerSearchQueryServiceTest {
     }
 
     private LockerSuggestCandidate sampleCandidate(int lockerCount) {
+        return sampleCandidate(lockerCount, Set.of(LockerSuggestCandidate.PLACE_NAME_QUERY));
+    }
+
+    private LockerSuggestCandidate sampleCandidate(int lockerCount, Set<String> matchedQueries) {
         return new LockerSuggestCandidate(
             10L,
             "신촌역 1번 출구 b1 관리사무소 옆",
@@ -199,6 +256,7 @@ class LockerSearchQueryServiceTest {
             LocalDateTime.now(),
             101L,
             "신촌역 1번 출구",
+            matchedQueries,
             lockerCount,
             100L,
             37.556,
