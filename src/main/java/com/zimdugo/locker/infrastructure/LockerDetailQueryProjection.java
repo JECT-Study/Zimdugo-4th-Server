@@ -26,4 +26,7 @@ public interface LockerDetailQueryProjection {
     int getInaccurateVoteCount();
     LocalDateTime getCreatedAt();
     LocalDateTime getUpdatedAt();
+    Boolean getIsFavorite();
+    Boolean getIsAccurateVoted();
+    Boolean getIsInaccurateVoted();
 }
