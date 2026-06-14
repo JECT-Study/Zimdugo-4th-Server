@@ -49,7 +49,6 @@ public class LockerSearchQueryService {
 
         return lockerSearchAssembler.assemble(
             candidateResult.candidates(),
-            keyword,
             candidateResult.matchType()
         );
     }

@@ -1,6 +1,5 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.common.util.HangulUtils;
 import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.domain.LockerSearchMatchType;
@@ -16,17 +15,13 @@ public class LockerSearchAssembler {
 
     public List<LockerSuggestItemResult> assemble(
         List<LockerSuggestCandidate> candidates,
-        String keyword,
         LockerSearchMatchType matchType
     ) {
-        String normalizedKeyword = normalize(keyword);
-        String decomposedKeyword = HangulUtils.decompose(normalizedKeyword);
-
         List<LockerSuggestItemResult> suggestions = new ArrayList<>(candidates.size());
         Set<Long> seenPlaceIdsForPlaceType = new HashSet<>();
 
         for (LockerSuggestCandidate candidate : candidates) {
-            LockerSuggestItemResult item = toItemResult(candidate, normalizedKeyword, decomposedKeyword, matchType);
+            LockerSuggestItemResult item = toItemResult(candidate, matchType);
             if (item.type() == LockerItemType.LOCKER) {
                 suggestions.add(item);
             } else if (item.type() == LockerItemType.PLACE) {
@@ -40,14 +35,8 @@ public class LockerSearchAssembler {
 
     private LockerSuggestItemResult toItemResult(
         LockerSuggestCandidate candidate,
-        String normalizedKeyword,
-        String decomposedKeyword,
         LockerSearchMatchType matchType
     ) {
-        String normalizedPlaceName = normalize(candidate.placeName());
-        boolean placeMatched = isPlaceMatched(decomposedKeyword, normalizedPlaceName);
-        boolean hasDetailKeyword = isDetailKeyword(normalizedKeyword, normalizedPlaceName);
-
         if (candidate.lockerCount() == 1) {
             return LockerSuggestItemResult.locker(candidate);
         }
@@ -56,41 +45,14 @@ public class LockerSearchAssembler {
             return LockerSuggestItemResult.place(candidate);
         }
 
-        if (hasDetailKeyword) {
-            return LockerSuggestItemResult.locker(candidate);
-        }
-
-        if (placeMatched) {
+        if (candidate.matchedQueries().contains(LockerSuggestCandidate.PLACE_NAME_QUERY)) {
             return LockerSuggestItemResult.place(candidate);
         }
 
+        if (candidate.matchedQueries().contains(LockerSuggestCandidate.LOCKER_NAME_QUERY)) {
+            return LockerSuggestItemResult.locker(candidate);
+        }
+
         return LockerSuggestItemResult.locker(candidate);
-    }
-
-    private boolean isPlaceMatched(String decomposedKeyword, String normalizedPlaceName) {
-        String decomposedPlaceName = HangulUtils.decompose(normalizedPlaceName);
-        return decomposedPlaceName.contains(decomposedKeyword) || decomposedKeyword.contains(decomposedPlaceName);
-    }
-
-    private boolean isDetailKeyword(String normalizedKeyword, String normalizedPlaceName) {
-        if (!normalizedKeyword.startsWith(normalizedPlaceName)) {
-            return false;
-        }
-        return normalizedKeyword.length() > normalizedPlaceName.length();
-    }
-
-    private String normalize(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        StringBuilder builder = new StringBuilder(value.length());
-        for (int i = 0; i < value.length(); i++) {
-            char character = value.charAt(i);
-            if (!Character.isWhitespace(character)) {
-                builder.append(Character.toLowerCase(character));
-            }
-        }
-        return builder.toString();
     }
 }

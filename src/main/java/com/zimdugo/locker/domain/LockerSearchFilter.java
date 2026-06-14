@@ -37,6 +37,10 @@ public record LockerSearchFilter(
         Set<String> indoorOutdoorTypes,
         Set<String> lockerTypes
     ) {
+        System.out.println("[DEBUG] LockerSearchFilter.from - sizeTypes: " + sizeTypes);
+        System.out.println("[DEBUG] LockerSearchFilter.from - indoorOutdoorTypes: " + indoorOutdoorTypes);
+        System.out.println("[DEBUG] LockerSearchFilter.from - lockerTypes: " + lockerTypes);
+
         Set<LockerSizeType> parsedSizeTypes = parseEnumSet(sizeTypes, LockerSizeType::from);
         Set<IndoorOutdoorType> parsedIndoorOutdoorTypes =
             parseEnumSet(indoorOutdoorTypes, val -> parse(val, IndoorOutdoorType.class));
@@ -72,7 +76,9 @@ public record LockerSearchFilter(
         }
         return values.stream()
             .filter(Objects::nonNull)
+            .map(value -> value.replaceAll("[\\[\\]\"]", ""))
             .flatMap(value -> Arrays.stream(value.split(",")))
+            .map(String::trim)
             .map(mapper)
             .filter(Objects::nonNull)
             .collect(Collectors.toUnmodifiableSet());
