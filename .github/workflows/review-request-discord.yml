@@ -45,12 +45,20 @@ jobs:
               ? `🔔 ${mention} 님에게 PR 리뷰 요청이 왔습니다.`
               : '🔔 PR 리뷰 요청이 왔습니다.';
 
+            let prBody = pr.body?.trim() || '';
+            if (prBody.length > 2000) {
+              prBody = prBody.slice(0, 2000) + '\n\n...(이하 생략)...';
+            }
+            if (!prBody) {
+              prBody = '_PR 설명이 없습니다._';
+            }
+
             const message = {
               username: '📢짐두고 백엔드 PR 알리미',
               content: reviewRequestText,
               embeds: [{
-                title: `PR #${pr.number}\n[ ${pr.title} ]`,
-                description: pr.body?.trim() || '_PR 설명이 없습니다._',
+                title: `PR #${pr.number}\n[ ${pr.title.slice(0, 200)} ]`,
+                description: prBody,
                 url: pr.html_url,
                 color: 0x2EAF83,
                 fields: [
