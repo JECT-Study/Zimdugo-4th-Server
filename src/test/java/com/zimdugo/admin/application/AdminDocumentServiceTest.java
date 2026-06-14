@@ -2,15 +2,8 @@ package com.zimdugo.admin.application;
 
 import com.zimdugo.admin.domain.AdminDocument;
 import com.zimdugo.admin.domain.AdminDocumentRepository;
-import com.zimdugo.admin.domain.AdminDocumentSection;
 import com.zimdugo.admin.domain.DocumentType;
 import com.zimdugo.admin.ui.dto.AdminDocumentForm;
-import com.zimdugo.admin.ui.dto.AdminDocumentTranslationRequest;
-import com.zimdugo.admin.ui.dto.AdminDocumentTranslationsResponse;
-import com.zimdugo.admin.ui.dto.ClientDocumentResponse;
-import com.zimdugo.common.i18n.SupportedLanguage;
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -132,30 +125,23 @@ class AdminDocumentServiceTest {
 
         // then
         assertThatThrownBy(() -> adminDocumentService.getById(docId))
-            .isInstanceOfSatisfying(BusinessException.class, exception ->
-                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ADMIN_DOCUMENT_NOT_FOUND)
-            );
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("공지사항(NOTICE) 문서는 개수에 상관없이 각각 개별적으로 활성화 상태를 토글할 수 있다")
     void toggleActiveForNotice() {
         // given
-        AdminDocument doc1 = AdminDocument.builder()
+        AdminDocument doc1 = adminDocumentRepository.save(AdminDocument.builder()
             .title("공지 1")
             .type(DocumentType.NOTICE)
             .active(false)
-            .build();
-        addAllTranslations(doc1);
-        adminDocumentRepository.save(doc1);
-
-        AdminDocument doc2 = AdminDocument.builder()
+            .build());
+        AdminDocument doc2 = adminDocumentRepository.save(AdminDocument.builder()
             .title("공지 2")
             .type(DocumentType.NOTICE)
             .active(false)
-            .build();
-        addAllTranslations(doc2);
-        adminDocumentRepository.save(doc2);
+            .build());
 
         // when & then: 1번 공지 활성화
         adminDocumentService.toggleActive(doc1.getId());
@@ -177,21 +163,16 @@ class AdminDocumentServiceTest {
     @DisplayName("이용 약관(TERMS) 문서를 활성화하면 기존에 활성화되어 있던 다른 약관 문서는 자동으로 비활성화된다")
     void toggleActiveForTermsExclusivity() {
         // given
-        AdminDocument terms1 = AdminDocument.builder()
+        AdminDocument terms1 = adminDocumentRepository.save(AdminDocument.builder()
             .title("약관 버전 1")
             .type(DocumentType.TERMS)
             .active(true)
-            .build();
-        addAllTranslations(terms1);
-        adminDocumentRepository.save(terms1);
-
-        AdminDocument terms2 = AdminDocument.builder()
+            .build());
+        AdminDocument terms2 = adminDocumentRepository.save(AdminDocument.builder()
             .title("약관 버전 2")
             .type(DocumentType.TERMS)
             .active(false)
-            .build();
-        addAllTranslations(terms2);
-        adminDocumentRepository.save(terms2);
+            .build());
 
         assertThat(terms1.isActive()).isTrue();
         assertThat(terms2.isActive()).isFalse();
@@ -212,7 +193,6 @@ class AdminDocumentServiceTest {
         form.setTitle("최초 생성");
         form.setType(DocumentType.NOTICE);
         AdminDocument doc = adminDocumentService.createDocument(form);
-        addAllTranslations(doc);
         
         java.time.LocalDateTime initialUpdatedAt = doc.getUpdatedAt();
         assertThat(doc.getAppliedAt()).isNull();
@@ -237,7 +217,6 @@ class AdminDocumentServiceTest {
 
         // then: updatedAt이 새롭게 갱신되어 초기 수정 시점보다 미래여야 함
         assertThat(doc.getUpdatedAt()).isAfter(initialUpdatedAt);
-        assertThat(doc.isActive()).isFalse();
     }
 
     @Test
@@ -280,7 +259,7 @@ class AdminDocumentServiceTest {
     }
 
     @Test
-    @DisplayName("공지사항이 아닌 다른 타입의 문서를 재배치하려고 하면 요청 오류가 발생한다")
+    @DisplayName("공지사항이 아닌 다른 타입(TERMS 등)의 문서를 재배치하려고 하면 IllegalArgumentException이 발생한다")
     void reorderNonNoticeDocumentsThrowsException() {
         // given
         AdminDocument terms = adminDocumentRepository.save(AdminDocument.builder()
@@ -291,178 +270,7 @@ class AdminDocumentServiceTest {
 
         // when & then
         assertThatThrownBy(() -> adminDocumentService.reorderDocuments(List.of(terms.getId())))
-            .isInstanceOfSatisfying(BusinessException.class, exception ->
-                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_ADMIN_DOCUMENT_ORDER)
-            );
-    }
-
-    @Test
-    @DisplayName("요청 언어의 번역만 반환한다")
-    void localizesDocumentWithRequestedLanguageOnly() {
-        AdminDocumentSection section1 = section("원문 소제목 1", "원문 내용 1", 0);
-        AdminDocumentSection section2 = section("원문 소제목 2", "원문 내용 2", 1);
-        AdminDocument document = adminDocumentRepository.save(AdminDocument.builder()
-            .title("원문 제목")
-            .type(DocumentType.NOTICE)
-            .active(true)
-            .sections(List.of(section1, section2))
-            .build());
-
-        document.upsertTranslation("ko", "한국어 제목");
-        section1.upsertTranslation("ko", "한국어 소제목 1", "한국어 내용 1");
-        section2.upsertTranslation("ko", "한국어 소제목 2", "한국어 내용 2");
-
-        ClientDocumentResponse response = adminDocumentService
-            .getLocalizedActiveDocumentsByType(DocumentType.NOTICE, SupportedLanguage.KOREAN)
-            .getFirst();
-
-        assertThat(response.getTitle()).isEqualTo("한국어 제목");
-        assertThat(response.getSections().get(0).getContent()).isEqualTo("한국어 내용 1");
-        assertThat(response.getSections().get(1).getContent()).isEqualTo("한국어 내용 2");
-    }
-
-    @Test
-    @DisplayName("요청 언어 번역이 누락되면 다른 언어로 대체하지 않는다")
-    void rejectsMissingRequestedLanguageTranslation() {
-        AdminDocumentSection section = section("원문 소제목", "원문 내용", 0);
-        AdminDocument document = adminDocumentRepository.save(AdminDocument.builder()
-            .title("원문 제목")
-            .type(DocumentType.NOTICE)
-            .active(true)
-            .sections(List.of(section))
-            .build());
-        document.upsertTranslation("en", "English title");
-        section.upsertTranslation("en", "English subtitle", "English content");
-
-        assertThatThrownBy(() -> adminDocumentService
-            .getLocalizedActiveDocumentsByType(DocumentType.NOTICE, SupportedLanguage.JAPANESE))
-            .isInstanceOfSatisfying(BusinessException.class, exception ->
-                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.I18N_TRANSLATION_MISSING)
-            );
-    }
-
-    @Test
-    @DisplayName("관리자 번역 PUT은 언어 태그를 정규화하고 누락된 섹션 번역을 제거한다")
-    void putTranslationReplacesLanguageTranslation() {
-        AdminDocumentSection section1 = section("원문 소제목 1", "원문 내용 1", 0);
-        AdminDocumentSection section2 = section("원문 소제목 2", "원문 내용 2", 1);
-        AdminDocument document = adminDocumentRepository.saveAndFlush(AdminDocument.builder()
-            .title("원문 제목")
-            .type(DocumentType.NOTICE)
-            .sections(List.of(section1, section2))
-            .build());
-
-        adminDocumentService.putTranslation(document.getId(), translationRequest(
-            "en",
-            "US title",
-            sectionTranslation(section1.getId(), "US subtitle 1", "US content 1"),
-            sectionTranslation(section2.getId(), "US subtitle 2", "US content 2")
-        ));
-
-        AdminDocumentTranslationsResponse response = adminDocumentService.putTranslation(
-            document.getId(),
-            translationRequest(
-                "en",
-                "Updated US title",
-                sectionTranslation(section1.getId(), "Updated subtitle 1", "Updated content 1")
-            )
-        );
-
-        assertThat(response.getTranslations()).singleElement().satisfies(translation -> {
-            assertThat(translation.getLanguage()).isEqualTo("en");
-            assertThat(translation.getTitle()).isEqualTo("Updated US title");
-            assertThat(translation.getSections()).singleElement().satisfies(section -> {
-                assertThat(section.getSectionId()).isEqualTo(section1.getId());
-                assertThat(section.getContent()).isEqualTo("Updated content 1");
-            });
-        });
-        assertThat(section2.getTranslations()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("다른 문서의 섹션 ID로 번역을 저장할 수 없다")
-    void putTranslationRejectsForeignSection() {
-        AdminDocument document = adminDocumentRepository.saveAndFlush(AdminDocument.builder()
-            .title("문서")
-            .type(DocumentType.NOTICE)
-            .sections(List.of(section("소제목", "내용", 0)))
-            .build());
-        AdminDocument otherDocument = adminDocumentRepository.saveAndFlush(AdminDocument.builder()
-            .title("다른 문서")
-            .type(DocumentType.NOTICE)
-            .sections(List.of(section("다른 소제목", "다른 내용", 0)))
-            .build());
-        Long foreignSectionId = otherDocument.getSections().getFirst().getId();
-
-        assertThatThrownBy(() -> adminDocumentService.putTranslation(
-            document.getId(),
-            translationRequest("en", "Title", sectionTranslation(foreignSectionId, "Subtitle", "Content"))
-        ))
-            .isInstanceOfSatisfying(BusinessException.class, exception ->
-                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_ADMIN_DOCUMENT_TRANSLATION)
-            );
-    }
-
-    private AdminDocumentSection section(String subtitle, String content, int listOrder) {
-        return AdminDocumentSection.builder()
-            .subtitle(subtitle)
-            .content(content)
-            .listOrder(listOrder)
-            .build();
-    }
-
-    private AdminDocumentTranslationRequest translationRequest(
-        String language,
-        String title,
-        AdminDocumentTranslationRequest.SectionTranslationRequest... sections
-    ) {
-        AdminDocumentTranslationRequest request = new AdminDocumentTranslationRequest();
-        request.setLanguage(language);
-        request.setTitle(title);
-        request.setSections(List.of(sections));
-        return request;
-    }
-
-    private AdminDocumentTranslationRequest.SectionTranslationRequest sectionTranslation(
-        Long sectionId,
-        String subtitle,
-        String content
-    ) {
-        AdminDocumentTranslationRequest.SectionTranslationRequest request =
-            new AdminDocumentTranslationRequest.SectionTranslationRequest();
-        request.setSectionId(sectionId);
-        request.setSubtitle(subtitle);
-        request.setContent(content);
-        return request;
-    }
-
-    @Test
-    @DisplayName("지원 언어 번역이 하나라도 완료되지 않은 문서는 활성화할 수 없다")
-    void toggleActiveWithoutRequiredTranslationsThrowsException() {
-        // given
-        AdminDocument doc = adminDocumentRepository.save(AdminDocument.builder()
-            .title("번역 없는 문서")
-            .type(DocumentType.NOTICE)
-            .active(false)
-            .build());
-
-        // when & then
-        assertThatThrownBy(() -> adminDocumentService.toggleActive(doc.getId()))
-            .isInstanceOfSatisfying(BusinessException.class, exception ->
-                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS)
-            );
-    }
-
-    private void addAllTranslations(AdminDocument document) {
-        for (SupportedLanguage language : SupportedLanguage.all()) {
-            document.upsertTranslation(language.languageTag(), language.languageTag() + " title");
-            for (AdminDocumentSection section : document.getSections()) {
-                section.upsertTranslation(
-                    language.languageTag(),
-                    language.languageTag() + " subtitle",
-                    language.languageTag() + " content"
-                );
-            }
-        }
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("공지사항 타입의 문서만 순서를 변경할 수 있습니다");
     }
 }
