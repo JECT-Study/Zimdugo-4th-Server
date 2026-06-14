@@ -34,8 +34,7 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
             return Map.of();
         }
 
-        List<LockerPlaceLockerQueryProjection> projections =
-            findProjections(latitude, longitude, placeIds, languageCode);
+        List<LockerPlaceLockerQueryProjection> projections = findProjections(latitude, longitude, placeIds, languageCode);
         Map<Long, List<LockerPlaceLocker>> lockersByPlace = new LinkedHashMap<>();
         for (LockerPlaceLockerQueryProjection projection : projections) {
             LockerType lockerType = LockerType.valueOf(projection.getLockerType());

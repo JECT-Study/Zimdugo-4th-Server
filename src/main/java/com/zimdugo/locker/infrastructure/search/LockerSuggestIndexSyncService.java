@@ -205,7 +205,11 @@ public class LockerSuggestIndexSyncService {
         }
     }
 
-    private IndexSyncDataHolder loadSyncData(List<LockerSuggestIndexQueryProjection> projections) {
+    private List<LockerSuggestDocument> toDocuments(List<LockerSuggestIndexQueryProjection> projections) {
+        if (projections.isEmpty()) {
+            return List.of();
+        }
+
         List<Long> lockerIds = projections.stream()
             .map(LockerSuggestIndexQueryProjection::getLockerId)
             .toList();
@@ -214,31 +218,16 @@ public class LockerSuggestIndexSyncService {
             .distinct()
             .toList();
 
-        Map<Long, List<LockerTranslationEntity>> lockerTranslations =
-            lockerTranslationRepository.findByLockerIdIn(lockerIds).stream()
-                .collect(Collectors.groupingBy(lt -> lt.getLocker().getId()));
+        Map<Long, List<LockerTranslationEntity>> lockerTranslations = lockerTranslationRepository.findByLockerIdIn(lockerIds).stream()
+            .collect(Collectors.groupingBy(lt -> lt.getLocker().getId()));
+        Map<Long, List<LockerAliasEntity>> lockerAliases = lockerAliasRepository.findByLockerIdIn(lockerIds).stream()
+            .collect(Collectors.groupingBy(la -> la.getLocker().getId()));
 
-        Map<Long, List<LockerAliasEntity>> lockerAliases =
-            lockerAliasRepository.findByLockerIdIn(lockerIds).stream()
-                .collect(Collectors.groupingBy(la -> la.getLocker().getId()));
+        Map<Long, List<PlaceTranslationEntity>> placeTranslations = placeTranslationRepository.findByPlaceIdIn(placeIds).stream()
+            .collect(Collectors.groupingBy(pt -> pt.getPlace().getId()));
+        Map<Long, List<PlaceAliasEntity>> placeAliases = placeAliasRepository.findByPlaceIdIn(placeIds).stream()
+            .collect(Collectors.groupingBy(pa -> pa.getPlace().getId()));
 
-        Map<Long, List<PlaceTranslationEntity>> placeTranslations =
-            placeTranslationRepository.findByPlaceIdIn(placeIds).stream()
-                .collect(Collectors.groupingBy(pt -> pt.getPlace().getId()));
-
-        Map<Long, List<PlaceAliasEntity>> placeAliases =
-            placeAliasRepository.findByPlaceIdIn(placeIds).stream()
-                .collect(Collectors.groupingBy(pa -> pa.getPlace().getId()));
-
-        return new IndexSyncDataHolder(lockerTranslations, lockerAliases, placeTranslations, placeAliases);
-    }
-
-    private List<LockerSuggestDocument> toDocuments(List<LockerSuggestIndexQueryProjection> projections) {
-        if (projections.isEmpty()) {
-            return List.of();
-        }
-
-        IndexSyncDataHolder holder = loadSyncData(projections);
         Map<Long, List<LockerSuggestIndexQueryProjection>> projectionsByPlace = groupByPlace(projections);
         Map<Long, GeoPoint> centerByPlace = calculateCentroids(projectionsByPlace);
 
@@ -250,13 +239,15 @@ public class LockerSuggestIndexSyncService {
             int lockerCount = placeProjections.size();
 
             for (LockerSuggestIndexQueryProjection projection : placeProjections) {
-                DocumentBuildContext ctx = new DocumentBuildContext(
+                documents.add(buildDocument(
                     projection,
                     center,
                     lockerCount,
-                    holder
-                );
-                documents.add(buildDocument(ctx));
+                    lockerTranslations.getOrDefault(projection.getLockerId(), List.of()),
+                    lockerAliases.getOrDefault(projection.getLockerId(), List.of()),
+                    placeTranslations.getOrDefault(placeId, List.of()),
+                    placeAliases.getOrDefault(placeId, List.of())
+                ));
             }
         }
         return documents;
@@ -287,8 +278,12 @@ public class LockerSuggestIndexSyncService {
         return centroids;
     }
 
-    private List<String> buildPlaceSearchNames(
+    private LockerSuggestDocument buildDocument(
         LockerSuggestIndexQueryProjection p,
+        GeoPoint placeCenter,
+        int lockerCount,
+        List<LockerTranslationEntity> lTrans,
+        List<LockerAliasEntity> lAliases,
         List<PlaceTranslationEntity> pTrans,
         List<PlaceAliasEntity> pAliases
     ) {
@@ -309,14 +304,8 @@ public class LockerSuggestIndexSyncService {
                 placeSearchNameSet.add(pa.getNormalizedAlias());
             }
         }
-        return normalizeAndFilter(placeSearchNameSet);
-    }
+        List<String> placeSearchNames = normalizeAndFilter(placeSearchNameSet);
 
-    private List<String> buildLockerSearchNames(
-        LockerSuggestIndexQueryProjection p,
-        List<LockerTranslationEntity> lTrans,
-        List<LockerAliasEntity> lAliases
-    ) {
         Set<String> lockerSearchNameSet = new LinkedHashSet<>();
         if (p.getLockerName() != null) {
             lockerSearchNameSet.add(p.getLockerName());
@@ -334,14 +323,8 @@ public class LockerSuggestIndexSyncService {
                 lockerSearchNameSet.add(la.getNormalizedAlias());
             }
         }
-        return normalizeAndFilter(lockerSearchNameSet);
-    }
+        List<String> lockerSearchNames = normalizeAndFilter(lockerSearchNameSet);
 
-    private List<String> buildSearchAddresses(
-        LockerSuggestIndexQueryProjection p,
-        List<PlaceTranslationEntity> pTrans,
-        List<LockerTranslationEntity> lTrans
-    ) {
         Set<String> searchAddressSet = new LinkedHashSet<>();
         if (p.getRoadAddress() != null) {
             searchAddressSet.add(p.getRoadAddress());
@@ -359,93 +342,59 @@ public class LockerSuggestIndexSyncService {
                 searchAddressSet.add(lt.getRoadAddress());
             }
         }
-        return normalizeAndFilter(searchAddressSet);
-    }
+        List<String> searchAddresses = normalizeAndFilter(searchAddressSet);
 
-    private Map<String, String> buildLocalizedLockerNames(List<LockerTranslationEntity> lTrans) {
-        return lTrans.stream()
+        Map<String, String> localizedLockerNames = lTrans.stream()
             .filter(lt -> lt.getName() != null && lt.getLanguage() != null)
             .collect(Collectors.toMap(
                 lt -> lt.getLanguage().name().toLowerCase(),
                 LockerTranslationEntity::getName,
                 (v1, v2) -> v1
             ));
-    }
 
-    private Map<String, String> buildLocalizedRoadAddresses(List<LockerTranslationEntity> lTrans) {
-        return lTrans.stream()
+        Map<String, String> localizedRoadAddresses = lTrans.stream()
             .filter(lt -> lt.getRoadAddress() != null && lt.getLanguage() != null)
             .collect(Collectors.toMap(
                 lt -> lt.getLanguage().name().toLowerCase(),
                 LockerTranslationEntity::getRoadAddress,
                 (v1, v2) -> v1
             ));
-    }
 
-    private Map<String, String> buildLocalizedPlaceNames(List<PlaceTranslationEntity> pTrans) {
-        return pTrans.stream()
+        Map<String, String> localizedPlaceNames = pTrans.stream()
             .filter(pt -> pt.getName() != null && pt.getLanguage() != null)
             .collect(Collectors.toMap(
                 pt -> pt.getLanguage().name().toLowerCase(),
                 PlaceTranslationEntity::getName,
                 (v1, v2) -> v1
             ));
-    }
 
-    private LockerSuggestDocument buildDocument(DocumentBuildContext ctx) {
-        LockerSuggestIndexQueryProjection p = ctx.getProjection();
-        IndexSyncDataHolder dh = ctx.getDataHolder();
-        List<String> pNames = buildPlaceSearchNames(
-            p, dh.getPlaceTranslations().getOrDefault(p.getPlaceId(), List.of()),
-            dh.getPlaceAliases().getOrDefault(p.getPlaceId(), List.of())
-        );
-        List<String> lNames = buildLockerSearchNames(
-            p, dh.getLockerTranslations().getOrDefault(p.getLockerId(), List.of()),
-            dh.getLockerAliases().getOrDefault(p.getLockerId(), List.of())
-        );
-        List<String> addrs = buildSearchAddresses(
-            p, dh.getPlaceTranslations().getOrDefault(p.getPlaceId(), List.of()),
-            dh.getLockerTranslations().getOrDefault(p.getLockerId(), List.of())
-        );
-
-        LockerSuggestDocument.LockerSuggestDocumentBuilder builder = LockerSuggestDocument.builder()
-            .id(String.valueOf(p.getLockerId())).lockerId(p.getLockerId())
-            .lockerName(p.getLockerName()).lockerNameDecomposed(HangulUtils.decompose(p.getLockerName()))
-            .lockerSearchNames(lNames).lockerSearchNamesDecomposed(decompose(lNames))
-            .roadAddress(p.getRoadAddress()).roadAddressDecomposed(HangulUtils.decompose(p.getRoadAddress()))
-            .searchAddresses(addrs).searchAddressesDecomposed(decompose(addrs))
-            .lockerType(p.getLockerType()).indoorOutdoorType(p.getIndoorOutdoorType())
+        return LockerSuggestDocument.builder()
+            .id(String.valueOf(p.getLockerId()))
+            .lockerId(p.getLockerId())
+            .lockerName(p.getLockerName())
+            .lockerNameDecomposed(HangulUtils.decompose(p.getLockerName()))
+            .lockerSearchNames(lockerSearchNames)
+            .lockerSearchNamesDecomposed(decompose(lockerSearchNames))
+            .roadAddress(p.getRoadAddress())
+            .roadAddressDecomposed(HangulUtils.decompose(p.getRoadAddress()))
+            .searchAddresses(searchAddresses)
+            .searchAddressesDecomposed(decompose(searchAddresses))
+            .lockerType(p.getLockerType())
+            .indoorOutdoorType(p.getIndoorOutdoorType())
             .lockerSize(parseLockerSizes(p.getLockerSize()))
-            .minPrice(p.getMinPrice()).updatedAt(p.getUpdatedAt());
-
-        return fillPlaceAndTranslations(builder, ctx, pNames);
-    }
-
-    private LockerSuggestDocument fillPlaceAndTranslations(
-        LockerSuggestDocument.LockerSuggestDocumentBuilder builder,
-        DocumentBuildContext ctx,
-        List<String> pNames
-    ) {
-        LockerSuggestIndexQueryProjection p = ctx.getProjection();
-        IndexSyncDataHolder dh = ctx.getDataHolder();
-        return builder
+            .minPrice(p.getMinPrice())
+            .updatedAt(p.getUpdatedAt())
             .placeId(p.getPlaceId())
             .placeName(p.getPlaceName())
             .placeNameDecomposed(HangulUtils.decompose(p.getPlaceName()))
-            .placeSearchNames(pNames)
-            .placeSearchNamesDecomposed(decompose(pNames))
+            .placeSearchNames(placeSearchNames)
+            .placeSearchNamesDecomposed(decompose(placeSearchNames))
             .location(new GeoPoint(p.getLockerLatitude(), p.getLockerLongitude()))
-            .placeLocation(ctx.getPlaceCenter())
-            .lockerCount(ctx.getLockerCount())
-            .localizedLockerNames(buildLocalizedLockerNames(
-                dh.getLockerTranslations().getOrDefault(p.getLockerId(), List.of())
-            ))
-            .localizedPlaceNames(buildLocalizedPlaceNames(
-                dh.getPlaceTranslations().getOrDefault(p.getPlaceId(), List.of())
-            ))
-            .localizedRoadAddresses(buildLocalizedRoadAddresses(
-                dh.getLockerTranslations().getOrDefault(p.getLockerId(), List.of())
-            ))
+            .placeLocation(placeCenter)
+            .lockerCount(lockerCount)
+            .localizedLockerNames(localizedLockerNames)
+            .localizedPlaceNames(localizedPlaceNames)
+            .localizedRoadAddresses(localizedRoadAddresses)
             .build();
     }
 
