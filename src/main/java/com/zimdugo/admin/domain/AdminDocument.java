@@ -15,6 +15,9 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.common.i18n.SupportedLanguage;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -40,6 +43,10 @@ public class AdminDocument {
     @OneToMany(mappedBy = "adminDocument", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("listOrder ASC")
     private List<AdminDocumentSection> sections = new ArrayList<>();
+
+    @OneToMany(mappedBy = "adminDocument", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("languageCode ASC")
+    private List<AdminDocumentTranslation> translations = new ArrayList<>();
 
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean active = false;
@@ -94,6 +101,37 @@ public class AdminDocument {
     public void addSection(AdminDocumentSection section) {
         this.sections.add(section);
         section.setAdminDocument(this);
+    }
+
+    public void upsertTranslation(String languageCode, String translatedTitle) {
+        String normalizedLanguage = DocumentLanguage.normalize(languageCode);
+        translations.stream()
+            .filter(translation -> translation.getLanguageCode().equals(normalizedLanguage))
+            .findFirst()
+            .ifPresentOrElse(
+                translation -> translation.updateTitle(translatedTitle),
+                () -> translations.add(new AdminDocumentTranslation(this, normalizedLanguage, translatedTitle))
+            );
+    }
+
+    public String localizedTitle(SupportedLanguage language) {
+        return translations.stream()
+            .filter(translation -> translation.getLanguageCode().equals(language.languageTag()))
+            .map(AdminDocumentTranslation::getTitle)
+            .findFirst()
+            .orElseThrow(() -> new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING));
+    }
+
+    public boolean hasCompleteTranslation(String languageCode) {
+        String normalizedLanguage = DocumentLanguage.normalize(languageCode);
+        boolean titleTranslated = translations.stream()
+            .anyMatch(translation -> translation.getLanguageCode().equals(normalizedLanguage));
+        return titleTranslated && sections.stream().allMatch(section -> section.hasTranslation(normalizedLanguage));
+    }
+
+    public boolean hasAllRequiredTranslations() {
+        return SupportedLanguage.all().stream()
+            .allMatch(language -> hasCompleteTranslation(language.languageTag()));
     }
 
     public void updateListOrder(int listOrder) {
