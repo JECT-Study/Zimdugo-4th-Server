@@ -19,8 +19,8 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
     private final LockerRepository lockerRepository;
 
     @Override
-    public Optional<LockerDetail> readById(Long lockerId, Long userId, String languageCode) {
-        return lockerRepository.findDetailById(lockerId, userId, languageCode).map(this::toDomain);
+    public Optional<LockerDetail> readById(Long lockerId) {
+        return lockerRepository.findDetailById(lockerId).map(this::toDomain);
     }
 
     private LockerDetail toDomain(LockerDetailQueryProjection projection) {
@@ -46,10 +46,7 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
             projection.getAccurateVoteCount(),
             projection.getInaccurateVoteCount(),
             projection.getCreatedAt(),
-            projection.getUpdatedAt(),
-            Boolean.TRUE.equals(projection.getIsFavorite()),
-            Boolean.TRUE.equals(projection.getIsAccurateVoted()),
-            Boolean.TRUE.equals(projection.getIsInaccurateVoted())
+            projection.getUpdatedAt()
         );
     }
 

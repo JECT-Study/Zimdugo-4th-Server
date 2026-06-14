@@ -27,14 +27,18 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
         double latitude,
         double longitude,
         List<Long> placeIds,
-        LockerSearchFilter filter,
-        String languageCode
+        LockerSearchFilter filter
     ) {
         if (placeIds == null || placeIds.isEmpty()) {
             return Map.of();
         }
 
-        List<LockerPlaceLockerQueryProjection> projections = findProjections(latitude, longitude, placeIds, languageCode);
+        List<LockerPlaceLockerQueryProjection> projections = lockerRepository.findByPlaceIds(
+            latitude,
+            longitude,
+            placeIds
+        );
+
         Map<Long, List<LockerPlaceLocker>> lockersByPlace = new LinkedHashMap<>();
         for (LockerPlaceLockerQueryProjection projection : projections) {
             LockerType lockerType = LockerType.valueOf(projection.getLockerType());
@@ -44,23 +48,10 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
                 continue;
             }
             lockersByPlace.computeIfAbsent(projection.getPlaceId(), ignored -> new ArrayList<>())
-                .add(toDomain(
-                    projection,
-                    lockerType,
-                    indoorOutdoorType,
-                    lockerSizes
-                ));
+                .add(toDomain(projection, lockerType, indoorOutdoorType, lockerSizes));
         }
-        return lockersByPlace;
-    }
 
-    private List<LockerPlaceLockerQueryProjection> findProjections(
-        double latitude,
-        double longitude,
-        List<Long> placeIds,
-        String languageCode
-    ) {
-        return lockerRepository.findByPlaceIds(latitude, longitude, placeIds, languageCode);
+        return lockersByPlace;
     }
 
     private LockerPlaceLocker toDomain(
