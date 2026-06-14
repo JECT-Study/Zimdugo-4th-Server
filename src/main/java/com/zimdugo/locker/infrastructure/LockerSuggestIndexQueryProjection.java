@@ -15,4 +15,5 @@ public interface LockerSuggestIndexQueryProjection {
     LocalDateTime getUpdatedAt();
     Long getPlaceId();
     String getPlaceName();
+    String getPlaceRoadAddress();
 }
