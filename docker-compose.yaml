@@ -16,3 +16,22 @@ services:
     container_name: zimdugo-redis
     ports:
       - "6379:6379"
+
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: ./docker/elasticsearch/Dockerfile
+    image: zimdugo-elasticsearch:9.2.6
+    container_name: zimdugo-elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.enrollment.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+volumes:
+  elasticsearch-data:
