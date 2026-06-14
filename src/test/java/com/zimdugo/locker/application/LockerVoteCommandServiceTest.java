@@ -113,8 +113,7 @@ class LockerVoteCommandServiceTest {
             LockerType.ETC, IndoorOutdoorType.INDOOR, "1", 1, 1000, 2000,
             Set.of(LockerSizeType.SMALL), "정보", LocalTime.of(9, 0), LocalTime.of(22, 0),
             "image.jpg", accurateVoteCount, inaccurateVoteCount,
-            LocalDateTime.now(), LocalDateTime.now(),
-            false, false, false
+            LocalDateTime.now(), LocalDateTime.now()
         );
     }
 }

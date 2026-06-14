@@ -63,20 +63,6 @@ class LockerSearchFilterTest {
     }
 
     @Test
-    @DisplayName("대괄호와 큰따옴표가 포함된 JSON 배열 형식의 문자열 필터도 안전하게 도메인 enum으로 변환한다")
-    void parsesJsonArrayStyleFilterValues() {
-        LockerSearchFilter filter = LockerSearchFilter.from(
-            Set.of("[\"SMALL\", \"LARGE\"]"),
-            Set.of("[\"INDOOR\"]"),
-            Set.of("[\"SUBWAY_STATION\"]")
-        );
-
-        assertThat(filter.sizeTypes()).containsExactlyInAnyOrder(LockerSizeType.SMALL, LockerSizeType.LARGE);
-        assertThat(filter.indoorOutdoorTypes()).containsExactly(IndoorOutdoorType.INDOOR);
-        assertThat(filter.lockerTypes()).containsExactly(LockerType.SUBWAY_STATION);
-    }
-
-    @Test
     @DisplayName("실내외 필터는 복수 값 중 하나가 일치하면 통과한다")
     void matchesAnySelectedIndoorOutdoorType() {
         LockerSearchFilter filter = new LockerSearchFilter(

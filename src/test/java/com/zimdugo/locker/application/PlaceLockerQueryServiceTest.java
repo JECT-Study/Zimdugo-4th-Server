@@ -1,7 +1,5 @@
 package com.zimdugo.locker.application;
 
-import com.zimdugo.common.i18n.CurrentRequestLanguage;
-import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.place.PlaceLockerResult;
@@ -18,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,16 +37,8 @@ class PlaceLockerQueryServiceTest {
     @Mock
     private LockerPlaceLockerReader lockerPlaceLockerReader;
 
-    @Mock
-    private CurrentRequestLanguage currentRequestLanguage;
-
     @InjectMocks
     private PlaceLockerQueryService placeLockerQueryService;
-
-    @BeforeEach
-    void setUp() {
-        given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
-    }
 
     @Test
     @DisplayName("장소 ID와 keyword 검색 필터로 하위 보관함을 조회한다")
@@ -60,8 +49,8 @@ class PlaceLockerQueryServiceTest {
             Set.of(IndoorOutdoorType.INDOOR),
             Set.of(LockerType.SUBWAY_STATION)
         );
-        given(lockerPlaceReader.readById(101L, "ko")).willReturn(Optional.of(place()));
-        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), filter, "ko"))
+        given(lockerPlaceReader.readById(101L)).willReturn(Optional.of(place()));
+        given(lockerPlaceLockerReader.readByPlaceIds(37.55, 126.93, List.of(101L), filter))
             .willReturn(Map.of(101L, List.of(locker())));
 
         PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(command);
@@ -73,13 +62,13 @@ class PlaceLockerQueryServiceTest {
         assertThat(result.bounds().neLat()).isEqualTo(37.556);
         assertThat(result.bounds().neLng()).isEqualTo(126.923);
         assertThat(result.lockers()).extracting(locker -> locker.lockerId()).containsExactly(10L);
-        then(lockerPlaceLockerReader).should().readByPlaceIds(37.55, 126.93, List.of(101L), filter, "ko");
+        then(lockerPlaceLockerReader).should().readByPlaceIds(37.55, 126.93, List.of(101L), filter);
     }
 
     @Test
     @DisplayName("필터에 맞는 하위 보관함이 없어도 장소와 빈 목록을 반환한다")
     void returnsPlaceWithEmptyLockers() {
-        given(lockerPlaceReader.readById(101L, "ko")).willReturn(Optional.of(place()));
+        given(lockerPlaceReader.readById(101L)).willReturn(Optional.of(place()));
         given(lockerPlaceLockerReader.readByPlaceIds(
             37.55,
             126.93,
@@ -88,8 +77,7 @@ class PlaceLockerQueryServiceTest {
                 Set.of(LockerSizeType.LARGE),
                 Set.of(IndoorOutdoorType.INDOOR),
                 Set.of(LockerType.SUBWAY_STATION)
-            ),
-            "ko"
+            )
         )).willReturn(Map.of());
 
         PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(command());
@@ -102,7 +90,7 @@ class PlaceLockerQueryServiceTest {
     @Test
     @DisplayName("존재하지 않는 장소이면 404 예외를 발생시킨다")
     void throwsWhenPlaceDoesNotExist() {
-        given(lockerPlaceReader.readById(101L, "ko")).willReturn(Optional.empty());
+        given(lockerPlaceReader.readById(101L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> placeLockerQueryService.getPlaceLockers(command()))
             .isInstanceOf(BusinessException.class)
