@@ -11,13 +11,4 @@ public interface LockerPlaceLockerReader {
         LockerSearchFilter filter,
         String languageCode
     );
-
-    default Map<Long, List<LockerPlaceLocker>> readByPlaceIds(
-        double latitude,
-        double longitude,
-        List<Long> placeIds,
-        LockerSearchFilter filter
-    ) {
-        return readByPlaceIds(latitude, longitude, placeIds, filter, "ko");
-    }
 }
