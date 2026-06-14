@@ -40,7 +40,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         BusinessException ex,
         HttpServletRequest request
     ) {
-        return errorResponse(ex.getErrorCode(), ex.getMessage(), null, request);
+        ErrorCode errorCode = ex.getErrorCode();
+        if (errorCode.getStatus().is5xxServerError()) {
+            log.error(
+                "서버 오류가 발생했습니다. code={}, method={}, path={}",
+                errorCode.getCode(),
+                request.getMethod(),
+                request.getRequestURI(),
+                ex
+            );
+            return errorResponse(errorCode, errorCode.getMessage(), null, request);
+        }
+        return errorResponse(errorCode, ex.getMessage(), null, request);
     }
 
     @Override
@@ -284,6 +295,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private String resolveTraceId(WebRequest request) {
+        if (request instanceof ServletWebRequest servletWebRequest) {
+            return resolveTraceId(servletWebRequest.getRequest());
+        }
         String traceId = request.getHeader(RequestTraceFilter.TRACE_ID_HEADER);
         if (traceId == null || traceId.isBlank()) {
             return null;
