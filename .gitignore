@@ -38,7 +38,4 @@ out/
 
 src/main/resources/application-h2.yaml
 /zimdugo-server-keypair.pem
-/seed_extra_dummy_data.sql
-/scripts/sql/seed_dummy_search_data.sql
-/seed_dense_test_data.sql
-/scripts/db/03-i18n-prod.sql
+/scripts/db/03-i18n.sql
