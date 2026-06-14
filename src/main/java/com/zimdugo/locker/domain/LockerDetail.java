@@ -28,7 +28,10 @@ public record LockerDetail(
     int accurateVoteCount,
     int inaccurateVoteCount,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    boolean isFavorite,
+    boolean isAccurateVoted,
+    boolean isInaccurateVoted
 ) {
 
     public LockerDetail voteCorrect() {
