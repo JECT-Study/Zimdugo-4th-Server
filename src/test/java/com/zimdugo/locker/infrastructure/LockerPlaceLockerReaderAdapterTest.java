@@ -33,12 +33,13 @@ class LockerPlaceLockerReaderAdapterTest {
     @DisplayName("PLACE 하위 보관함에도 복합 필터를 적용한다")
     void filtersPlaceLockers() {
         List<LockerPlaceLockerQueryProjection> projections = List.of(
-            projection(10L, "SMALL,LARGE", "INDOOR", "SUBWAY_STATION"),
-            projection(11L, "MEDIUM", "INDOOR", "SUBWAY_STATION"),
-            projection(12L, "LARGE", "OUTDOOR", "SUBWAY_STATION")
+            projection(10L, "Translated locker 10", "SMALL,LARGE", "INDOOR", "SUBWAY_STATION"),
+            projection(11L, "Translated locker 11", "MEDIUM", "INDOOR", "SUBWAY_STATION"),
+            projection(12L, "Translated locker 12", "LARGE", "OUTDOOR", "SUBWAY_STATION")
         );
-        given(lockerRepository.findByPlaceIds(37.55, 126.93, List.of(101L)))
+        given(lockerRepository.findByPlaceIds(37.55, 126.93, List.of(101L), "ko"))
             .willReturn(projections);
+
         LockerSearchFilter filter = new LockerSearchFilter(
             Set.of(LockerSizeType.LARGE),
             Set.of(IndoorOutdoorType.INDOOR),
@@ -49,14 +50,19 @@ class LockerPlaceLockerReaderAdapterTest {
             37.55,
             126.93,
             List.of(101L),
-            filter
+            filter,
+            "ko"
         );
 
         assertThat(result.get(101L)).extracting(LockerPlaceLocker::lockerId).containsExactly(10L);
+        assertThat(result.get(101L).getFirst().lockerName()).isEqualTo("Translated locker 10");
+        assertThat(result.get(101L).getFirst().lockerSizes())
+            .containsExactlyInAnyOrder(LockerSizeType.SMALL, LockerSizeType.LARGE);
     }
 
     private LockerPlaceLockerQueryProjection projection(
         Long lockerId,
+        String lockerName,
         String lockerSize,
         String indoorOutdoorType,
         String lockerType
@@ -67,8 +73,8 @@ class LockerPlaceLockerReaderAdapterTest {
         );
         given(projection.getPlaceId()).willReturn(101L);
         given(projection.getLockerId()).willReturn(lockerId);
-        given(projection.getLockerName()).willReturn("보관함");
-        given(projection.getRoadAddress()).willReturn("서울");
+        given(projection.getLockerName()).willReturn(lockerName);
+        given(projection.getRoadAddress()).willReturn("Translated address");
         given(projection.getLockerType()).willReturn(lockerType);
         given(projection.getIndoorOutdoorType()).willReturn(indoorOutdoorType);
         given(projection.getLockerSize()).willReturn(lockerSize);
