@@ -13,6 +13,7 @@ import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
 import com.zimdugo.auth.config.SecurityConfig;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.LockerReportCommandService;
+import com.zimdugo.locker.application.LockerReportNamePreviewService;
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +55,9 @@ class LockerReportControllerTest {
 
     @MockitoBean
     private LockerReportCommandService lockerReportCommandService;
+
+    @MockitoBean
+    private LockerReportNamePreviewService lockerReportNamePreviewService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -133,6 +137,7 @@ class LockerReportControllerTest {
                       "isFree": true,
                       "minPrice": null,
                       "maxPrice": null,
+                      "is24Hours": false,
                       "startTime": null,
                       "endTime": null,
                       "additionalInfo": "홍대입구 2번 출구 근처",
@@ -169,6 +174,7 @@ class LockerReportControllerTest {
                       "isFree": true,
                       "minPrice": null,
                       "maxPrice": null,
+                      "is24Hours": false,
                       "startTime": null,
                       "endTime": null,
                       "additionalInfo": "홍대입구 2번 출구 근처",
@@ -205,6 +211,7 @@ class LockerReportControllerTest {
                       "isFree": true,
                       "minPrice": null,
                       "maxPrice": null,
+                      "is24Hours": false,
                       "startTime": null,
                       "endTime": null,
                       "additionalInfo": "홍대입구 2번 출구 근처",
@@ -234,6 +241,7 @@ class LockerReportControllerTest {
               "isFree": true,
               "minPrice": null,
               "maxPrice": null,
+              "is24Hours": false,
               "startTime": null,
               "endTime": null,
               "additionalInfo": "홍대입구 2번 출구 근처",
