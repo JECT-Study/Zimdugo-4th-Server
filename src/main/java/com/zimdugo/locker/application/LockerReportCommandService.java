@@ -15,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class LockerReportCommandService {
 
-    private static final String DEFAULT_REPORT_NAME = "물품보관함";
-
     private final ActiveUserValidator activeUserValidator;
     private final LockerReportStore lockerReportStore;
     private final LockerReportNameResolver lockerReportNameResolver;
@@ -63,8 +61,9 @@ public class LockerReportCommandService {
             command.isFree(),
             command.minPrice(),
             command.maxPrice(),
-            command.startTime(),
-            command.endTime(),
+            command.is24Hours(),
+            command.is24Hours() ? null : command.startTime(),
+            command.is24Hours() ? null : command.endTime(),
             command.additionalInfo(),
             command.imageUrl(),
             command.locationConsentAgreed(),
@@ -85,8 +84,9 @@ public class LockerReportCommandService {
             command.isFree(),
             command.minPrice(),
             command.maxPrice(),
-            command.startTime(),
-            command.endTime(),
+            command.is24Hours(),
+            command.is24Hours() ? null : command.startTime(),
+            command.is24Hours() ? null : command.endTime(),
             command.additionalInfo(),
             command.imageUrl(),
             command.locationConsentAgreed(),
@@ -103,7 +103,7 @@ public class LockerReportCommandService {
             command.longitude()
         );
         if (resolvedName == null || resolvedName.isBlank()) {
-            return DEFAULT_REPORT_NAME;
+            return command.roadAddress();
         }
         return resolvedName;
     }

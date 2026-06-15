@@ -24,7 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class LockerReportCommandServiceTest {
 
-    private static final String LOCKER_NAME = "물품보관함";
+    private static final String LOCKER_NAME = "홍대입구역";
     private static final String ROAD_ADDRESS = "서울 마포구 양화로 160";
     private static final String ADDITIONAL_INFO = "B2 출구 근처";
 
@@ -61,6 +61,39 @@ class LockerReportCommandServiceTest {
         }
 
         @Test
+        @DisplayName("POI 이름이 없으면 도로명주소를 name으로 저장한다")
+        void useRoadAddressWhenPoiNameIsMissing() {
+            given(lockerReportNameResolver.resolve(ROAD_ADDRESS, "SUBWAY_STATION", 37.556, 126.923))
+                .willReturn(" ");
+            given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
+                .willReturn(testReport());
+
+            LockerReportCreateResult result = lockerReportCommandService.create(1L, createNewCommand());
+
+            assertThat(result.name()).isEqualTo(ROAD_ADDRESS);
+        }
+
+        @Test
+        @DisplayName("24시간 제보면 운영시간을 비워서 저장한다")
+        void omitOperatingHoursWhenOpenAllDay() {
+            given(lockerReportNameResolver.resolve(ROAD_ADDRESS, "SUBWAY_STATION", 37.556, 126.923))
+                .willReturn(LOCKER_NAME);
+            given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
+                .willReturn(testReport());
+
+            lockerReportCommandService.create(1L, createTwentyFourHourCommand());
+
+            ArgumentCaptor<LockerReportCreateInfo> captor =
+                ArgumentCaptor.forClass(LockerReportCreateInfo.class);
+            verify(lockerReportStore).create(captor.capture());
+
+            LockerReportCreateInfo createInfo = captor.getValue();
+            assertThat(createInfo.is24Hours()).isTrue();
+            assertThat(createInfo.startTime()).isNull();
+            assertThat(createInfo.endTime()).isNull();
+        }
+
+        @Test
         @DisplayName("제보 입력 typed field를 그대로 전달한다")
         void saveReportWithTypedFields() {
             given(lockerReportNameResolver.resolve(ROAD_ADDRESS, "SUBWAY_STATION", 37.556, 126.923))
@@ -86,6 +119,7 @@ class LockerReportCommandServiceTest {
             assertThat(createInfo.isFree()).isFalse();
             assertThat(createInfo.minPrice()).isEqualTo(1000);
             assertThat(createInfo.maxPrice()).isEqualTo(3000);
+            assertThat(createInfo.is24Hours()).isFalse();
             assertThat(createInfo.startTime()).isEqualTo(LocalTime.of(9, 0));
             assertThat(createInfo.endTime()).isEqualTo(LocalTime.of(22, 30));
             assertThat(createInfo.additionalInfo()).isEqualTo(ADDITIONAL_INFO);
@@ -113,6 +147,30 @@ class LockerReportCommandServiceTest {
             false,
             1000,
             3000,
+            false,
+            LocalTime.of(9, 0),
+            LocalTime.of(22, 30),
+            ADDITIONAL_INFO,
+            "https://cdn.example.com/locker/1.jpg",
+            true
+        );
+    }
+
+    private LockerReportCreateCommand createTwentyFourHourCommand() {
+        return new LockerReportCreateCommand(
+            ROAD_ADDRESS,
+            37.556,
+            126.923,
+            false,
+            null,
+            null,
+            "INDOOR",
+            "SUBWAY_STATION",
+            List.of("SMALL"),
+            false,
+            1000,
+            3000,
+            true,
             LocalTime.of(9, 0),
             LocalTime.of(22, 30),
             ADDITIONAL_INFO,
@@ -131,10 +189,11 @@ class LockerReportCommandServiceTest {
             null,
             "INDOOR",
             "SUBWAY_STATION",
+            List.of("SMALL"),
             null,
             null,
             null,
-            null,
+            false,
             null,
             null,
             null,

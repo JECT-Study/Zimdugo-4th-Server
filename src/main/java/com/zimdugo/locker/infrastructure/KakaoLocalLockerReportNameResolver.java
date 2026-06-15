@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 @Slf4j
 @Component
@@ -16,6 +17,7 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
     private static final String CATEGORY_SEARCH_PATH = "/v2/local/search/category.json";
     private static final String KEYWORD_SEARCH_PATH = "/v2/local/search/keyword.json";
     private static final int SEARCH_RADIUS_METERS = 300;
+    private static final String DEFAULT_KEYWORD = "물품보관함";
 
     private final RestClient restClient;
 
@@ -33,75 +35,103 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
 
     @Override
     public String resolve(String roadAddress, String lockerType, double latitude, double longitude) {
-        try {
-            String placeName = searchNearestPlaceName(lockerType, latitude, longitude);
-            if (placeName != null && !placeName.isBlank()) {
-                return placeName;
-            }
-        } catch (Exception e) {
-            log.warn(
-                "카카오 Local API로 제보 장소명을 찾지 못했습니다. roadAddress={}, lockerType={}",
-                roadAddress,
-                lockerType,
-                e
-            );
+        String placeName = searchNearestPlaceName(lockerType, latitude, longitude, roadAddress);
+        if (placeName != null && !placeName.isBlank()) {
+            return placeName;
         }
-
         if (roadAddress == null || roadAddress.isBlank()) {
             return null;
         }
         return roadAddress;
     }
 
-    private String searchNearestPlaceName(String lockerType, double latitude, double longitude) {
+    private String searchNearestPlaceName(
+        String lockerType,
+        double latitude,
+        double longitude,
+        String roadAddress
+    ) {
         LockerPlaceSearchSpec spec = LockerPlaceSearchSpec.from(lockerType);
 
-        String categoryPlaceName = searchByCategory(spec, latitude, longitude);
+        String categoryPlaceName = searchByCategory(spec, latitude, longitude, roadAddress, lockerType);
         if (categoryPlaceName != null) {
             return categoryPlaceName;
         }
 
-        return searchByKeyword(spec.keyword(), latitude, longitude);
+        return searchByKeyword(spec.keyword(), latitude, longitude, roadAddress, lockerType);
     }
 
-    private String searchByCategory(LockerPlaceSearchSpec spec, double latitude, double longitude) {
+    private String searchByCategory(
+        LockerPlaceSearchSpec spec,
+        double latitude,
+        double longitude,
+        String roadAddress,
+        String lockerType
+    ) {
         if (spec.categoryGroupCode() == null) {
             return null;
         }
 
-        KakaoPlaceSearchResponse response = restClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path(CATEGORY_SEARCH_PATH)
-                .queryParam("category_group_code", spec.categoryGroupCode())
-                .queryParam("x", longitude)
-                .queryParam("y", latitude)
-                .queryParam("radius", SEARCH_RADIUS_METERS)
-                .queryParam("sort", "distance")
-                .queryParam("size", 1)
-                .build())
-            .retrieve()
-            .body(KakaoPlaceSearchResponse.class);
-
-        if (response == null || !response.hasPlaceName()) {
+        try {
+            return extractPlaceName(
+                restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                        .path(CATEGORY_SEARCH_PATH)
+                        .queryParam("category_group_code", spec.categoryGroupCode())
+                        .queryParam("x", longitude)
+                        .queryParam("y", latitude)
+                        .queryParam("radius", SEARCH_RADIUS_METERS)
+                        .queryParam("sort", "distance")
+                        .queryParam("size", 1)
+                        .build())
+                    .retrieve()
+                    .body(KakaoPlaceSearchResponse.class)
+            );
+        } catch (RestClientException e) {
+            log.warn(
+                "Failed to resolve locker report name from Kakao category API. roadAddress={}, lockerType={}",
+                roadAddress,
+                lockerType,
+                e
+            );
             return null;
         }
-        return response.firstPlaceName();
     }
 
-    private String searchByKeyword(String keyword, double latitude, double longitude) {
-        KakaoPlaceSearchResponse response = restClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path(KEYWORD_SEARCH_PATH)
-                .queryParam("query", keyword)
-                .queryParam("x", longitude)
-                .queryParam("y", latitude)
-                .queryParam("radius", SEARCH_RADIUS_METERS)
-                .queryParam("sort", "distance")
-                .queryParam("size", 1)
-                .build())
-            .retrieve()
-            .body(KakaoPlaceSearchResponse.class);
+    private String searchByKeyword(
+        String keyword,
+        double latitude,
+        double longitude,
+        String roadAddress,
+        String lockerType
+    ) {
+        try {
+            return extractPlaceName(
+                restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                        .path(KEYWORD_SEARCH_PATH)
+                        .queryParam("query", keyword)
+                        .queryParam("x", longitude)
+                        .queryParam("y", latitude)
+                        .queryParam("radius", SEARCH_RADIUS_METERS)
+                        .queryParam("sort", "distance")
+                        .queryParam("size", 1)
+                        .build())
+                    .retrieve()
+                    .body(KakaoPlaceSearchResponse.class)
+            );
+        } catch (RestClientException e) {
+            log.warn(
+                "Failed to resolve locker report name from Kakao keyword API. roadAddress={}, lockerType={}",
+                roadAddress,
+                lockerType,
+                e
+            );
+            return null;
+        }
+    }
 
+    private String extractPlaceName(KakaoPlaceSearchResponse response) {
         if (response == null || !response.hasPlaceName()) {
             return null;
         }
@@ -127,7 +157,7 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
     private record LockerPlaceSearchSpec(String keyword, String categoryGroupCode) {
         private static LockerPlaceSearchSpec from(String lockerType) {
             if (lockerType == null || lockerType.isBlank()) {
-                return new LockerPlaceSearchSpec("물품보관함", null);
+                return new LockerPlaceSearchSpec(DEFAULT_KEYWORD, null);
             }
 
             return switch (lockerType) {
@@ -137,8 +167,8 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
                 case "MUSEUM" -> new LockerPlaceSearchSpec("박물관", "CT1");
                 case "DEPARTMENT_STORE" -> new LockerPlaceSearchSpec("백화점", null);
                 case "PUBLIC_OFFICE" -> new LockerPlaceSearchSpec("공공기관", "PO3");
-                case "PRIVATE_LOCKER" -> new LockerPlaceSearchSpec("물품보관함", null);
-                default -> new LockerPlaceSearchSpec("물품보관함", null);
+                case "PRIVATE_LOCKER" -> new LockerPlaceSearchSpec(DEFAULT_KEYWORD, null);
+                default -> new LockerPlaceSearchSpec(DEFAULT_KEYWORD, null);
             };
         }
     }
