@@ -18,16 +18,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@Tag(name = "Locker Report", description = "Locker report API")
+@Tag(name = "Locker Report", description = "보관함 제보 API")
 public interface LockerReportApi {
 
     @Operation(
-        summary = "Locker report name preview",
-        description = "Returns the report name to show immediately for the selected map pin."
+        summary = "제보 이름 미리보기",
+        description = "지도에서 선택한 위치를 기준으로 즉시 표시할 제보 이름을 반환합니다."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Preview success"),
-        @ApiResponse(responseCode = "400", description = "Invalid request parameter")
+        @ApiResponse(responseCode = "200", description = "미리보기 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터")
     })
     @SecurityRequirements
     @GetMapping("/locker-reports/name-preview")
@@ -36,13 +36,13 @@ public interface LockerReportApi {
     );
 
     @Operation(
-        summary = "Create locker report",
-        description = "Creates a locker report for the logged-in user."
+        summary = "보관함 제보 생성",
+        description = "로그인한 사용자의 보관함 제보를 생성합니다."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Create success"),
-        @ApiResponse(responseCode = "400", description = "Missing required value or invalid request"),
-        @ApiResponse(responseCode = "401", description = "Login required")
+        @ApiResponse(responseCode = "200", description = "생성 성공"),
+        @ApiResponse(responseCode = "400", description = "필수값 누락 또는 잘못된 요청"),
+        @ApiResponse(responseCode = "401", description = "로그인 필요")
     })
     @PostMapping("/locker-reports")
     ResponseEntity<RestResponse<LockerReportCreateResponse>> createLockerReport(

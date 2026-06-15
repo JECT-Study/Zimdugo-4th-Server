@@ -20,6 +20,9 @@ public class LockerReportNamePreviewService {
             command.latitude(),
             command.longitude()
         );
+        if (resolvedName == null || resolvedName.isBlank()) {
+            resolvedName = command.roadAddress();
+        }
         return new LockerReportNamePreviewResult(
             resolvedName,
             command.roadAddress(),

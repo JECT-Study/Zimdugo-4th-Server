@@ -9,24 +9,24 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record LockerReportNamePreviewRequest(
-    @Schema(description = "Road address", example = "서울 마포구 양화로 160")
+    @Schema(description = "도로명 주소", example = "서울 마포구 양화로 160")
     @NotBlank
     @Size(max = 255)
     String roadAddress,
 
-    @Schema(description = "Latitude", example = "37.556")
+    @Schema(description = "위도", example = "37.556")
     @NotNull
     @DecimalMin(value = "-90.0")
     @DecimalMax(value = "90.0")
     Double lat,
 
-    @Schema(description = "Longitude", example = "126.923")
+    @Schema(description = "경도", example = "126.923")
     @NotNull
     @DecimalMin(value = "-180.0")
     @DecimalMax(value = "180.0")
     Double lng,
 
-    @Schema(description = "Locker type", example = "SUBWAY_STATION")
+    @Schema(description = "보관함 유형", example = "SUBWAY_STATION")
     @NotBlank
     @Size(max = 20)
     String lockerType

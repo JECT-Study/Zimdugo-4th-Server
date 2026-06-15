@@ -17,8 +17,6 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
     private static final String CATEGORY_SEARCH_PATH = "/v2/local/search/category.json";
     private static final String KEYWORD_SEARCH_PATH = "/v2/local/search/keyword.json";
     private static final int SEARCH_RADIUS_METERS = 300;
-    private static final String DEFAULT_KEYWORD = "물품보관함";
-
     private final RestClient restClient;
 
     public KakaoLocalLockerReportNameResolver(KakaoLocalApiProperties properties) {
@@ -58,6 +56,9 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
             return categoryPlaceName;
         }
 
+        if (spec.keyword() == null || spec.keyword().isBlank()) {
+            return null;
+        }
         return searchByKeyword(spec.keyword(), latitude, longitude, roadAddress, lockerType);
     }
 
@@ -88,12 +89,12 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
                     .body(KakaoPlaceSearchResponse.class)
             );
         } catch (RestClientException e) {
-            log.warn(
-                "Failed to resolve locker report name from Kakao category API. roadAddress={}, lockerType={}",
+            String message = String.format(
+                "카카오 카테고리 API로 제보 이름을 해석하지 못했습니다. roadAddress=%s, lockerType=%s",
                 roadAddress,
-                lockerType,
-                e
+                lockerType
             );
+            log.warn(message, e);
             return null;
         }
     }
@@ -121,12 +122,12 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
                     .body(KakaoPlaceSearchResponse.class)
             );
         } catch (RestClientException e) {
-            log.warn(
-                "Failed to resolve locker report name from Kakao keyword API. roadAddress={}, lockerType={}",
+            String message = String.format(
+                "카카오 키워드 API로 제보 이름을 해석하지 못했습니다. roadAddress=%s, lockerType=%s",
                 roadAddress,
-                lockerType,
-                e
+                lockerType
             );
+            log.warn(message, e);
             return null;
         }
     }
@@ -157,7 +158,7 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
     private record LockerPlaceSearchSpec(String keyword, String categoryGroupCode) {
         private static LockerPlaceSearchSpec from(String lockerType) {
             if (lockerType == null || lockerType.isBlank()) {
-                return new LockerPlaceSearchSpec(DEFAULT_KEYWORD, null);
+                return new LockerPlaceSearchSpec(null, null);
             }
 
             return switch (lockerType) {
@@ -167,8 +168,8 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
                 case "MUSEUM" -> new LockerPlaceSearchSpec("박물관", "CT1");
                 case "DEPARTMENT_STORE" -> new LockerPlaceSearchSpec("백화점", null);
                 case "PUBLIC_OFFICE" -> new LockerPlaceSearchSpec("공공기관", "PO3");
-                case "PRIVATE_LOCKER" -> new LockerPlaceSearchSpec(DEFAULT_KEYWORD, null);
-                default -> new LockerPlaceSearchSpec(DEFAULT_KEYWORD, null);
+                case "PRIVATE_LOCKER", "ETC" -> new LockerPlaceSearchSpec(null, null);
+                default -> new LockerPlaceSearchSpec(null, null);
             };
         }
     }

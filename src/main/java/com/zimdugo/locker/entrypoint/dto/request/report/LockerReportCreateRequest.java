@@ -14,77 +14,77 @@ import java.util.List;
 import java.util.Set;
 
 public record LockerReportCreateRequest(
-    @Schema(description = "Road address", example = "서울 마포구 양화로 160")
+    @Schema(description = "도로명 주소", example = "서울 마포구 양화로 160")
     @NotBlank
     @Size(max = 255)
     String roadAddress,
 
-    @Schema(description = "Latitude", example = "37.556")
+    @Schema(description = "위도", example = "37.556")
     @NotNull
     @DecimalMin(value = "-90.0")
     @DecimalMax(value = "90.0")
     Double latitude,
 
-    @Schema(description = "Longitude", example = "126.923")
+    @Schema(description = "경도", example = "126.923")
     @NotNull
     @DecimalMin(value = "-180.0")
     @DecimalMax(value = "180.0")
     Double longitude,
 
-    @Schema(description = "Whether floor information exists", example = "true")
+    @Schema(description = "층 정보 존재 여부", example = "true")
     @NotNull
     Boolean hasFloor,
 
-    @Schema(description = "Floor type", example = "UNDERGROUND")
+    @Schema(description = "층 구분", example = "UNDERGROUND")
     @Size(max = 20)
     String floorType,
 
-    @Schema(description = "Floor number", example = "2")
+    @Schema(description = "층수", example = "2")
     Integer floorNumber,
 
-    @Schema(description = "Indoor or outdoor", example = "INDOOR")
+    @Schema(description = "실내/실외 구분", example = "INDOOR")
     @NotBlank
     @Size(max = 20)
     String indoorOutdoorType,
 
-    @Schema(description = "Locker type", example = "SUBWAY_STATION")
+    @Schema(description = "보관함 유형", example = "SUBWAY_STATION")
     @NotBlank
     @Size(max = 20)
     String lockerType,
 
-    @Schema(description = "Locker sizes", example = "[\"SMALL\",\"MEDIUM\",\"LARGE\"]")
+    @Schema(description = "보관함 크기 목록", example = "[\"SMALL\",\"MEDIUM\",\"LARGE\"]")
     @NotEmpty
     @Size(max = 3)
     List<String> sizeTypes,
 
-    @Schema(description = "Whether the locker is free", example = "false")
+    @Schema(description = "무료 여부", example = "false")
     Boolean isFree,
 
-    @Schema(description = "Minimum price", example = "1000")
+    @Schema(description = "최소 가격", example = "1000")
     Integer minPrice,
 
-    @Schema(description = "Maximum price", example = "3000")
+    @Schema(description = "최대 가격", example = "3000")
     Integer maxPrice,
 
-    @Schema(description = "Whether the locker operates 24 hours", example = "false")
+    @Schema(description = "24시간 운영 여부", example = "false")
     @NotNull
     Boolean is24Hours,
 
-    @Schema(description = "Operation start time", example = "09:00")
+    @Schema(description = "운영 시작 시간", example = "09:00")
     LocalTime startTime,
 
-    @Schema(description = "Operation end time", example = "22:30")
+    @Schema(description = "운영 종료 시간", example = "22:30")
     LocalTime endTime,
 
-    @Schema(description = "Additional information", example = "B2 entrance nearby")
+    @Schema(description = "추가 정보", example = "2번 출구 근처")
     @Size(max = 255)
     String additionalInfo,
 
-    @Schema(description = "Image URL", example = "https://cdn.example.com/locker/1.jpg")
+    @Schema(description = "이미지 URL", example = "https://cdn.example.com/locker/1.jpg")
     @Size(max = 500)
     String imageUrl,
 
-    @Schema(description = "Location consent agreed", example = "true")
+    @Schema(description = "위치 정보 제공 동의 여부", example = "true")
     Boolean locationConsentAgreed
 ) {
     @AssertTrue(message = "층 정보 입력이 올바르지 않습니다.")
