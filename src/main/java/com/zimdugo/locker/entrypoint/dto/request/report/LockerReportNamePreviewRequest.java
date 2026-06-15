@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record LockerReportNamePreviewRequest(
-    @Schema(description = "도로명 주소", example = "서울 마포구 양화로 160")
+    @Schema(description = "도로명주소", example = "서울 마포구 양화로 160")
     @NotBlank
     @Size(max = 255)
     String roadAddress,

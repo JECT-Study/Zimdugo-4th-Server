@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 public record LockerReportCreateRequest(
-    @Schema(description = "도로명 주소", example = "서울 마포구 양화로 160")
+    @Schema(description = "도로명주소", example = "서울 마포구 양화로 160")
     @NotBlank
     @Size(max = 255)
     String roadAddress,
@@ -35,14 +35,14 @@ public record LockerReportCreateRequest(
     @NotNull
     Boolean hasFloor,
 
-    @Schema(description = "층 구분", example = "UNDERGROUND")
+    @Schema(description = "층수 유형", example = "UNDERGROUND")
     @Size(max = 20)
     String floorType,
 
-    @Schema(description = "층수", example = "2")
+    @Schema(description = "층수 숫자", example = "2")
     Integer floorNumber,
 
-    @Schema(description = "실내/실외 구분", example = "INDOOR")
+    @Schema(description = "실내/실외", example = "INDOOR")
     @NotBlank
     @Size(max = 20)
     String indoorOutdoorType,
@@ -52,7 +52,7 @@ public record LockerReportCreateRequest(
     @Size(max = 20)
     String lockerType,
 
-    @Schema(description = "보관함 크기 목록", example = "[\"SMALL\",\"MEDIUM\",\"LARGE\"]")
+    @Schema(description = "보관함 사이즈", example = "[\"SMALL\",\"MEDIUM\",\"LARGE\"]")
     @NotEmpty
     @Size(max = 3)
     List<String> sizeTypes,

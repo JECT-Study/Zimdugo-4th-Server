@@ -17,6 +17,7 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
     private static final String CATEGORY_SEARCH_PATH = "/v2/local/search/category.json";
     private static final String KEYWORD_SEARCH_PATH = "/v2/local/search/keyword.json";
     private static final int SEARCH_RADIUS_METERS = 300;
+
     private final RestClient restClient;
 
     public KakaoLocalLockerReportNameResolver(KakaoLocalApiProperties properties) {
@@ -56,9 +57,6 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
             return categoryPlaceName;
         }
 
-        if (spec.keyword() == null || spec.keyword().isBlank()) {
-            return null;
-        }
         return searchByKeyword(spec.keyword(), latitude, longitude, roadAddress, lockerType);
     }
 
@@ -106,6 +104,10 @@ public class KakaoLocalLockerReportNameResolver implements LockerReportNameResol
         String roadAddress,
         String lockerType
     ) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+
         try {
             return extractPlaceName(
                 restClient.get()
