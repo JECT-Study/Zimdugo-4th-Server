@@ -2,15 +2,15 @@ package com.zimdugo.locker.infrastructure;
 
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.locker.domain.IndoorOutdoorType;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
 import com.zimdugo.locker.domain.LockerReportStore;
 import com.zimdugo.locker.domain.LockerReportUpdateInfo;
-import com.zimdugo.locker.domain.SavedLockerReport;
-import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
-import com.zimdugo.locker.domain.IndoorOutdoorType;
-import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import com.zimdugo.locker.domain.LockerSizeType;
 import com.zimdugo.locker.domain.LockerType;
+import com.zimdugo.locker.domain.SavedLockerReport;
+import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import com.zimdugo.user.infrastructure.UserRepository;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import java.util.List;
@@ -44,6 +44,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
             .minPrice(createInfo.minPrice())
             .maxPrice(createInfo.maxPrice())
             .additionalInfo(createInfo.additionalInfo())
+            .is24Hours(createInfo.is24Hours())
             .startTime(createInfo.startTime())
             .endTime(createInfo.endTime())
             .imageUrl(createInfo.imageUrl())
@@ -72,6 +73,7 @@ public class LockerReportStoreAdapter implements LockerReportStore {
             updateInfo.minPrice(),
             updateInfo.maxPrice(),
             updateInfo.additionalInfo(),
+            updateInfo.is24Hours(),
             updateInfo.startTime(),
             updateInfo.endTime(),
             updateInfo.imageUrl(),

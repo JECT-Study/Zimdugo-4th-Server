@@ -2,12 +2,12 @@ package com.zimdugo.locker.infrastructure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.zimdugo.locker.domain.LockerReportStatus;
-import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
 import com.zimdugo.locker.domain.IndoorOutdoorType;
-import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
+import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.locker.domain.LockerSizeType;
 import com.zimdugo.locker.domain.LockerType;
+import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
@@ -36,7 +36,7 @@ class LockerReportRepositoryTest {
 
         LockerReportEntity report = lockerReportRepository.save(LockerReportEntity.builder()
             .user(user)
-            .name("물품보관함")
+            .name("홍대입구역")
             .indoorOutdoorType(IndoorOutdoorType.INDOOR)
             .lockerType(LockerType.ETC)
             .lockerSize(Set.of())
@@ -58,6 +58,7 @@ class LockerReportRepositoryTest {
         assertThat(savedReport.getMinPrice()).isNull();
         assertThat(savedReport.getMaxPrice()).isNull();
         assertThat(savedReport.getAdditionalInfo()).isNull();
+        assertThat(savedReport.is24Hours()).isFalse();
         assertThat(savedReport.getStartTime()).isNull();
         assertThat(savedReport.getEndTime()).isNull();
         assertThat(savedReport.getLatitude()).isEqualTo(37.556);
@@ -74,7 +75,7 @@ class LockerReportRepositoryTest {
 
         LockerReportEntity report = lockerReportRepository.save(LockerReportEntity.builder()
             .user(user)
-            .name("물품보관함")
+            .name("홍대입구역")
             .roadAddress("서울 마포구 양화로 160")
             .groundLevelType(GroundLevelType.UNDERGROUND)
             .floor(2)
@@ -84,9 +85,10 @@ class LockerReportRepositoryTest {
             .isFree(false)
             .minPrice(1000)
             .maxPrice(3000)
-            .additionalInfo("B2 화장실 옆")
-            .startTime(LocalTime.of(9, 0))
-            .endTime(LocalTime.of(22, 30))
+            .additionalInfo("B2 입구 근처")
+            .is24Hours(true)
+            .startTime(null)
+            .endTime(null)
             .imageUrl("https://cdn.example.com/locker/1.jpg")
             .locationConsentAgreed(true)
             .latitude(37.556)
@@ -106,9 +108,10 @@ class LockerReportRepositoryTest {
         assertThat(savedReport.getLockerSize()).containsExactlyInAnyOrder(LockerSizeType.SMALL, LockerSizeType.MEDIUM);
         assertThat(savedReport.getMinPrice()).isEqualTo(1000);
         assertThat(savedReport.getMaxPrice()).isEqualTo(3000);
-        assertThat(savedReport.getAdditionalInfo()).isEqualTo("B2 화장실 옆");
-        assertThat(savedReport.getStartTime()).isEqualTo(LocalTime.of(9, 0));
-        assertThat(savedReport.getEndTime()).isEqualTo(LocalTime.of(22, 30));
+        assertThat(savedReport.getAdditionalInfo()).isEqualTo("B2 입구 근처");
+        assertThat(savedReport.is24Hours()).isTrue();
+        assertThat(savedReport.getStartTime()).isNull();
+        assertThat(savedReport.getEndTime()).isNull();
         assertThat(savedReport.isLocationConsentAgreed()).isTrue();
         assertThat(savedReport.getLatitude()).isEqualTo(37.556);
         assertThat(savedReport.getLongitude()).isEqualTo(126.923);

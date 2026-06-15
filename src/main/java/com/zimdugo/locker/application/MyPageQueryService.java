@@ -87,6 +87,7 @@ public class MyPageQueryService {
             report.isFree(),
             report.minPrice(),
             report.maxPrice(),
+            report.is24Hours(),
             report.startTime(),
             report.endTime(),
             report.additionalInfo(),

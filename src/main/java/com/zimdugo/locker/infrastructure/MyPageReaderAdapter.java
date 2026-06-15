@@ -71,6 +71,7 @@ public class MyPageReaderAdapter implements MyPageReader {
                 report.getIsFree(),
                 report.getMinPrice(),
                 report.getMaxPrice(),
+                report.is24Hours(),
                 report.getStartTime(),
                 report.getEndTime(),
                 report.getAdditionalInfo(),

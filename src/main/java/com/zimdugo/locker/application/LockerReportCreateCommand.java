@@ -16,6 +16,7 @@ public record LockerReportCreateCommand(
     Boolean isFree,
     Integer minPrice,
     Integer maxPrice,
+    boolean is24Hours,
     LocalTime startTime,
     LocalTime endTime,
     String additionalInfo,

@@ -88,6 +88,10 @@ public class LockerReportEntity {
     @Column(length = 255)
     private String additionalInfo;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean is24Hours = false;
+
     private LocalTime startTime;
 
     private LocalTime endTime;
@@ -146,6 +150,7 @@ public class LockerReportEntity {
         this.minPrice = values.minPrice();
         this.maxPrice = values.maxPrice();
         this.additionalInfo = values.additionalInfo();
+        this.is24Hours = values.is24Hours();
         this.startTime = values.startTime();
         this.endTime = values.endTime();
         this.imageUrl = values.imageUrl();
@@ -166,6 +171,7 @@ public class LockerReportEntity {
         Integer minPrice,
         Integer maxPrice,
         String additionalInfo,
+        boolean is24Hours,
         LocalTime startTime,
         LocalTime endTime,
         String imageUrl,
@@ -186,6 +192,7 @@ public class LockerReportEntity {
             Integer minPrice,
             Integer maxPrice,
             String additionalInfo,
+            boolean is24Hours,
             LocalTime startTime,
             LocalTime endTime,
             boolean locationConsentAgreed,
@@ -204,6 +211,7 @@ public class LockerReportEntity {
                 minPrice,
                 maxPrice,
                 additionalInfo,
+                is24Hours,
                 startTime,
                 endTime,
                 null,

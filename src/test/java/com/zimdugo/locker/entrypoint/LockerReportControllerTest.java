@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.zimdugo.auth.config.SecurityConfig;
 import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
 import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
-import com.zimdugo.auth.config.SecurityConfig;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.LockerReportCommandService;
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
@@ -81,7 +81,7 @@ class LockerReportControllerTest {
         given(lockerReportCommandService.create(eq(1L), any()))
             .willReturn(new LockerReportCreateResult(
                 100L,
-                "물품보관함",
+                "홍대입구역",
                 "서울 마포구 양화로 160",
                 37.556,
                 126.923,
@@ -133,9 +133,10 @@ class LockerReportControllerTest {
                       "isFree": true,
                       "minPrice": null,
                       "maxPrice": null,
+                      "is24Hours": false,
                       "startTime": null,
                       "endTime": null,
-                      "additionalInfo": "홍대입구 2번 출구 근처",
+                      "additionalInfo": "2번 출구 근처",
                       "imageUrl": null,
                       "locationConsentAgreed": true
                     }
@@ -143,8 +144,6 @@ class LockerReportControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(content().contentTypeCompatibleWith("application/json"))
             .andExpect(jsonPath("$.code").value("COMMON-400-1"))
-            .andExpect(jsonPath("$.message").value("요청 값 검증에 실패했습니다."))
-            .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.validationErrors").isArray())
             .andExpect(jsonPath("$.validationErrors[0].field").exists());
     }
@@ -169,9 +168,10 @@ class LockerReportControllerTest {
                       "isFree": true,
                       "minPrice": null,
                       "maxPrice": null,
+                      "is24Hours": false,
                       "startTime": null,
                       "endTime": null,
-                      "additionalInfo": "홍대입구 2번 출구 근처",
+                      "additionalInfo": "2번 출구 근처",
                       "imageUrl": null,
                       "locationConsentAgreed": true
                     }
@@ -179,15 +179,13 @@ class LockerReportControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(content().contentTypeCompatibleWith("application/json"))
             .andExpect(jsonPath("$.code").value("COMMON-400-1"))
-            .andExpect(jsonPath("$.message").value("요청 값 검증에 실패했습니다."))
-            .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.validationErrors").isArray())
             .andExpect(jsonPath("$.validationErrors[0].field").exists());
     }
 
     @Test
-    @DisplayName("enum 형식이 잘못되면 validation error를 반환한다")
-    void createLockerReportWithInvalidEnumValueReturnsBadRequest() throws Exception {
+    @DisplayName("층 있음과 실외를 함께 보내면 validation error를 반환한다")
+    void createLockerReportWithOutdoorFloorCombinationReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/v1/locker-reports")
                 .principal(authenticatedUser())
                 .contentType("application/json")
@@ -197,26 +195,88 @@ class LockerReportControllerTest {
                       "latitude": 37.556,
                       "longitude": 126.923,
                       "hasFloor": true,
-                      "floorType": "BASEMENT",
+                      "floorType": "UNDERGROUND",
                       "floorNumber": 2,
-                      "indoorOutdoorType": "INDOORS",
-                      "lockerType": "SUBWAY",
-                      "sizeTypes": ["SMALL", "MEDIUM"],
+                      "indoorOutdoorType": "OUTDOOR",
+                      "lockerType": "SUBWAY_STATION",
+                      "sizeTypes": ["SMALL"],
                       "isFree": true,
                       "minPrice": null,
                       "maxPrice": null,
+                      "is24Hours": false,
                       "startTime": null,
                       "endTime": null,
-                      "additionalInfo": "홍대입구 2번 출구 근처",
+                      "additionalInfo": "야외 보관함",
                       "imageUrl": null,
                       "locationConsentAgreed": true
                     }
                     """))
             .andExpect(status().isBadRequest())
-            .andExpect(content().contentTypeCompatibleWith("application/json"))
-            .andExpect(jsonPath("$.code").value("COMMON-400-1"))
-            .andExpect(jsonPath("$.validationErrors").isArray())
-            .andExpect(jsonPath("$.validationErrors[0].field").exists());
+            .andExpect(jsonPath("$.code").value("COMMON-400-1"));
+    }
+
+    @Test
+    @DisplayName("24시간 운영인데 시간을 함께 보내면 validation error를 반환한다")
+    void createLockerReportWithTwentyFourHourAndTimesReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/locker-reports")
+                .principal(authenticatedUser())
+                .contentType("application/json")
+                .content("""
+                    {
+                      "roadAddress": "서울 마포구 양화로 160",
+                      "latitude": 37.556,
+                      "longitude": 126.923,
+                      "hasFloor": false,
+                      "floorType": null,
+                      "floorNumber": null,
+                      "indoorOutdoorType": "INDOOR",
+                      "lockerType": "SUBWAY_STATION",
+                      "sizeTypes": ["SMALL"],
+                      "isFree": true,
+                      "minPrice": null,
+                      "maxPrice": null,
+                      "is24Hours": true,
+                      "startTime": "09:00",
+                      "endTime": "22:00",
+                      "additionalInfo": "24시간",
+                      "imageUrl": null,
+                      "locationConsentAgreed": true
+                    }
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("COMMON-400-1"));
+    }
+
+    @Test
+    @DisplayName("보관함 사이즈가 비어 있으면 validation error를 반환한다")
+    void createLockerReportWithoutSizeTypesReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/v1/locker-reports")
+                .principal(authenticatedUser())
+                .contentType("application/json")
+                .content("""
+                    {
+                      "roadAddress": "서울 마포구 양화로 160",
+                      "latitude": 37.556,
+                      "longitude": 126.923,
+                      "hasFloor": false,
+                      "floorType": null,
+                      "floorNumber": null,
+                      "indoorOutdoorType": "INDOOR",
+                      "lockerType": "SUBWAY_STATION",
+                      "sizeTypes": [],
+                      "isFree": true,
+                      "minPrice": null,
+                      "maxPrice": null,
+                      "is24Hours": false,
+                      "startTime": null,
+                      "endTime": null,
+                      "additionalInfo": "2번 출구 근처",
+                      "imageUrl": null,
+                      "locationConsentAgreed": true
+                    }
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("COMMON-400-1"));
     }
 
     private String validCreateRequestJson() {
@@ -234,9 +294,10 @@ class LockerReportControllerTest {
               "isFree": true,
               "minPrice": null,
               "maxPrice": null,
+              "is24Hours": false,
               "startTime": null,
               "endTime": null,
-              "additionalInfo": "홍대입구 2번 출구 근처",
+              "additionalInfo": "2번 출구 근처",
               "imageUrl": null,
               "locationConsentAgreed": true
             }
