@@ -87,7 +87,7 @@ public record LockerReportCreateRequest(
     @Schema(description = "Location consent agreed", example = "true")
     Boolean locationConsentAgreed
 ) {
-    @AssertTrue(message = "validation.invalid_floor")
+    @AssertTrue(message = "층 정보 입력이 올바르지 않습니다.")
     public boolean isFloorInputValid() {
         if (Boolean.TRUE.equals(hasFloor) && "OUTDOOR".equals(indoorOutdoorType)) {
             return false;
@@ -103,7 +103,7 @@ public record LockerReportCreateRequest(
         return false;
     }
 
-    @AssertTrue(message = "validation.invalid_enum_value")
+    @AssertTrue(message = "보관함 분류 입력이 올바르지 않습니다.")
     public boolean isEnumInputValid() {
         return isValidEnumValue(indoorOutdoorType, Set.of("INDOOR", "OUTDOOR"))
             && isValidEnumValue(
@@ -121,7 +121,7 @@ public record LockerReportCreateRequest(
         );
     }
 
-    @AssertTrue(message = "validation.invalid_price")
+    @AssertTrue(message = "가격 정보 입력이 올바르지 않습니다.")
     public boolean isPriceInputValid() {
         if (isFree == null) {
             return true;
@@ -141,7 +141,7 @@ public record LockerReportCreateRequest(
         return minPrice == null || maxPrice == null || minPrice <= maxPrice;
     }
 
-    @AssertTrue(message = "validation.invalid_operating_hours")
+    @AssertTrue(message = "운영 시간 입력이 올바르지 않습니다.")
     public boolean isOperatingHoursValid() {
         if (is24Hours == null) {
             return false;
@@ -158,7 +158,7 @@ public record LockerReportCreateRequest(
         return !startTime.isAfter(endTime);
     }
 
-    @AssertTrue(message = "validation.invalid_size_types")
+    @AssertTrue(message = "보관함 크기 입력이 올바르지 않습니다.")
     public boolean isSizeTypesValid() {
         if (sizeTypes == null || sizeTypes.isEmpty()) {
             return false;
@@ -168,7 +168,7 @@ public record LockerReportCreateRequest(
         return sizeTypes.stream().allMatch(allowedSizeTypes::contains);
     }
 
-    @AssertTrue(message = "validation.invalid_location_consent")
+    @AssertTrue(message = "이미지 제보 시 위치 정보 제공 동의가 필요합니다.")
     public boolean isLocationConsentValid() {
         if (imageUrl == null || imageUrl.isBlank()) {
             return true;
