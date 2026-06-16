@@ -64,6 +64,9 @@ dependencies {
     // AWS S3
     implementation("software.amazon.awssdk:s3")
 
+    // Image metadata
+    implementation("com.drewnoakes:metadata-extractor:2.19.0")
+
     // DB
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("com.h2database:h2")
