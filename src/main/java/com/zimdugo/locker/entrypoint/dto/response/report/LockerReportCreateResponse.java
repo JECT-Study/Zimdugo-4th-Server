@@ -6,9 +6,6 @@ public record LockerReportCreateResponse(
     @Schema(description = "제보 ID", example = "10")
     Long reportId,
 
-    @Schema(description = "보관함 이름", example = "물품보관함")
-    String name,
-
     @Schema(description = "도로명 주소", example = "서울 마포구 양화로 160")
     String roadAddress,
 

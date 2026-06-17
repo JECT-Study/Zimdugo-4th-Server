@@ -2,12 +2,14 @@ package com.zimdugo.locker.infrastructure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.zimdugo.locker.domain.LockerReportStatus;
-import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
 import com.zimdugo.locker.domain.IndoorOutdoorType;
-import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
+import com.zimdugo.locker.domain.LockerReportOperatingTimeType;
+import com.zimdugo.locker.domain.LockerReportPriceType;
+import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.locker.domain.LockerSizeType;
 import com.zimdugo.locker.domain.LockerType;
+import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
@@ -40,6 +42,8 @@ class LockerReportRepositoryTest {
             .indoorOutdoorType(IndoorOutdoorType.INDOOR)
             .lockerType(LockerType.ETC)
             .lockerSize(Set.of())
+            .priceType(LockerReportPriceType.FREE)
+            .operatingTimeType(LockerReportOperatingTimeType.OPEN_24_HOURS)
             .locationConsentAgreed(false)
             .latitude(37.556)
             .longitude(126.923)
@@ -81,13 +85,13 @@ class LockerReportRepositoryTest {
             .indoorOutdoorType(IndoorOutdoorType.INDOOR)
             .lockerType(LockerType.SUBWAY_STATION)
             .lockerSize(Set.of(LockerSizeType.SMALL, LockerSizeType.MEDIUM))
-            .isFree(false)
+            .priceType(LockerReportPriceType.PAID)
             .minPrice(1000)
             .maxPrice(3000)
             .additionalInfo("B2 화장실 옆")
+            .operatingTimeType(LockerReportOperatingTimeType.TIME_RANGE)
             .startTime(LocalTime.of(9, 0))
             .endTime(LocalTime.of(22, 30))
-            .imageUrl("https://cdn.example.com/locker/1.jpg")
             .locationConsentAgreed(true)
             .latitude(37.556)
             .longitude(126.923)
@@ -104,9 +108,11 @@ class LockerReportRepositoryTest {
         assertThat(savedReport.getIndoorOutdoorType()).isEqualTo(IndoorOutdoorType.INDOOR);
         assertThat(savedReport.getLockerType()).isEqualTo(LockerType.SUBWAY_STATION);
         assertThat(savedReport.getLockerSize()).containsExactlyInAnyOrder(LockerSizeType.SMALL, LockerSizeType.MEDIUM);
+        assertThat(savedReport.getPriceType()).isEqualTo(LockerReportPriceType.PAID);
         assertThat(savedReport.getMinPrice()).isEqualTo(1000);
         assertThat(savedReport.getMaxPrice()).isEqualTo(3000);
         assertThat(savedReport.getAdditionalInfo()).isEqualTo("B2 화장실 옆");
+        assertThat(savedReport.getOperatingTimeType()).isEqualTo(LockerReportOperatingTimeType.TIME_RANGE);
         assertThat(savedReport.getStartTime()).isEqualTo(LocalTime.of(9, 0));
         assertThat(savedReport.getEndTime()).isEqualTo(LocalTime.of(22, 30));
         assertThat(savedReport.isLocationConsentAgreed()).isTrue();

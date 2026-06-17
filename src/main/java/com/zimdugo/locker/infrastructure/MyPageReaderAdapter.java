@@ -1,9 +1,10 @@
 package com.zimdugo.locker.infrastructure;
 
-import com.zimdugo.locker.domain.MyPageReader;
 import com.zimdugo.locker.domain.MyLockerReportDetail;
 import com.zimdugo.locker.domain.MyLockerReportHistoryItem;
 import com.zimdugo.locker.domain.MyLockerReportHistoryPage;
+import com.zimdugo.locker.domain.MyPageReader;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -53,30 +54,38 @@ public class MyPageReaderAdapter implements MyPageReader {
     @Override
     public Optional<MyLockerReportDetail> findLockerReport(Long userId, Long reportId) {
         return lockerReportRepository.findActiveByIdAndUserId(reportId, userId)
-            .map(report -> new MyLockerReportDetail(
-                report.getId(),
-                report.getName(),
-                report.getRoadAddress(),
-                report.getLatitude(),
-                report.getLongitude(),
-                report.getGroundLevelType() != null && report.getFloor() != null,
-                report.getGroundLevelType() == null ? null : report.getGroundLevelType().name(),
-                report.getFloor(),
-                report.getIndoorOutdoorType().name(),
-                report.getLockerType().name(),
-                report.getLockerSize().stream()
-                    .map(Enum::name)
-                    .sorted()
-                    .toList(),
-                report.getIsFree(),
-                report.getMinPrice(),
-                report.getMaxPrice(),
-                report.getStartTime(),
-                report.getEndTime(),
-                report.getAdditionalInfo(),
-                report.getImageUrl(),
-                report.isLocationConsentAgreed()
-            ));
+            .map(this::toLockerReportDetail);
+    }
+
+    private MyLockerReportDetail toLockerReportDetail(LockerReportEntity report) {
+        String imageUrl = report.getImage() != null ? report.getImage().getImageUrl() : null;
+        List<String> sizeTypes = report.getLockerSize().stream()
+            .map(Enum::name)
+            .sorted()
+            .toList();
+
+        return new MyLockerReportDetail(
+            report.getId(),
+            report.getName(),
+            report.getRoadAddress(),
+            report.getLatitude(),
+            report.getLongitude(),
+            report.getGroundLevelType() != null && report.getFloor() != null,
+            report.getGroundLevelType() == null ? null : report.getGroundLevelType().name(),
+            report.getFloor(),
+            report.getIndoorOutdoorType().name(),
+            report.getLockerType().name(),
+            sizeTypes,
+            report.getPriceType().name(),
+            report.getMinPrice(),
+            report.getMaxPrice(),
+            report.getOperatingTimeType().name(),
+            report.getStartTime(),
+            report.getEndTime(),
+            report.getAdditionalInfo(),
+            imageUrl,
+            report.isLocationConsentAgreed()
+        );
     }
 
     private MyLockerReportHistoryItem toLockerReportHistoryItem(

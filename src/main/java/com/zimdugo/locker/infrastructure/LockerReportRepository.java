@@ -13,28 +13,21 @@ import jakarta.persistence.LockModeType;
 public interface LockerReportRepository extends JpaRepository<LockerReportEntity, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT lr FROM LockerReportEntity lr WHERE lr.id = :reportId AND lr.deletedAt IS NULL")
+    @Query("SELECT lr FROM LockerReportEntity lr WHERE lr.id = :reportId")
     Optional<LockerReportEntity> findByIdForUpdate(@Param("reportId") Long reportId);
 
-    @Query("SELECT lr FROM LockerReportEntity lr WHERE lr.id = :reportId AND lr.deletedAt IS NULL")
+    @Query("SELECT lr FROM LockerReportEntity lr WHERE lr.id = :reportId")
     Optional<LockerReportEntity> findActiveById(@Param("reportId") Long reportId);
 
-    Page<LockerReportEntity> findAllByDeletedAtIsNull(Pageable pageable);
-
-    Page<LockerReportEntity> findAllByStatusAndDeletedAtIsNull(
-        com.zimdugo.locker.domain.LockerReportStatus status,
-        Pageable pageable
-    );
-
-    @Query("SELECT COUNT(lr) FROM LockerReportEntity lr WHERE lr.user.id = :userId AND lr.deletedAt IS NULL")
+    @Query("SELECT COUNT(lr) FROM LockerReportEntity lr WHERE lr.user.id = :userId")
     long countLockerReportsByUserId(@Param("userId") Long userId);
 
     @Query("""
         SELECT lr
         FROM LockerReportEntity lr
+        LEFT JOIN FETCH lr.image
         WHERE lr.id = :reportId
             AND lr.user.id = :userId
-            AND lr.deletedAt IS NULL
         """)
     Optional<LockerReportEntity> findActiveByIdAndUserId(
         @Param("reportId") Long reportId,
@@ -51,7 +44,7 @@ public interface LockerReportRepository extends JpaRepository<LockerReportEntity
                 lr.name AS lockerName,
                 lr.road_address AS roadAddress,
                 lr.locker_type AS lockerType,
-                lr.image_url AS imageUrl,
+                lri.image_url AS imageUrl,
                 lr.latitude AS latitude,
                 lr.longitude AS longitude,
                 ST_Distance(
@@ -60,6 +53,7 @@ public interface LockerReportRepository extends JpaRepository<LockerReportEntity
                 ) AS distanceMeters,
                 lr.updated_at AS updatedAt
             FROM locker_reports lr
+            LEFT JOIN locker_report_images lri ON lri.report_id = lr.id
             CROSS JOIN target
             WHERE lr.user_id = :userId
                 AND lr.deleted_at IS NULL

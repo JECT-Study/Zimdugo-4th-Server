@@ -30,10 +30,6 @@ public record LockerReportCreateRequest(
     @DecimalMax(value = "180.0")
     Double longitude,
 
-    @Schema(description = "층수 정보 존재 여부", example = "true")
-    @NotNull
-    Boolean hasFloor,
-
     @Schema(description = "층수 유형", example = "UNDERGROUND")
     @Size(max = 20)
     String floorType,
@@ -54,9 +50,6 @@ public record LockerReportCreateRequest(
     @Schema(description = "보관함 사이즈", example = "[\"SMALL\",\"MEDIUM\",\"LARGE\"]")
     @Size(max = 3)
     List<String> sizeTypes,
-
-    @Schema(description = "무료 여부", example = "false")
-    Boolean isFree,
 
     @Schema(description = "최소 가격", example = "1000")
     Integer minPrice,
@@ -81,23 +74,9 @@ public record LockerReportCreateRequest(
     @Schema(description = "위치정보 수집 및 이용 동의", example = "true")
     Boolean locationConsentAgreed
 ) {
-    @AssertTrue(message = "validation.invalid_floor")
-    public boolean isFloorInputValid() {
-        if (Boolean.FALSE.equals(hasFloor)) {
-            return floorType == null && floorNumber == null;
-        }
-        if (Boolean.TRUE.equals(hasFloor)) {
-            return isValidEnumValue(floorType, Set.of("ABOVE_GROUND", "UNDERGROUND"))
-                && floorNumber != null
-                && floorNumber > 0;
-        }
-        return false;
-    }
-
     @AssertTrue(message = "validation.invalid_enum_value")
     public boolean isEnumInputValid() {
-        return isValidEnumValue(indoorOutdoorType, Set.of("INDOOR", "OUTDOOR"))
-            && isValidEnumValue(
+        return isValidEnumValue(
             lockerType,
             Set.of(
                 "MUSEUM",
@@ -114,22 +93,19 @@ public record LockerReportCreateRequest(
 
     @AssertTrue(message = "validation.invalid_price")
     public boolean isPriceInputValid() {
-        if (isFree == null) {
+        if (minPrice == null && maxPrice == null) {
             return true;
         }
-        if (Boolean.TRUE.equals(isFree)) {
-            return minPrice == null && maxPrice == null;
-        }
-        if (minPrice == null && maxPrice == null) {
+        if (minPrice == null || maxPrice == null) {
             return false;
         }
-        if (minPrice != null && minPrice < 0) {
+        if (minPrice < 0) {
             return false;
         }
-        if (maxPrice != null && maxPrice < 0) {
+        if (maxPrice <= 0) {
             return false;
         }
-        return minPrice == null || maxPrice == null || minPrice <= maxPrice;
+        return minPrice <= maxPrice;
     }
 
     @AssertTrue(message = "validation.invalid_operating_hours")
@@ -146,11 +122,9 @@ public record LockerReportCreateRequest(
     @AssertTrue(message = "validation.invalid_size_types")
     public boolean isSizeTypesValid() {
         if (sizeTypes == null || sizeTypes.isEmpty()) {
-            return true;
+            return false;
         }
-
-        Set<String> allowedSizeTypes = Set.of("SMALL", "MEDIUM", "LARGE");
-        return sizeTypes.stream().allMatch(allowedSizeTypes::contains);
+        return sizeTypes.stream().allMatch(sizeType -> isValidEnumValue(sizeType, Set.of("SMALL", "MEDIUM", "LARGE")));
     }
 
     @AssertTrue(message = "validation.invalid_location_consent")
@@ -166,13 +140,11 @@ public record LockerReportCreateRequest(
             roadAddress,
             latitude,
             longitude,
-            Boolean.TRUE.equals(hasFloor),
             floorType,
             floorNumber,
             indoorOutdoorType,
             lockerType,
             sizeTypes,
-            isFree,
             minPrice,
             maxPrice,
             startTime,
