@@ -65,5 +65,8 @@ jwt:
 
 storage:
   s3:
+    region: ap-northeast-2
     bucket: test-bucket
     public-base-url: https://test-cdn.example.com
+    upload-expiration-minutes: 10
+    max-upload-bytes: 10485760
