@@ -50,8 +50,7 @@ public enum ErrorCode implements BaseCode {
     PLACE_NOT_FOUND("LOCKER-404-2", "장소를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     LOCKER_REPORT_NOT_FOUND("LOCKER-404-3", "보관함 제보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     LOCKER_REPORT_ALREADY_REVIEWED("LOCKER-409-1", "이미 검토된 보관함 제보입니다.", HttpStatus.CONFLICT),
-    LOCKER_REPORT_APPROVED_NOT_EDITABLE("LOCKER-409-2", "승인된 보관함 제보는 수정하거나 삭제할 수 없습니다.", HttpStatus.CONFLICT),
-    INVALID_LOCKER_REPORT_REVIEW("LOCKER-400-4", "보관함 제보 검토 입력값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_LOCKER_REPORT_INPUT("LOCKER-400-5", "보관함 제보 입력값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_LOCATION_RANGE("LOCKER-400-1", "좌표 범위가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_LOCKER_SIZE_TYPE("LOCKER-400-3", "보관함 크기 타입이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INDEX_SYNC_FAILED("LOCKER-500-1", "검색 인덱스 동기화에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -60,7 +59,10 @@ public enum ErrorCode implements BaseCode {
     // 이미지 (IMAGE)
     UNSUPPORTED_IMAGE_TYPE("IMAGE-400-1", "지원하지 않는 이미지 형식입니다.", HttpStatus.BAD_REQUEST),
     INVALID_IMAGE_EXTENSION("IMAGE-400-2", "이미지 파일 확장자가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-    IMAGE_STORAGE_CONFIGURATION_MISSING("IMAGE-500-1", "이미지 저장소 설정이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    IMAGE_METADATA_PARSE_FAILED("IMAGE-400-3", "이미지 메타데이터를 해석할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_IMAGE_URL("IMAGE-400-4", "이미지 URL이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    IMAGE_STORAGE_CONFIGURATION_MISSING("IMAGE-500-1", "이미지 저장소 설정이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    IMAGE_STORAGE_READ_FAILED("IMAGE-500-2", "이미지 저장소에서 파일을 읽을 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     @Getter
     private final String code;

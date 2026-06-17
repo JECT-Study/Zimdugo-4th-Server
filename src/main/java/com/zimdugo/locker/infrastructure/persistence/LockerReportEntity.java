@@ -1,12 +1,20 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.IndoorOutdoorType;
+import com.zimdugo.locker.domain.LockerReportCreateInfo;
+import com.zimdugo.locker.domain.LockerReportOperatingTimeType;
+import com.zimdugo.locker.domain.LockerReportPriceType;
 import com.zimdugo.locker.domain.LockerReportStatus;
 import com.zimdugo.locker.domain.LockerSizeType;
 import com.zimdugo.locker.domain.LockerType;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -17,6 +25,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -36,6 +45,8 @@ import lombok.NoArgsConstructor;
         @Index(name = "idx_locker_reports_user_id", columnList = "user_id")
     }
 )
+@SQLDelete(sql = "UPDATE locker_reports SET deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
@@ -50,7 +61,7 @@ public class LockerReportEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String name;
 
     @Column(length = 255)
@@ -76,8 +87,9 @@ public class LockerReportEntity {
     @Builder.Default
     private java.util.Set<LockerSizeType> lockerSize = java.util.Set.of();
 
-    @Column
-    private Boolean isFree;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private LockerReportPriceType priceType;
 
     @Column
     private Integer minPrice;
@@ -88,12 +100,13 @@ public class LockerReportEntity {
     @Column(length = 255)
     private String additionalInfo;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private LockerReportOperatingTimeType operatingTimeType;
+
     private LocalTime startTime;
 
     private LocalTime endTime;
-
-    @Column(length = 500)
-    private String imageUrl;
 
     @Column(nullable = false)
     private boolean locationConsentAgreed;
@@ -133,91 +146,90 @@ public class LockerReportEntity {
     @Column
     private LocalDateTime reviewedAt;
 
-    public void updateReport(UpdateValues values) {
-        ensureUserEditable();
-        this.name = values.name();
-        this.roadAddress = values.roadAddress();
-        this.groundLevelType = values.groundLevelType();
-        this.floor = values.floor();
-        this.indoorOutdoorType = values.indoorOutdoorType();
-        this.lockerType = values.lockerType();
-        this.lockerSize = values.lockerSize();
-        this.isFree = values.isFree();
-        this.minPrice = values.minPrice();
-        this.maxPrice = values.maxPrice();
-        this.additionalInfo = values.additionalInfo();
-        this.startTime = values.startTime();
-        this.endTime = values.endTime();
-        this.imageUrl = values.imageUrl();
-        this.locationConsentAgreed = values.locationConsentAgreed();
-        this.latitude = values.latitude();
-        this.longitude = values.longitude();
+    @OneToOne(mappedBy = "report", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private LockerReportImageEntity image;
+
+    public void addImage(LockerReportImageEntity image) {
+        this.image = image;
     }
 
-    public record UpdateValues(
-        String name,
-        String roadAddress,
-        GroundLevelType groundLevelType,
-        Integer floor,
-        IndoorOutdoorType indoorOutdoorType,
-        LockerType lockerType,
-        Set<LockerSizeType> lockerSize,
-        Boolean isFree,
-        Integer minPrice,
-        Integer maxPrice,
-        String additionalInfo,
-        LocalTime startTime,
-        LocalTime endTime,
-        String imageUrl,
-        boolean locationConsentAgreed,
-        double latitude,
-        double longitude
-    ) {
-        @SuppressWarnings("checkstyle:ParameterNumber")
-        public UpdateValues(
-            String name,
-            String roadAddress,
-            GroundLevelType groundLevelType,
-            Integer floor,
-            IndoorOutdoorType indoorOutdoorType,
-            LockerType lockerType,
-            Set<LockerSizeType> lockerSize,
-            Boolean isFree,
-            Integer minPrice,
-            Integer maxPrice,
-            String additionalInfo,
-            LocalTime startTime,
-            LocalTime endTime,
-            boolean locationConsentAgreed,
-            double latitude,
-            double longitude
-        ) {
-            this(
-                name,
-                roadAddress,
-                groundLevelType,
-                floor,
-                indoorOutdoorType,
-                lockerType,
-                lockerSize,
-                isFree,
-                minPrice,
-                maxPrice,
-                additionalInfo,
-                startTime,
-                endTime,
-                null,
-                locationConsentAgreed,
-                latitude,
-                longitude
-            );
+    public static LockerReportEntity of(LockerReportCreateInfo createInfo, UserEntity user) {
+        return LockerReportEntity.builder()
+            .user(user)
+            .roadAddress(createInfo.roadAddress())
+            .groundLevelType(toGroundLevelType(createInfo.groundLevelType()))
+            .floor(createInfo.floorNumber())
+            .indoorOutdoorType(toIndoorOutdoorType(createInfo.indoorOutdoorType()))
+            .lockerType(toLockerType(createInfo.lockerType()))
+            .lockerSize(toLockerSize(createInfo.sizeTypes()))
+            .priceType(toPriceType(createInfo.priceType()))
+            .minPrice(createInfo.minPrice())
+            .maxPrice(createInfo.maxPrice())
+            .additionalInfo(createInfo.additionalInfo())
+            .operatingTimeType(toOperatingTimeType(createInfo.operatingTimeType()))
+            .startTime(createInfo.startTime())
+            .endTime(createInfo.endTime())
+            .locationConsentAgreed(createInfo.locationConsentAgreed())
+            .latitude(createInfo.latitude())
+            .longitude(createInfo.longitude())
+            .build();
+    }
+
+
+
+    private static GroundLevelType toGroundLevelType(String groundLevelType) {
+        if (groundLevelType == null || groundLevelType.isBlank()) {
+            return null;
+        }
+        try {
+            return GroundLevelType.valueOf(groundLevelType);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.INVALID_LOCKER_REPORT_INPUT, e);
         }
     }
 
-    public void delete() {
-        ensureUserEditable();
-        this.deletedAt = LocalDateTime.now();
+    private static IndoorOutdoorType toIndoorOutdoorType(String indoorOutdoorType) {
+        try {
+            return IndoorOutdoorType.valueOf(indoorOutdoorType);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new BusinessException(ErrorCode.INVALID_LOCKER_REPORT_INPUT, e);
+        }
     }
+
+    private static LockerType toLockerType(String lockerType) {
+        try {
+            return LockerType.valueOf(lockerType);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new BusinessException(ErrorCode.INVALID_LOCKER_REPORT_INPUT, e);
+        }
+    }
+
+    private static LockerReportPriceType toPriceType(String priceType) {
+        try {
+            return LockerReportPriceType.valueOf(priceType);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new BusinessException(ErrorCode.INVALID_LOCKER_REPORT_INPUT, e);
+        }
+    }
+
+    private static LockerReportOperatingTimeType toOperatingTimeType(String operatingTimeType) {
+        try {
+            return LockerReportOperatingTimeType.valueOf(operatingTimeType);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new BusinessException(ErrorCode.INVALID_LOCKER_REPORT_INPUT, e);
+        }
+    }
+
+    private static Set<LockerSizeType> toLockerSize(java.util.List<String> sizeTypes) {
+        if (sizeTypes == null || sizeTypes.isEmpty()) {
+            return Set.of();
+        }
+        return sizeTypes.stream()
+            .map(LockerSizeType::from)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+
 
     public void approve(Long placeId, Long lockerId, String reviewer, String reviewNote) {
         ensureReviewable();
@@ -233,19 +245,11 @@ public class LockerReportEntity {
         recordReview(reviewer, reviewNote);
     }
 
-    private void ensureUserEditable() {
-        if (status == LockerReportStatus.APPROVED) {
-            throw new com.zimdugo.core.exception.BusinessException(
-                com.zimdugo.core.exception.ErrorCode.LOCKER_REPORT_APPROVED_NOT_EDITABLE
-            );
-        }
-    }
+
 
     private void ensureReviewable() {
         if (status == LockerReportStatus.APPROVED || status == LockerReportStatus.REJECTED) {
-            throw new com.zimdugo.core.exception.BusinessException(
-                com.zimdugo.core.exception.ErrorCode.LOCKER_REPORT_ALREADY_REVIEWED
-            );
+            throw new BusinessException(ErrorCode.LOCKER_REPORT_ALREADY_REVIEWED);
         }
     }
 

@@ -8,7 +8,6 @@ import com.zimdugo.locker.application.result.mypage.MyLockerReportDetailResult;
 import com.zimdugo.locker.application.result.mypage.MyLockerReportHistoryResult;
 import com.zimdugo.locker.application.MyPageQueryService;
 import com.zimdugo.locker.application.result.mypage.MyPageSummaryResult;
-import com.zimdugo.locker.entrypoint.dto.request.report.LockerReportCreateRequest;
 import com.zimdugo.locker.entrypoint.dto.response.mypage.MyLockerReportDetailResponse;
 import com.zimdugo.locker.entrypoint.dto.response.mypage.MyLockerReportHistoryResponse;
 import com.zimdugo.locker.entrypoint.dto.response.mypage.MyPageSummaryResponse;
@@ -62,22 +61,4 @@ public class MyPageController implements MyPageApi {
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, MyLockerReportDetailResponse.from(result)));
     }
 
-    @Override
-    public ResponseEntity<RestResponse<Void>> updateMyLockerReport(
-        @CurrentUser Long userId,
-        Long reportId,
-        LockerReportCreateRequest request
-    ) {
-        lockerReportCommandService.update(userId, reportId, request.toCommand());
-        return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
-    }
-
-    @Override
-    public ResponseEntity<RestResponse<Void>> deleteMyLockerReport(
-        @CurrentUser Long userId,
-        Long reportId
-    ) {
-        lockerReportCommandService.delete(userId, reportId);
-        return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
-    }
 }

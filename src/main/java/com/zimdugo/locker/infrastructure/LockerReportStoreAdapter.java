@@ -3,19 +3,14 @@ package com.zimdugo.locker.infrastructure;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.LockerReportCreateInfo;
+import com.zimdugo.locker.domain.LockerReportImageMetadata;
+import com.zimdugo.locker.domain.LockerReportImageMetadataReader;
 import com.zimdugo.locker.domain.LockerReportStore;
-import com.zimdugo.locker.domain.LockerReportUpdateInfo;
 import com.zimdugo.locker.domain.SavedLockerReport;
-import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
-import com.zimdugo.locker.domain.IndoorOutdoorType;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
-import com.zimdugo.locker.domain.LockerSizeType;
-import com.zimdugo.locker.domain.LockerType;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportImageEntity;
 import com.zimdugo.user.infrastructure.UserRepository;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,83 +20,40 @@ public class LockerReportStoreAdapter implements LockerReportStore {
 
     private final LockerReportRepository lockerReportRepository;
     private final UserRepository userRepository;
+    private final LockerReportImageMetadataReader imageMetadataReader;
 
     @Override
     public SavedLockerReport create(LockerReportCreateInfo createInfo) {
         UserEntity user = userRepository.findById(createInfo.userId())
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        LockerReportEntity report = lockerReportRepository.save(LockerReportEntity.builder()
-            .user(user)
-            .name(createInfo.name())
-            .roadAddress(createInfo.roadAddress())
-            .groundLevelType(toGroundLevelType(createInfo.groundLevelType()))
-            .floor(createInfo.floorNumber())
-            .indoorOutdoorType(IndoorOutdoorType.valueOf(createInfo.indoorOutdoorType()))
-            .lockerType(LockerType.valueOf(createInfo.lockerType()))
-            .lockerSize(toLockerSize(createInfo.sizeTypes()))
-            .isFree(createInfo.isFree())
-            .minPrice(createInfo.minPrice())
-            .maxPrice(createInfo.maxPrice())
-            .additionalInfo(createInfo.additionalInfo())
-            .startTime(createInfo.startTime())
-            .endTime(createInfo.endTime())
-            .imageUrl(createInfo.imageUrl())
-            .locationConsentAgreed(createInfo.locationConsentAgreed())
-            .latitude(createInfo.latitude())
-            .longitude(createInfo.longitude())
-            .build());
+        LockerReportEntity report = LockerReportEntity.of(createInfo, user);
+
+        if (!isBlank(createInfo.imageUrl())) {
+            LockerReportImageMetadata imageMetadata = readImageMetadata(createInfo.imageUrl());
+            LockerReportImageEntity imageEntity = LockerReportImageEntity.builder()
+                .report(report)
+                .imageUrl(createInfo.imageUrl())
+                .exifMetadataJson(imageMetadata.metadataJson())
+                .exifExtractedAt(imageMetadata.extractedAt())
+                .gpsLatitude(imageMetadata.gpsLatitude())
+                .gpsLongitude(imageMetadata.gpsLongitude())
+                .gpsAltitude(imageMetadata.gpsAltitude())
+                .capturedAt(imageMetadata.capturedAt())
+                .build();
+            report.addImage(imageEntity);
+        }
+
+        lockerReportRepository.save(report);
 
         return new SavedLockerReport(report.getId(), report.getStatus().name());
     }
 
-    @Override
-    public void update(Long userId, Long reportId, LockerReportUpdateInfo updateInfo) {
-        LockerReportEntity report = lockerReportRepository.findActiveByIdAndUserId(reportId, userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
-
-        report.updateReport(new LockerReportEntity.UpdateValues(
-            updateInfo.name(),
-            updateInfo.roadAddress(),
-            toGroundLevelType(updateInfo.groundLevelType()),
-            updateInfo.floorNumber(),
-            IndoorOutdoorType.valueOf(updateInfo.indoorOutdoorType()),
-            LockerType.valueOf(updateInfo.lockerType()),
-            toLockerSize(updateInfo.sizeTypes()),
-            updateInfo.isFree(),
-            updateInfo.minPrice(),
-            updateInfo.maxPrice(),
-            updateInfo.additionalInfo(),
-            updateInfo.startTime(),
-            updateInfo.endTime(),
-            updateInfo.imageUrl(),
-            updateInfo.locationConsentAgreed(),
-            updateInfo.latitude(),
-            updateInfo.longitude()
-        ));
+    private LockerReportImageMetadata readImageMetadata(String imageUrl) {
+        return imageMetadataReader.readMetadata(imageUrl);
     }
 
-    @Override
-    public void delete(Long userId, Long reportId) {
-        LockerReportEntity report = lockerReportRepository.findActiveByIdAndUserId(reportId, userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_REPORT_NOT_FOUND));
-
-        report.delete();
-    }
-
-    private GroundLevelType toGroundLevelType(String groundLevelType) {
-        if (groundLevelType == null || groundLevelType.isBlank()) {
-            return null;
-        }
-        return GroundLevelType.valueOf(groundLevelType);
-    }
-
-    private Set<LockerSizeType> toLockerSize(List<String> sizeTypes) {
-        if (sizeTypes == null || sizeTypes.isEmpty()) {
-            return Set.of();
-        }
-        return sizeTypes.stream()
-            .map(LockerSizeType::from)
-            .collect(Collectors.toUnmodifiableSet());
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

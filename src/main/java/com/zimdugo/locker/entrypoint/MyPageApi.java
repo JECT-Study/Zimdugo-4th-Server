@@ -2,7 +2,6 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.common.security.CurrentUser;
 import com.zimdugo.core.response.RestResponse;
-import com.zimdugo.locker.entrypoint.dto.request.report.LockerReportCreateRequest;
 import com.zimdugo.locker.entrypoint.dto.response.mypage.MyLockerReportDetailResponse;
 import com.zimdugo.locker.entrypoint.dto.response.mypage.MyLockerReportHistoryResponse;
 import com.zimdugo.locker.entrypoint.dto.response.mypage.MyPageSummaryResponse;
@@ -12,19 +11,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.PutMapping;
 
 @Tag(name = "My Page", description = "마이페이지 요약 및 제보 히스토리 관리 API")
 public interface MyPageApi {
@@ -85,43 +80,6 @@ public interface MyPageApi {
     })
     @GetMapping("/me/locker-reports/{reportId}")
     ResponseEntity<RestResponse<MyLockerReportDetailResponse>> getMyLockerReport(
-        @CurrentUser Long userId,
-        @PathVariable("reportId")
-        @Parameter(description = "제보 ID", example = "10")
-        @Positive
-        Long reportId
-    );
-
-    @Operation(
-        summary = "내 제보 수정",
-        description = "로그인한 사용자의 제보를 수정합니다."
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "내 제보 수정 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인이 필요합니다."),
-        @ApiResponse(responseCode = "404", description = "제보를 찾을 수 없습니다.")
-    })
-    @PutMapping("/me/locker-reports/{reportId}")
-    ResponseEntity<RestResponse<Void>> updateMyLockerReport(
-        @CurrentUser Long userId,
-        @PathVariable("reportId")
-        @Parameter(description = "제보 ID", example = "10")
-        @Positive
-        Long reportId,
-        @Valid @RequestBody LockerReportCreateRequest request
-    );
-
-    @Operation(
-        summary = "내 제보 삭제",
-        description = "로그인한 사용자의 제보를 삭제합니다."
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "내 제보 삭제 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인이 필요합니다."),
-        @ApiResponse(responseCode = "404", description = "제보를 찾을 수 없습니다.")
-    })
-    @DeleteMapping("/me/locker-reports/{reportId}")
-    ResponseEntity<RestResponse<Void>> deleteMyLockerReport(
         @CurrentUser Long userId,
         @PathVariable("reportId")
         @Parameter(description = "제보 ID", example = "10")
