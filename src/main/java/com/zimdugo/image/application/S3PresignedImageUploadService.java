@@ -43,11 +43,12 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         UploadCategory category,
         String originalFileName,
         String contentType,
+        Long contentLength,
         Long userId
     ) {
         validateConfiguration();
         String normalizedContentType = normalizeContentType(contentType);
-        validateRequest(category, originalFileName, normalizedContentType, userId);
+        validateRequest(category, originalFileName, normalizedContentType, contentLength, userId);
 
         String extension = extractExtension(originalFileName);
         String key = createKey(category, extension, userId);
@@ -57,6 +58,7 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
             .bucket(properties.bucket())
             .key(key)
             .contentType(normalizedContentType)
+            .contentLength(contentLength)
             .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
@@ -78,6 +80,7 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         UploadCategory category,
         String originalFileName,
         String contentType,
+        Long contentLength,
         Long userId
     ) {
         if (category == null || originalFileName == null || originalFileName.isBlank()) {
@@ -87,6 +90,9 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
             throw new BusinessException(ErrorCode.UNSUPPORTED_IMAGE_TYPE);
         }
         if (category == UploadCategory.PROFILE && userId == null) {
+            throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
+        }
+        if (contentLength == null || contentLength <= 0 || contentLength > properties.maxUploadBytes()) {
             throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
 

@@ -28,6 +28,7 @@ public class ImageUploadController implements ImageUploadApi {
             request.category(),
             request.fileName(),
             request.contentType(),
+            request.contentLength(),
             userId
         );
 

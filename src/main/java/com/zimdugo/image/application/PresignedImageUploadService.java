@@ -6,6 +6,7 @@ public interface PresignedImageUploadService {
         UploadCategory category,
         String originalFileName,
         String contentType,
+        Long contentLength,
         Long userId
     );
 }
