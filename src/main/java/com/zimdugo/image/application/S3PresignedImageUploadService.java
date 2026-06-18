@@ -1,42 +1,23 @@
 package com.zimdugo.image.application;
 
+import com.zimdugo.common.storage.ImageUploadPolicy;
+import com.zimdugo.common.storage.PresignedUpload;
+import com.zimdugo.common.storage.S3ImagePathResolver;
+import com.zimdugo.common.storage.S3PresignedUploadClient;
+import com.zimdugo.common.storage.S3StorageProperties;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 @Service
 @RequiredArgsConstructor
 public class S3PresignedImageUploadService implements PresignedImageUploadService {
 
-    private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/heic",
-        "image/heif"
-    );
-
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
-        "jpg",
-        "jpeg",
-        "png",
-        "webp",
-        "heic",
-        "heif"
-    );
-
-    private final S3Presigner s3Presigner;
-    private final S3ImageProperties properties;
+    private final S3StorageProperties properties;
+    private final ImageUploadPolicy imageUploadPolicy;
+    private final S3ImagePathResolver pathResolver;
+    private final S3PresignedUploadClient presignedUploadClient;
 
     @Override
     public PresignedUploadResult createPresignedUpload(
@@ -46,48 +27,33 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         Long contentLength,
         Long userId
     ) {
-        validateConfiguration();
-        String normalizedContentType = normalizeContentType(contentType);
-        validateRequest(category, originalFileName, normalizedContentType, contentLength, userId);
+        validateRequest(category, originalFileName, contentLength, userId);
 
-        String extension = extractExtension(originalFileName);
+        String normalizedContentType = imageUploadPolicy.validateContentType(contentType);
+        String extension = imageUploadPolicy.extractValidExtension(originalFileName);
         String key = createKey(category, extension, userId);
-        Instant expiresAt = Instant.now().plus(Duration.ofMinutes(properties.uploadExpirationMinutes()));
-
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-            .bucket(properties.bucket())
-            .key(key)
-            .contentType(normalizedContentType)
-            .contentLength(contentLength)
-            .build();
-
-        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-            .signatureDuration(Duration.ofMinutes(properties.uploadExpirationMinutes()))
-            .putObjectRequest(putObjectRequest)
-            .build();
-
-        PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
+        PresignedUpload upload = presignedUploadClient.createPresignedPutObject(
+            key,
+            normalizedContentType,
+            contentLength
+        );
 
         return new PresignedUploadResult(
-            presignedRequest.url().toString(),
-            buildPublicUrl(key),
-            key,
-            expiresAt
+            upload.uploadUrl(),
+            upload.fileUrl(),
+            upload.key(),
+            upload.expiresAt()
         );
     }
 
     private void validateRequest(
         UploadCategory category,
         String originalFileName,
-        String contentType,
         Long contentLength,
         Long userId
     ) {
         if (category == null || originalFileName == null || originalFileName.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
-        }
-        if (contentType == null || !ALLOWED_IMAGE_CONTENT_TYPES.contains(contentType)) {
-            throw new BusinessException(ErrorCode.UNSUPPORTED_IMAGE_TYPE);
         }
         if (category == UploadCategory.PROFILE && userId == null) {
             throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
@@ -95,50 +61,12 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         if (contentLength == null || contentLength <= 0 || contentLength > properties.maxUploadBytes()) {
             throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
-
-        String extension = extractExtension(originalFileName);
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new BusinessException(ErrorCode.INVALID_IMAGE_EXTENSION);
-        }
-    }
-
-    private String normalizeContentType(String contentType) {
-        if (contentType == null) {
-            return null;
-        }
-        return contentType.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private void validateConfiguration() {
-        if (properties.bucket() == null || properties.bucket().isBlank()) {
-            throw new BusinessException(ErrorCode.IMAGE_STORAGE_CONFIGURATION_MISSING);
-        }
-        if (properties.publicBaseUrl() == null || properties.publicBaseUrl().isBlank()) {
-            throw new BusinessException(ErrorCode.IMAGE_STORAGE_CONFIGURATION_MISSING);
-        }
-    }
-
-    private String extractExtension(String originalFileName) {
-        int extensionIndex = originalFileName.lastIndexOf('.');
-        if (extensionIndex < 0 || extensionIndex == originalFileName.length() - 1) {
-            throw new BusinessException(ErrorCode.INVALID_IMAGE_EXTENSION);
-        }
-
-        return originalFileName.substring(extensionIndex + 1).toLowerCase(Locale.ROOT);
     }
 
     private String createKey(UploadCategory category, String extension, Long userId) {
-        String uuid = UUID.randomUUID().toString();
-
         return switch (category) {
-            case PROFILE -> "profiles/" + userId + "/" + uuid + "." + extension;
-            case LOCKER_REPORT -> "reports/" + uuid + "." + extension;
+            case PROFILE -> pathResolver.createProfileImageKey(userId, extension);
+            case LOCKER_REPORT -> pathResolver.createReportImageKey(extension);
         };
-    }
-
-    private String buildPublicUrl(String key) {
-        String baseUrl = properties.publicBaseUrl();
-        String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-        return normalizedBaseUrl + "/" + key;
     }
 }

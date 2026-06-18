@@ -11,6 +11,9 @@ import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.exif.GpsDirectory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zimdugo.common.storage.ImageUploadPolicy;
+import com.zimdugo.common.storage.S3ImagePathResolver;
+import com.zimdugo.common.storage.S3StorageProperties;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.core.exception.ExternalApiException;
@@ -24,10 +27,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -42,30 +42,25 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 public class S3LockerReportImageMetadataReader implements LockerReportImageMetadataReader {
 
     private static final int HTTP_NOT_FOUND = 404;
-    private static final String REPORT_IMAGE_KEY_PREFIX = "reports/";
-    private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/heic",
-        "image/heif"
-    );
 
     private final S3Client s3Client;
     private final ObjectMapper objectMapper;
-    private final String bucket;
-    private final String publicBaseUrl;
+    private final S3StorageProperties properties;
+    private final ImageUploadPolicy imageUploadPolicy;
+    private final S3ImagePathResolver pathResolver;
 
     public S3LockerReportImageMetadataReader(
         S3Client s3Client,
         ObjectMapper objectMapper,
-        @Value("${storage.s3.bucket}") String bucket,
-        @Value("${storage.s3.public-base-url}") String publicBaseUrl
+        S3StorageProperties properties,
+        ImageUploadPolicy imageUploadPolicy,
+        S3ImagePathResolver pathResolver
     ) {
         this.s3Client = s3Client;
         this.objectMapper = objectMapper;
-        this.bucket = bucket;
-        this.publicBaseUrl = normalizeBaseUrl(publicBaseUrl);
+        this.properties = properties;
+        this.imageUploadPolicy = imageUploadPolicy;
+        this.pathResolver = pathResolver;
     }
 
     @Override
@@ -74,14 +69,14 @@ public class S3LockerReportImageMetadataReader implements LockerReportImageMetad
             return LockerReportImageMetadata.empty();
         }
 
-        String key = resolveKey(imageUrl);
+        String key = pathResolver.resolveReportImageKey(imageUrl);
         GetObjectRequest request = GetObjectRequest.builder()
-            .bucket(bucket)
+            .bucket(properties.bucket())
             .key(key)
             .build();
 
         try (ResponseInputStream<GetObjectResponse> inputStream = s3Client.getObject(request)) {
-            validateContentType(inputStream.response().contentType());
+            imageUploadPolicy.validateContentType(inputStream.response().contentType());
             Metadata metadata = parseMetadata(inputStream);
             return buildImageMetadata(metadata);
         } catch (NoSuchKeyException e) {
@@ -170,41 +165,6 @@ public class S3LockerReportImageMetadataReader implements LockerReportImageMetad
         return date.toInstant()
             .atZone(SEOUL_ZONE)
             .toLocalDateTime();
-    }
-
-    private String resolveKey(String imageUrl) {
-        String normalizedUrl = imageUrl.trim();
-        String requiredPrefix = publicBaseUrl + "/";
-        if (!normalizedUrl.startsWith(requiredPrefix)) {
-            throw new BusinessException(ErrorCode.INVALID_IMAGE_URL);
-        }
-
-        String key = normalizedUrl.substring(requiredPrefix.length());
-        if (key.isBlank() || !key.startsWith(REPORT_IMAGE_KEY_PREFIX)) {
-            throw new BusinessException(ErrorCode.INVALID_IMAGE_URL);
-        }
-        return key;
-    }
-
-    private void validateContentType(String contentType) {
-        if (contentType == null || contentType.isBlank()) {
-            throw new BusinessException(ErrorCode.UNSUPPORTED_IMAGE_TYPE);
-        }
-        String normalizedContentType = contentType.trim().toLowerCase(Locale.ROOT);
-        if (!ALLOWED_IMAGE_CONTENT_TYPES.contains(normalizedContentType)) {
-            throw new BusinessException(ErrorCode.UNSUPPORTED_IMAGE_TYPE);
-        }
-    }
-
-    private String normalizeBaseUrl(String baseUrl) {
-        if (baseUrl == null || baseUrl.isBlank()) {
-            throw new BusinessException(ErrorCode.IMAGE_STORAGE_CONFIGURATION_MISSING);
-        }
-        String trimmed = baseUrl.trim();
-        if (trimmed.endsWith("/")) {
-            return trimmed.substring(0, trimmed.length() - 1);
-        }
-        return trimmed;
     }
 
     private List<MetadataEntry> toEntries(Metadata metadata) {
