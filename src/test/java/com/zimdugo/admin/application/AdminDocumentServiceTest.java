@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +35,9 @@ class AdminDocumentServiceTest {
 
     @Autowired
     private AdminDocumentRepository adminDocumentRepository;
+
+    @MockitoBean
+    private AdminNoticeImageValidator adminNoticeImageValidator;
 
     @Test
     @DisplayName("새로운 문서를 저장할 때 1:N 관계의 덩어리(Section)들도 함께 저장된다")

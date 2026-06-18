@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminDocumentService {
 
     private final AdminDocumentRepository adminDocumentRepository;
+    private final AdminNoticeImageValidator adminNoticeImageValidator;
 
     public List<AdminDocument> getDocumentsByType(DocumentType type) {
         return adminDocumentRepository.findByType(type);
@@ -63,6 +64,7 @@ public class AdminDocumentService {
 
     @Transactional
     public AdminDocument createDocument(AdminDocumentForm form) {
+        adminNoticeImageValidator.validate(form.getImageUrl());
         AdminDocument document = form.toEntity();
         return adminDocumentRepository.save(document);
     }
@@ -85,6 +87,7 @@ public class AdminDocumentService {
             }
         }
         
+        adminNoticeImageValidator.validate(form.getImageUrl());
         document.update(form.getTitle(), form.getImageUrl(), newSections);
         if (document.isActive()) {
             document.deactivate();

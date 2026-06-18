@@ -39,7 +39,7 @@ public class S3ImagePathResolver {
         return key;
     }
 
-    private String resolveKey(String imageUrl) {
+    public String resolveKey(String imageUrl) {
         String normalizedUrl = imageUrl.trim();
         String requiredPrefix = properties.normalizedPublicBaseUrl() + "/";
         if (!normalizedUrl.startsWith(requiredPrefix)) {
