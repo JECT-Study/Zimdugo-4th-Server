@@ -70,3 +70,7 @@ storage:
     public-base-url: https://test-cdn.example.com
     upload-expiration-minutes: 10
     max-upload-bytes: 10485760
+
+admin:
+  notice-image:
+    required-width-pixels: 1080

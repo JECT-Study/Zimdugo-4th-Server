@@ -61,6 +61,7 @@ public enum ErrorCode implements BaseCode {
     INVALID_IMAGE_EXTENSION("IMAGE-400-2", "이미지 파일 확장자가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     IMAGE_METADATA_PARSE_FAILED("IMAGE-400-3", "이미지 메타데이터를 해석할 수 없습니다.", HttpStatus.BAD_REQUEST),
     INVALID_IMAGE_URL("IMAGE-400-4", "이미지 URL이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_IMAGE_WIDTH("IMAGE-400-5", "이미지 가로 크기가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     IMAGE_STORAGE_CONFIGURATION_MISSING("IMAGE-500-1", "이미지 저장소 설정이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     IMAGE_STORAGE_READ_FAILED("IMAGE-500-2", "이미지 저장소에서 파일을 읽을 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
