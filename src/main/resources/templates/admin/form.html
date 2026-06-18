@@ -158,6 +158,76 @@
         }
 
         .section-heading i { color: #4f46e5; }
+
+        /* 이미지 업로드 영역 */
+        .image-upload-wrapper {
+            border: 2px dashed #d4d4d4;
+            border-radius: 8px;
+            background: #fafafa;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .image-upload-wrapper:hover, .image-upload-wrapper.dragover {
+            border-color: #4f46e5;
+            background: #f8f7ff;
+        }
+        .upload-icon {
+            font-size: 2rem;
+            color: #4f46e5;
+            margin-bottom: 0.5rem;
+        }
+        .image-preview-container {
+            position: relative;
+            margin-top: 1rem;
+            display: inline-block;
+            max-width: 100%;
+        }
+        .image-preview {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 6px;
+            border: 1px solid #e5e5e5;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .btn-remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc2626;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background 0.15s;
+        }
+        .btn-remove-image:hover {
+            background: #b91c1c;
+        }
+        .progress-bar-wrapper {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            height: 8px;
+            margin-top: 0.75rem;
+            display: none;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: #4f46e5;
+            height: 100%;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
     </style>
 
     <div class="page-header">
@@ -185,12 +255,41 @@
                 <span class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">제목 에러</span>
             </div>
 
-            <!-- 공지 이미지 URL 입력 (NOTICE 타입일 때만 표시) -->
+            <!-- 공지 이미지 파일 첨부 (NOTICE 타입일 때만 표시) -->
             <div class="form-group" th:if="${form.type.name() == 'NOTICE'}">
-                <label for="imageUrlInput" class="form-label">공지 이미지 URL</label>
-                <input type="text" id="imageUrlInput" th:field="*{imageUrl}" class="form-control"
-                       placeholder="Presigned 업로드 후 반환된 이미지 URL을 입력해 주세요. (선택)">
-                <span style="display: block; margin-top: 0.35rem; font-size: 0.78rem; color: #6b7280;">
+                <label class="form-label">공지 이미지</label>
+
+                <!-- 실제 저장되는 이미지 URL (히든 필드) -->
+                <input type="hidden" id="imageUrlInput" th:field="*{imageUrl}">
+
+                <!-- 드래그앤드롭 및 업로드 영역 -->
+                <div class="image-upload-wrapper" id="dropZone" onclick="document.getElementById('imageFileInput').click()">
+                    <div class="upload-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <p style="font-size: 0.85rem; font-weight: 600; color: #4b5563;">파일을 드래그하거나 클릭하여 업로드하세요</p>
+                    <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">지원 파일: JPG, PNG, WEBP (가로 1080px 권장)</p>
+                    
+                    <!-- 숨겨진 파일 인풋 -->
+                    <input type="file" id="imageFileInput" style="display: none;" accept="image/jpeg, image/png, image/webp" onchange="handleFileSelect(this.files)">
+                </div>
+
+                <!-- 프로그레스 바 -->
+                <div class="progress-bar-wrapper" id="uploadProgressBarWrapper">
+                    <div class="progress-bar" id="uploadProgressBar"></div>
+                </div>
+
+                <!-- 미리보기 영역 -->
+                <div id="previewWrapper" th:style="${form.imageUrl != null && !form.imageUrl.isEmpty()} ? 'display: block; margin-top: 1rem;' : 'display: none; margin-top: 1rem;'">
+                    <div class="image-preview-container">
+                        <img id="imagePreview" th:src="${form.imageUrl}" class="image-preview" alt="공지 이미지 미리보기">
+                        <button type="button" class="btn-remove-image" onclick="clearSelectedImage()" title="이미지 삭제">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <span style="display: block; margin-top: 0.5rem; font-size: 0.78rem; color: #6b7280;">
                     <i class="fa-solid fa-circle-info" style="color: #4f46e5; margin-right: 0.2rem;"></i>
                     이미지 가로 크기는 <strong>1080px</strong>이어야 합니다. 다른 크기의 이미지는 저장 시 검증에 실패합니다.
                 </span>
@@ -357,6 +456,136 @@
                     if (contentInput.id) contentInput.id = `sections${index}.content`;
                 }
             });
+        }
+
+        // --- 이미지 파일 비동기 S3 업로드 설정 ---
+        const dropZone = document.getElementById('dropZone');
+        if (dropZone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    dropZone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', e => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFileSelect(files);
+            }, false);
+        }
+
+        function handleFileSelect(files) {
+            if (files.length === 0) return;
+            const file = files[0];
+
+            // 이미지 유형 검증
+            if (!file.type.match('image.*')) {
+                alert("이미지 파일만 업로드할 수 있습니다.");
+                return;
+            }
+
+            uploadImageFile(file);
+        }
+
+        async function uploadImageFile(file) {
+            const csrfTokenElement = document.querySelector('meta[name="_csrf"]');
+            const csrfHeaderElement = document.querySelector('meta[name="_csrf_header"]');
+
+            if (!csrfTokenElement || !csrfHeaderElement) {
+                alert("CSRF 토큰 메타 정보가 누락되어 업로드 요청을 수행할 수 없습니다.");
+                return;
+            }
+
+            const csrfToken = csrfTokenElement.getAttribute('content');
+            const csrfHeader = csrfHeaderElement.getAttribute('content');
+
+            const requestBody = {
+                category: 'NOTICE_IMAGE',
+                fileName: file.name,
+                contentType: file.type,
+                contentLength: file.size
+            };
+
+            const progressWrapper = document.getElementById('uploadProgressBarWrapper');
+            const progressBar = document.getElementById('uploadProgressBar');
+            progressWrapper.style.display = 'block';
+            progressBar.style.width = '0%';
+
+            try {
+                // 1. Presigned URL 발급 요청
+                const response = await fetch('/admin/api/uploads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Presigned URL 생성에 실패했습니다.');
+                }
+
+                const resJson = await response.json();
+                const uploadData = resJson.data;
+
+                // 2. S3 PUT 업로드 실행
+                const uploadXhr = new XMLHttpRequest();
+                uploadXhr.open('PUT', uploadData.uploadUrl, true);
+                uploadXhr.setRequestHeader('Content-Type', file.type);
+
+                uploadXhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                    }
+                };
+
+                uploadXhr.onload = function() {
+                    if (uploadXhr.status === 200) {
+                        progressBar.style.width = '100%';
+                        setTimeout(() => {
+                            progressWrapper.style.display = 'none';
+                        }, 500);
+
+                        // 히든 필드 및 이미지 프리뷰 갱신
+                        document.getElementById('imageUrlInput').value = uploadData.fileUrl;
+                        const preview = document.getElementById('imagePreview');
+                        preview.src = uploadData.fileUrl;
+                        document.getElementById('previewWrapper').style.display = 'block';
+                    } else {
+                        alert('이미지 S3 업로드 실패 (HTTP ' + uploadXhr.status + ')');
+                        progressWrapper.style.display = 'none';
+                    }
+                };
+
+                uploadXhr.onerror = function() {
+                    alert('업로드 중 네트워크 오류가 발생했습니다.');
+                    progressWrapper.style.display = 'none';
+                };
+
+                uploadXhr.send(file);
+
+            } catch (error) {
+                alert('업로드 처리 에러: ' + error.message);
+                progressWrapper.style.display = 'none';
+            }
+        }
+
+        function clearSelectedImage() {
+            document.getElementById('imageUrlInput').value = '';
+            document.getElementById('previewWrapper').style.display = 'none';
+            const fileInput = document.getElementById('imageFileInput');
+            if (fileInput) fileInput.value = '';
         }
     </script>
 </main>
