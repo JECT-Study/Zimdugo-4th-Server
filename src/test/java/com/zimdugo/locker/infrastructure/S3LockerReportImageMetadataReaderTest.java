@@ -7,6 +7,9 @@ import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zimdugo.common.storage.ImageUploadPolicy;
+import com.zimdugo.common.storage.S3ImagePathResolver;
+import com.zimdugo.common.storage.S3StorageProperties;
 import com.drew.lang.Rational;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
@@ -39,12 +42,7 @@ class S3LockerReportImageMetadataReaderTest {
     void readMetadataFromReportImage() throws Exception {
         given(s3Client.getObject(any(software.amazon.awssdk.services.s3.model.GetObjectRequest.class)))
             .willReturn(responseInputStream(jpegWithExifMake()));
-        S3LockerReportImageMetadataReader reader = new S3LockerReportImageMetadataReader(
-            s3Client,
-            objectMapper,
-            "test-bucket",
-            PUBLIC_BASE_URL
-        );
+        S3LockerReportImageMetadataReader reader = reader();
 
         LockerReportImageMetadata metadata = reader.readMetadata(PUBLIC_BASE_URL + "/reports/test.jpg");
 
@@ -87,8 +85,9 @@ class S3LockerReportImageMetadataReaderTest {
         S3LockerReportImageMetadataReader reader = new S3LockerReportImageMetadataReader(
             s3Client,
             objectMapper,
-            "test-bucket",
-            PUBLIC_BASE_URL
+            properties(),
+            new ImageUploadPolicy(),
+            pathResolver()
         ) {
             @Override
             protected Metadata parseMetadata(java.io.InputStream inputStream) {
@@ -106,12 +105,7 @@ class S3LockerReportImageMetadataReaderTest {
 
     @Test
     void rejectExternalImageUrl() {
-        S3LockerReportImageMetadataReader reader = new S3LockerReportImageMetadataReader(
-            s3Client,
-            objectMapper,
-            "test-bucket",
-            PUBLIC_BASE_URL
-        );
+        S3LockerReportImageMetadataReader reader = reader();
 
         assertThatThrownBy(() -> reader.readMetadata("https://evil.example.com/reports/test.jpg"))
             .isInstanceOf(BusinessException.class);
@@ -119,12 +113,7 @@ class S3LockerReportImageMetadataReaderTest {
 
     @Test
     void rejectNonReportImageUrl() {
-        S3LockerReportImageMetadataReader reader = new S3LockerReportImageMetadataReader(
-            s3Client,
-            objectMapper,
-            "test-bucket",
-            PUBLIC_BASE_URL
-        );
+        S3LockerReportImageMetadataReader reader = reader();
 
         assertThatThrownBy(() -> reader.readMetadata(PUBLIC_BASE_URL + "/profiles/1/test.jpg"))
             .isInstanceOf(BusinessException.class);
@@ -134,12 +123,7 @@ class S3LockerReportImageMetadataReaderTest {
     void rejectUnsupportedS3ContentType() {
         given(s3Client.getObject(any(software.amazon.awssdk.services.s3.model.GetObjectRequest.class)))
             .willReturn(responseInputStream(new byte[]{0x00}, "text/plain"));
-        S3LockerReportImageMetadataReader reader = new S3LockerReportImageMetadataReader(
-            s3Client,
-            objectMapper,
-            "test-bucket",
-            PUBLIC_BASE_URL
-        );
+        S3LockerReportImageMetadataReader reader = reader();
 
         assertThatThrownBy(() -> reader.readMetadata(PUBLIC_BASE_URL + "/reports/test.jpg"))
             .isInstanceOf(BusinessException.class);
@@ -147,6 +131,30 @@ class S3LockerReportImageMetadataReaderTest {
 
     private ResponseInputStream<GetObjectResponse> responseInputStream(byte[] bytes) {
         return responseInputStream(bytes, "image/jpeg");
+    }
+
+    private S3LockerReportImageMetadataReader reader() {
+        return new S3LockerReportImageMetadataReader(
+            s3Client,
+            objectMapper,
+            properties(),
+            new ImageUploadPolicy(),
+            pathResolver()
+        );
+    }
+
+    private S3ImagePathResolver pathResolver() {
+        return new S3ImagePathResolver(properties());
+    }
+
+    private S3StorageProperties properties() {
+        return new S3StorageProperties(
+            "ap-northeast-2",
+            "test-bucket",
+            PUBLIC_BASE_URL,
+            10,
+            10_485_760
+        );
     }
 
     private ResponseInputStream<GetObjectResponse> responseInputStream(byte[] bytes, String contentType) {
