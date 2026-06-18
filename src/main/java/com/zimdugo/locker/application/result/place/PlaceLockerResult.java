@@ -3,7 +3,7 @@ package com.zimdugo.locker.application.result.place;
 import com.zimdugo.locker.application.result.GeoBoundsUtils;
 import com.zimdugo.locker.application.result.LockerBoundsResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
-import com.zimdugo.locker.domain.LockerPlace;
+import com.zimdugo.locker.domain.place.LockerPlace;
 import java.util.List;
 
 public record PlaceLockerResult(

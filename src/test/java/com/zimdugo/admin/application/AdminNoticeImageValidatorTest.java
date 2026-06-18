@@ -3,6 +3,7 @@ package com.zimdugo.admin.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -49,7 +50,7 @@ class AdminNoticeImageValidatorTest {
 
         validator.validate(" ");
 
-        verify(imageDimensionReader, never()).readWidth(org.mockito.ArgumentMatchers.anyString());
+        verify(imageDimensionReader, never()).readWidth(anyString());
     }
 
     private AdminNoticeImageValidator validator() {

@@ -1,5 +1,8 @@
 package com.zimdugo.user.entrypoint;
 
+import com.zimdugo.user.entrypoint.dto.request.UserProfileUpdateRequest;
+import com.zimdugo.user.entrypoint.dto.response.UserProfileResponse;
+
 import com.zimdugo.common.security.CurrentUser;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;

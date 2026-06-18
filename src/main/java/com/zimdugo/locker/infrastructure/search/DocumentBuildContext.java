@@ -1,6 +1,6 @@
 package com.zimdugo.locker.infrastructure.search;
 
-import com.zimdugo.locker.infrastructure.LockerSuggestIndexQueryProjection;
+import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

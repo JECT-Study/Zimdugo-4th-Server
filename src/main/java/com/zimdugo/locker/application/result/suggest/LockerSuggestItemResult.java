@@ -1,7 +1,7 @@
 package com.zimdugo.locker.application.result.suggest;
 
 import com.zimdugo.locker.application.result.LockerItemType;
-import com.zimdugo.locker.domain.LockerSuggestCandidate;
+import com.zimdugo.locker.domain.search.LockerSuggestCandidate;
 import java.time.LocalDateTime;
 
 public record LockerSuggestItemResult(

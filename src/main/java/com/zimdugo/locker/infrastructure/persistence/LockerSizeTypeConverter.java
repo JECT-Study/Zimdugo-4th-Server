@@ -1,10 +1,11 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
-import com.zimdugo.locker.domain.LockerSizeType;
+import com.zimdugo.locker.domain.locker.LockerSizeType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,7 +19,7 @@ public class LockerSizeTypeConverter implements AttributeConverter<Set<LockerSiz
         }
 
         return attribute.stream()
-            .filter(java.util.Objects::nonNull)
+            .filter(Objects::nonNull)
             .map(Enum::name)
             .sorted()
             .collect(Collectors.joining(","));

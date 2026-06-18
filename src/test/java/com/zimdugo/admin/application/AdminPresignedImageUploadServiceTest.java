@@ -2,6 +2,8 @@ package com.zimdugo.admin.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -27,9 +29,9 @@ class AdminPresignedImageUploadServiceTest {
     @Test
     void createPresignedUploadUsesAdminNoticeImageKey() {
         given(presignedUploadClient.createPresignedPutObject(
-            org.mockito.ArgumentMatchers.anyString(),
-            org.mockito.ArgumentMatchers.eq("image/png"),
-            org.mockito.ArgumentMatchers.eq(2048L)
+            anyString(),
+            eq("image/png"),
+            eq(2048L)
         )).willReturn(new PresignedUpload(
             "https://s3.example.com/upload",
             "https://cdn.example.com/admin/notice-images/test.png",
@@ -48,8 +50,8 @@ class AdminPresignedImageUploadServiceTest {
         ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
         verify(presignedUploadClient).createPresignedPutObject(
             keyCaptor.capture(),
-            org.mockito.ArgumentMatchers.eq("image/png"),
-            org.mockito.ArgumentMatchers.eq(2048L)
+            eq("image/png"),
+            eq(2048L)
         );
         assertThat(keyCaptor.getValue()).startsWith("admin/notice-images/");
         assertThat(upload.fileUrl()).startsWith("https://cdn.example.com/admin/notice-images/");

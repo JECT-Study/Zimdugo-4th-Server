@@ -1,6 +1,6 @@
 package com.zimdugo.locker.entrypoint.dto.request.report;
 
-import com.zimdugo.locker.application.LockerReportCreateCommand;
+import com.zimdugo.locker.application.report.LockerReportCreateCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;

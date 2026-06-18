@@ -3,7 +3,7 @@ package com.zimdugo.locker.entrypoint;
 import com.zimdugo.common.security.CurrentUser;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
-import com.zimdugo.locker.application.LockerVoteCommandService;
+import com.zimdugo.locker.application.vote.LockerVoteCommandService;
 import com.zimdugo.locker.entrypoint.dto.request.LockerVoteRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

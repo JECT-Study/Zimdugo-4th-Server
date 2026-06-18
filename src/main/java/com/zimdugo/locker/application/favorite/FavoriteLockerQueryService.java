@@ -1,0 +1,71 @@
+package com.zimdugo.locker.application.favorite;
+
+import com.zimdugo.locker.application.common.ActiveUserValidator;
+import com.zimdugo.locker.application.common.UserLocationResolver;
+
+import com.zimdugo.locker.application.result.favorite.FavoriteLockerListItemResult;
+import com.zimdugo.locker.application.result.favorite.FavoriteLockerListResult;
+import com.zimdugo.locker.domain.favorite.FavoriteLockerListItem;
+import com.zimdugo.locker.domain.favorite.FavoriteLockerListPage;
+import com.zimdugo.locker.domain.favorite.FavoriteLockerQueryReader;
+import java.util.Collections;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class FavoriteLockerQueryService {
+
+    private final FavoriteLockerQueryReader favoriteLockerQueryReader;
+    private final ActiveUserValidator activeUserValidator;
+
+    public FavoriteLockerListResult getFavoriteLockers(
+        Long userId,
+        Double latitude,
+        Double longitude,
+        int page,
+        int size
+    ) {
+        activeUserValidator.validate(userId);
+        UserLocationResolver.ResolvedLocation resolvedLocation = UserLocationResolver.resolve(latitude, longitude);
+
+        FavoriteLockerListPage result = favoriteLockerQueryReader.findAll(
+            userId,
+            resolvedLocation.latitude(),
+            resolvedLocation.longitude(),
+            page,
+            size
+        );
+
+        if (result.items().isEmpty()) {
+            return FavoriteLockerListResult.of(
+                Collections.emptyList(),
+                result.totalCount(),
+                result.hasNext()
+            );
+        }
+
+        List<FavoriteLockerListItemResult> items = result.items().stream()
+            .map(this::toResult)
+            .toList();
+
+        return FavoriteLockerListResult.of(items, result.totalCount(), result.hasNext());
+    }
+
+    private FavoriteLockerListItemResult toResult(FavoriteLockerListItem item) {
+        return new FavoriteLockerListItemResult(
+            item.lockerId(),
+            item.lockerName(),
+            item.roadAddress(),
+            item.lockerType(),
+            item.latitude(),
+            item.longitude(),
+            item.distanceMeters(),
+            item.updatedAt(),
+            true
+        );
+    }
+}

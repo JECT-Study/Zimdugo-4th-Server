@@ -1,7 +1,7 @@
 package com.zimdugo.auth.application;
 
-import com.zimdugo.auth.domain.OAuth2UserInfo;
-import com.zimdugo.auth.domain.OAuth2UserInfoFactory;
+import com.zimdugo.auth.domain.oauth2.OAuth2UserInfo;
+import com.zimdugo.auth.domain.oauth2.OAuth2UserInfoFactory;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.domain.SocialAccount;
 import com.zimdugo.user.domain.SocialAccountReader;

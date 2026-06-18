@@ -1,6 +1,6 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
-import com.zimdugo.locker.domain.LockerSizeType;
+import com.zimdugo.locker.domain.locker.LockerSizeType;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

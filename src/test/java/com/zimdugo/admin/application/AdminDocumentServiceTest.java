@@ -4,13 +4,14 @@ import com.zimdugo.admin.domain.AdminDocument;
 import com.zimdugo.admin.domain.AdminDocumentRepository;
 import com.zimdugo.admin.domain.AdminDocumentSection;
 import com.zimdugo.admin.domain.DocumentType;
-import com.zimdugo.admin.ui.dto.AdminDocumentForm;
-import com.zimdugo.admin.ui.dto.AdminDocumentTranslationRequest;
-import com.zimdugo.admin.ui.dto.AdminDocumentTranslationsResponse;
-import com.zimdugo.admin.ui.dto.ClientDocumentResponse;
+import com.zimdugo.admin.entrypoint.dto.AdminDocumentForm;
+import com.zimdugo.admin.entrypoint.dto.AdminDocumentTranslationRequest;
+import com.zimdugo.admin.application.dto.AdminDocumentTranslationsResult;
+import com.zimdugo.admin.application.dto.ClientDocumentResult;
 import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ class AdminDocumentServiceTest {
         // given
         AdminDocumentForm form = new AdminDocumentForm();
         form.setTitle("테스트 공지사항");
-        form.setType(DocumentType.NOTICE);
+        form.setType(DocumentType.NOTICE.name());
         form.setImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
 
         AdminDocumentForm.SectionForm sec1 = new AdminDocumentForm.SectionForm();
@@ -59,7 +60,7 @@ class AdminDocumentServiceTest {
         form.setSections(List.of(sec1, sec2));
 
         // when
-        AdminDocument saved = adminDocumentService.createDocument(form);
+        AdminDocument saved = adminDocumentService.createDocument(form.toCommand());
 
         // then
         assertThat(saved.getId()).isNotNull();
@@ -78,11 +79,11 @@ class AdminDocumentServiceTest {
     void createDocumentWithoutSections() {
         AdminDocumentForm form = new AdminDocumentForm();
         form.setTitle("이미지 공지");
-        form.setType(DocumentType.NOTICE);
+        form.setType(DocumentType.NOTICE.name());
         form.setImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
         form.setSections(List.of());
 
-        AdminDocument saved = adminDocumentService.createDocument(form);
+        AdminDocument saved = adminDocumentService.createDocument(form.toCommand());
 
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/notice.jpg");
@@ -95,7 +96,7 @@ class AdminDocumentServiceTest {
         // given
         AdminDocumentForm createForm = new AdminDocumentForm();
         createForm.setTitle("최초 공지");
-        createForm.setType(DocumentType.NOTICE);
+        createForm.setType(DocumentType.NOTICE.name());
         createForm.setImageUrl("https://cdn.example.com/admin/notice-images/old.jpg");
 
         AdminDocumentForm.SectionForm sec1 = new AdminDocumentForm.SectionForm();
@@ -103,7 +104,7 @@ class AdminDocumentServiceTest {
         sec1.setContent("구 내용");
         createForm.setSections(List.of(sec1));
 
-        AdminDocument saved = adminDocumentService.createDocument(createForm);
+        AdminDocument saved = adminDocumentService.createDocument(createForm.toCommand());
         Long docId = saved.getId();
 
         // 영속성 컨텍스트 초기화를 위해 레포지토리를 직접 다루거나 서비스를 호출하여 다시 로드
@@ -113,7 +114,7 @@ class AdminDocumentServiceTest {
         // when (수정 DTO 빌드)
         AdminDocumentForm updateForm = new AdminDocumentForm();
         updateForm.setTitle("수정된 공지");
-        updateForm.setType(DocumentType.NOTICE);
+        updateForm.setType(DocumentType.NOTICE.name());
         updateForm.setImageUrl("https://cdn.example.com/admin/notice-images/new.jpg");
 
         AdminDocumentForm.SectionForm newSec1 = new AdminDocumentForm.SectionForm();
@@ -126,7 +127,7 @@ class AdminDocumentServiceTest {
 
         updateForm.setSections(List.of(newSec1, newSec2));
 
-        AdminDocument updated = adminDocumentService.updateDocument(docId, updateForm);
+        AdminDocument updated = adminDocumentService.updateDocument(docId, updateForm.toCommand());
 
         // then
         assertThat(updated.getTitle()).isEqualTo("수정된 공지");
@@ -142,14 +143,14 @@ class AdminDocumentServiceTest {
         // given
         AdminDocumentForm form = new AdminDocumentForm();
         form.setTitle("삭제할 문서");
-        form.setType(DocumentType.PRIVACY);
+        form.setType(DocumentType.PRIVACY.name());
 
         AdminDocumentForm.SectionForm sec1 = new AdminDocumentForm.SectionForm();
         sec1.setSubtitle("약관 내용");
         sec1.setContent("중요 개인정보 처리 방침 본문");
         form.setSections(List.of(sec1));
 
-        AdminDocument saved = adminDocumentService.createDocument(form);
+        AdminDocument saved = adminDocumentService.createDocument(form.toCommand());
         Long docId = saved.getId();
 
         // when
@@ -235,11 +236,11 @@ class AdminDocumentServiceTest {
         // given
         AdminDocumentForm form = new AdminDocumentForm();
         form.setTitle("최초 생성");
-        form.setType(DocumentType.NOTICE);
-        AdminDocument doc = adminDocumentService.createDocument(form);
+        form.setType(DocumentType.NOTICE.name());
+        AdminDocument doc = adminDocumentService.createDocument(form.toCommand());
         addAllTranslations(doc);
         
-        java.time.LocalDateTime initialUpdatedAt = doc.getUpdatedAt();
+        LocalDateTime initialUpdatedAt = doc.getUpdatedAt();
         assertThat(doc.getAppliedAt()).isNull();
 
         Thread.sleep(10);
@@ -257,8 +258,8 @@ class AdminDocumentServiceTest {
         // when: 본문 내용 수정 실행
         AdminDocumentForm updateForm = new AdminDocumentForm();
         updateForm.setTitle("수정된 제목");
-        updateForm.setType(DocumentType.NOTICE);
-        adminDocumentService.updateDocument(doc.getId(), updateForm);
+        updateForm.setType(DocumentType.NOTICE.name());
+        adminDocumentService.updateDocument(doc.getId(), updateForm.toCommand());
 
         // then: updatedAt이 새롭게 갱신되어 초기 수정 시점보다 미래여야 함
         assertThat(doc.getUpdatedAt()).isAfter(initialUpdatedAt);
@@ -338,8 +339,8 @@ class AdminDocumentServiceTest {
         section1.upsertTranslation("ko", "한국어 소제목 1", "한국어 내용 1");
         section2.upsertTranslation("ko", "한국어 소제목 2", "한국어 내용 2");
 
-        ClientDocumentResponse response = adminDocumentService
-            .getLocalizedActiveDocumentsByType(DocumentType.NOTICE, SupportedLanguage.KOREAN)
+        ClientDocumentResult response = adminDocumentService
+            .getLocalizedActiveDocumentsByType(DocumentType.NOTICE.name(), SupportedLanguage.KOREAN)
             .getFirst();
 
         assertThat(response.getTitle()).isEqualTo("한국어 제목");
@@ -362,7 +363,7 @@ class AdminDocumentServiceTest {
         section.upsertTranslation("en", "English subtitle", "English content");
 
         assertThatThrownBy(() -> adminDocumentService
-            .getLocalizedActiveDocumentsByType(DocumentType.NOTICE, SupportedLanguage.JAPANESE))
+            .getLocalizedActiveDocumentsByType(DocumentType.NOTICE.name(), SupportedLanguage.JAPANESE))
             .isInstanceOfSatisfying(BusinessException.class, exception ->
                 assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.I18N_TRANSLATION_MISSING)
             );
@@ -384,15 +385,15 @@ class AdminDocumentServiceTest {
             "US title",
             sectionTranslation(section1.getId(), "US subtitle 1", "US content 1"),
             sectionTranslation(section2.getId(), "US subtitle 2", "US content 2")
-        ));
+        ).toCommand());
 
-        AdminDocumentTranslationsResponse response = adminDocumentService.putTranslation(
+        AdminDocumentTranslationsResult response = adminDocumentService.putTranslation(
             document.getId(),
             translationRequest(
                 "en",
                 "Updated US title",
                 sectionTranslation(section1.getId(), "Updated subtitle 1", "Updated content 1")
-            )
+            ).toCommand()
         );
 
         assertThat(response.getTranslations()).singleElement().satisfies(translation -> {
@@ -423,7 +424,7 @@ class AdminDocumentServiceTest {
 
         assertThatThrownBy(() -> adminDocumentService.putTranslation(
             document.getId(),
-            translationRequest("en", "Title", sectionTranslation(foreignSectionId, "Subtitle", "Content"))
+            translationRequest("en", "Title", sectionTranslation(foreignSectionId, "Subtitle", "Content")).toCommand()
         ))
             .isInstanceOfSatisfying(BusinessException.class, exception ->
                 assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_ADMIN_DOCUMENT_TRANSLATION)

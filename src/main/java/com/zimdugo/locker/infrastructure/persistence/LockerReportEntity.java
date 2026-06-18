@@ -2,13 +2,13 @@ package com.zimdugo.locker.infrastructure.persistence;
 
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.domain.IndoorOutdoorType;
-import com.zimdugo.locker.domain.LockerReportCreateInfo;
-import com.zimdugo.locker.domain.LockerReportOperatingTimeType;
-import com.zimdugo.locker.domain.LockerReportPriceType;
-import com.zimdugo.locker.domain.LockerReportStatus;
-import com.zimdugo.locker.domain.LockerSizeType;
-import com.zimdugo.locker.domain.LockerType;
+import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
+import com.zimdugo.locker.domain.report.LockerReportCreateInfo;
+import com.zimdugo.locker.domain.report.LockerReportOperatingTimeType;
+import com.zimdugo.locker.domain.report.LockerReportPriceType;
+import com.zimdugo.locker.domain.report.LockerReportStatus;
+import com.zimdugo.locker.domain.locker.LockerSizeType;
+import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -31,7 +31,9 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -85,7 +87,7 @@ public class LockerReportEntity {
     @Convert(converter = LockerSizeTypeConverter.class)
     @Column(length = 100)
     @Builder.Default
-    private java.util.Set<LockerSizeType> lockerSize = java.util.Set.of();
+    private Set<LockerSizeType> lockerSize = Set.of();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -220,13 +222,13 @@ public class LockerReportEntity {
         }
     }
 
-    private static Set<LockerSizeType> toLockerSize(java.util.List<String> sizeTypes) {
+    private static Set<LockerSizeType> toLockerSize(List<String> sizeTypes) {
         if (sizeTypes == null || sizeTypes.isEmpty()) {
             return Set.of();
         }
         return sizeTypes.stream()
             .map(LockerSizeType::from)
-            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+            .collect(Collectors.toUnmodifiableSet());
     }
 
 

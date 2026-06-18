@@ -3,10 +3,12 @@ package com.zimdugo.architecture;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import jakarta.persistence.Entity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.bind.annotation.RestController;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -80,7 +82,7 @@ class LayerDependencyTest {
         @DisplayName("@RestController는 entrypoint 패키지 혹은 admin 패키지에 위치한다")
         void rest_controllers_should_reside_in_entrypoint_or_admin() {
             classes()
-                .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
+                .that().areAnnotatedWith(RestController.class)
                 .should().resideInAnyPackage("..entrypoint..", "..admin..")
                 .allowEmptyShould(true)
                 .check(importedClasses);
@@ -91,7 +93,7 @@ class LayerDependencyTest {
 
         void entities_should_reside_in_infrastructure_or_admin() {
             classes()
-                .that().areAnnotatedWith("jakarta.persistence.Entity")
+                .that().areAnnotatedWith(Entity.class)
                 .should().resideInAnyPackage("..infrastructure..", "..admin..")
                 .allowEmptyShould(true)
                 .check(importedClasses);

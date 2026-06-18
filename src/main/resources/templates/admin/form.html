@@ -232,10 +232,10 @@
 
     <div class="page-header">
         <div>
-            <div class="page-header type-label" th:text="${form.type.description}">TYPE</div>
+            <div class="page-header type-label" th:text="${form.typeDescription}">TYPE</div>
             <h1 th:text="${isEdit} ? '문서 수정' : '새 문서 등록'">문서 편집</h1>
         </div>
-        <a th:href="@{/admin/documents(type=${form.type.name()})}" class="btn btn-secondary">
+        <a th:href="@{/admin/documents(type=${form.type})}" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> 목록으로
         </a>
     </div>
@@ -256,7 +256,7 @@
             </div>
 
             <!-- 공지 이미지 파일 첨부 (NOTICE 타입일 때만 표시) -->
-            <div class="form-group" th:if="${form.type.name() == 'NOTICE'}">
+            <div class="form-group" th:if="${form.type == 'NOTICE'}">
                 <label class="form-label">공지 이미지</label>
 
                 <!-- 실제 저장되는 이미지 URL (히든 필드) -->
@@ -344,7 +344,7 @@
 
             <!-- 하단 액션 버튼 -->
             <div class="form-actions">
-                <a th:href="@{/admin/documents(type=${form.type.name()})}" class="btn btn-secondary">취소</a>
+                <a th:href="@{/admin/documents(type=${form.type})}" class="btn btn-secondary">취소</a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fa-solid fa-floppy-disk"></i> 저장하기
                 </button>
