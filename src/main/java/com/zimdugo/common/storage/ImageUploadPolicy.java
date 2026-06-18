@@ -42,6 +42,9 @@ public class ImageUploadPolicy {
     }
 
     public String extractValidExtension(String originalFileName) {
+        if (originalFileName == null || originalFileName.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_IMAGE_EXTENSION);
+        }
         int extensionIndex = originalFileName.lastIndexOf('.');
         if (extensionIndex < 0 || extensionIndex == originalFileName.length() - 1) {
             throw new BusinessException(ErrorCode.INVALID_IMAGE_EXTENSION);
