@@ -185,6 +185,18 @@
                 <span class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">제목 에러</span>
             </div>
 
+            <!-- 공지 이미지 URL 입력 (NOTICE 타입일 때만 표시) -->
+            <div class="form-group" th:if="${form.type.name() == 'NOTICE'}">
+                <label for="imageUrlInput" class="form-label">공지 이미지 URL</label>
+                <input type="text" id="imageUrlInput" th:field="*{imageUrl}" class="form-control"
+                       placeholder="Presigned 업로드 후 반환된 이미지 URL을 입력해 주세요. (선택)">
+                <span style="display: block; margin-top: 0.35rem; font-size: 0.78rem; color: #6b7280;">
+                    <i class="fa-solid fa-circle-info" style="color: #4f46e5; margin-right: 0.2rem;"></i>
+                    이미지 가로 크기는 <strong>1080px</strong>이어야 합니다. 다른 크기의 이미지는 저장 시 검증에 실패합니다.
+                </span>
+                <span class="error-message" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}">이미지 URL 에러</span>
+            </div>
+
             <!-- 소제목 & 내용 섹션 영역 -->
             <div class="section-heading">
                 <i class="fa-solid fa-layer-group"></i> 소제목 &amp; 내용
