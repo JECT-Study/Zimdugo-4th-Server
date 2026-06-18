@@ -33,6 +33,7 @@ class ClientDocumentResponseTest {
             .active(true)
             .sections(List.of(section1, section2))
             .build();
+        document.updateImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
         document.upsertTranslation("ko", "테스트 문서 제목");
         section1.upsertTranslation("ko", "소제목 1", "내용 1");
         section2.upsertTranslation("ko", "소제목 2", "내용 2");
@@ -44,6 +45,7 @@ class ClientDocumentResponseTest {
         assertThat(response.getId()).isNull();
         assertThat(response.getTitle()).isEqualTo("테스트 문서 제목");
         assertThat(response.getType()).isEqualTo(DocumentType.NOTICE);
+        assertThat(response.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/notice.jpg");
         assertThat(response.getSections()).hasSize(2);
 
         ClientDocumentResponse.SectionResponse secResp1 = response.getSections().get(0);

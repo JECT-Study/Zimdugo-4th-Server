@@ -85,7 +85,7 @@ public class AdminDocumentService {
             }
         }
         
-        document.update(form.getTitle(), newSections);
+        document.update(form.getTitle(), form.getImageUrl(), newSections);
         if (document.isActive()) {
             document.deactivate();
         }

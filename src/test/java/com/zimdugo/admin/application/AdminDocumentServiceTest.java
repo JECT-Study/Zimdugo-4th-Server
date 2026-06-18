@@ -42,6 +42,7 @@ class AdminDocumentServiceTest {
         AdminDocumentForm form = new AdminDocumentForm();
         form.setTitle("테스트 공지사항");
         form.setType(DocumentType.NOTICE);
+        form.setImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
 
         AdminDocumentForm.SectionForm sec1 = new AdminDocumentForm.SectionForm();
         sec1.setSubtitle("소제목 1");
@@ -60,11 +61,28 @@ class AdminDocumentServiceTest {
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getTitle()).isEqualTo("테스트 공지사항");
         assertThat(saved.getType()).isEqualTo(DocumentType.NOTICE);
+        assertThat(saved.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/notice.jpg");
         assertThat(saved.getSections()).hasSize(2);
         assertThat(saved.getSections().get(0).getSubtitle()).isEqualTo("소제목 1");
         assertThat(saved.getSections().get(0).getListOrder()).isEqualTo(0);
         assertThat(saved.getSections().get(1).getSubtitle()).isEqualTo("소제목 2");
         assertThat(saved.getSections().get(1).getListOrder()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("섹션 없이 공지 문서를 저장할 수 있다")
+    void createDocumentWithoutSections() {
+        AdminDocumentForm form = new AdminDocumentForm();
+        form.setTitle("이미지 공지");
+        form.setType(DocumentType.NOTICE);
+        form.setImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
+        form.setSections(List.of());
+
+        AdminDocument saved = adminDocumentService.createDocument(form);
+
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/notice.jpg");
+        assertThat(saved.getSections()).isEmpty();
     }
 
     @Test
@@ -74,6 +92,7 @@ class AdminDocumentServiceTest {
         AdminDocumentForm createForm = new AdminDocumentForm();
         createForm.setTitle("최초 공지");
         createForm.setType(DocumentType.NOTICE);
+        createForm.setImageUrl("https://cdn.example.com/admin/notice-images/old.jpg");
 
         AdminDocumentForm.SectionForm sec1 = new AdminDocumentForm.SectionForm();
         sec1.setSubtitle("구 소제목");
@@ -91,6 +110,7 @@ class AdminDocumentServiceTest {
         AdminDocumentForm updateForm = new AdminDocumentForm();
         updateForm.setTitle("수정된 공지");
         updateForm.setType(DocumentType.NOTICE);
+        updateForm.setImageUrl("https://cdn.example.com/admin/notice-images/new.jpg");
 
         AdminDocumentForm.SectionForm newSec1 = new AdminDocumentForm.SectionForm();
         newSec1.setSubtitle("새 소제목 1");
@@ -106,6 +126,7 @@ class AdminDocumentServiceTest {
 
         // then
         assertThat(updated.getTitle()).isEqualTo("수정된 공지");
+        assertThat(updated.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/new.jpg");
         assertThat(updated.getSections()).hasSize(2);
         assertThat(updated.getSections().get(0).getSubtitle()).isEqualTo("새 소제목 1");
         assertThat(updated.getSections().get(1).getSubtitle()).isEqualTo("새 소제목 2");
@@ -307,6 +328,7 @@ class AdminDocumentServiceTest {
             .active(true)
             .sections(List.of(section1, section2))
             .build());
+        document.updateImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
 
         document.upsertTranslation("ko", "한국어 제목");
         section1.upsertTranslation("ko", "한국어 소제목 1", "한국어 내용 1");
@@ -317,6 +339,7 @@ class AdminDocumentServiceTest {
             .getFirst();
 
         assertThat(response.getTitle()).isEqualTo("한국어 제목");
+        assertThat(response.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/notice.jpg");
         assertThat(response.getSections().get(0).getContent()).isEqualTo("한국어 내용 1");
         assertThat(response.getSections().get(1).getContent()).isEqualTo("한국어 내용 2");
     }

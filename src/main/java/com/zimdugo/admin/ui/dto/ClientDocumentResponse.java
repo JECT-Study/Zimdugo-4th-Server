@@ -18,6 +18,7 @@ public class ClientDocumentResponse {
     private Long id;
     private DocumentType type;
     private String title;
+    private String imageUrl;
     private LocalDateTime appliedAt;
     private List<SectionResponse> sections = new ArrayList<>();
 
@@ -29,6 +30,7 @@ public class ClientDocumentResponse {
         this.id = document.getId();
         this.type = document.getType();
         this.title = document.localizedTitle(requestedLanguage);
+        this.imageUrl = document.getImageUrl();
         this.appliedAt = document.getAppliedAt();
         if (document.getSections() != null) {
             this.sections = document.getSections().stream()

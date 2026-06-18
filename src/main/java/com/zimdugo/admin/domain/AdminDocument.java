@@ -40,6 +40,9 @@ public class AdminDocument {
     @Column(nullable = false, length = 255)
     private String title;
 
+    @Column(length = 500)
+    private String imageUrl;
+
     @OneToMany(mappedBy = "adminDocument", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("listOrder ASC")
     private List<AdminDocumentSection> sections = new ArrayList<>();
@@ -89,8 +92,9 @@ public class AdminDocument {
         this.active = false;
     }
 
-    public void update(String title, List<AdminDocumentSection> newSections) {
+    public void update(String title, String imageUrl, List<AdminDocumentSection> newSections) {
         this.title = title;
+        this.imageUrl = normalizeImageUrl(imageUrl);
         this.sections.clear();
         if (newSections != null) {
             newSections.forEach(this::addSection);
@@ -136,6 +140,17 @@ public class AdminDocument {
 
     public void updateListOrder(int listOrder) {
         this.listOrder = listOrder;
+    }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = normalizeImageUrl(imageUrl);
+    }
+
+    private String normalizeImageUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return null;
+        }
+        return imageUrl.trim();
     }
 
     @PrePersist
