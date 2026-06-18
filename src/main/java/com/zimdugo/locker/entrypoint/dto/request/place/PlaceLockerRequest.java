@@ -1,6 +1,6 @@
 package com.zimdugo.locker.entrypoint.dto.request.place;
 
-import com.zimdugo.locker.application.PlaceLockerQueryCommand;
+import com.zimdugo.locker.application.place.PlaceLockerQueryCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;

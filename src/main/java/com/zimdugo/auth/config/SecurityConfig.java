@@ -1,8 +1,8 @@
 package com.zimdugo.auth.config;
 
 import com.zimdugo.auth.application.CustomOAuth2UserService;
-import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
-import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
+import com.zimdugo.auth.entrypoint.filter.JwtAuthenticationFilter;
+import com.zimdugo.auth.entrypoint.filter.OAuth2CallbackUrlCaptureFilter;
 import com.zimdugo.auth.entrypoint.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.zimdugo.auth.entrypoint.oauth2.OAuth2FailureHandler;
 import com.zimdugo.auth.entrypoint.oauth2.OAuth2SuccessHandler;
@@ -12,9 +12,12 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -38,12 +41,12 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
-    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
-        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
-    @org.springframework.core.annotation.Order(1)
+    @Order(1)
     public SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher("/admin/**")
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
@@ -69,7 +72,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @org.springframework.core.annotation.Order(2)
+    @Order(2)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher(request -> !request.getRequestURI().startsWith("/admin/"));
         configureBasicSecurity(http);

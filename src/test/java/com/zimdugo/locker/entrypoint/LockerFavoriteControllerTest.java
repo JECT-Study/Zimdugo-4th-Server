@@ -1,12 +1,12 @@
 package com.zimdugo.locker.entrypoint;
 
-import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
-import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
+import com.zimdugo.auth.entrypoint.filter.JwtAuthenticationFilter;
+import com.zimdugo.auth.entrypoint.filter.OAuth2CallbackUrlCaptureFilter;
 import com.zimdugo.auth.config.SecurityConfig;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.application.FavoriteLockerCommandService;
-import com.zimdugo.locker.application.FavoriteLockerQueryService;
+import com.zimdugo.locker.application.favorite.FavoriteLockerCommandService;
+import com.zimdugo.locker.application.favorite.FavoriteLockerQueryService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

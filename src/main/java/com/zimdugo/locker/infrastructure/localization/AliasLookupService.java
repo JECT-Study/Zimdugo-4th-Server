@@ -1,8 +1,8 @@
 package com.zimdugo.locker.infrastructure.localization;
 
 import com.zimdugo.common.i18n.SearchTextNormalizer;
-import com.zimdugo.locker.infrastructure.LockerAliasRepository;
-import com.zimdugo.locker.infrastructure.PlaceAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceAliasRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceAliasEntity;
 import java.util.List;

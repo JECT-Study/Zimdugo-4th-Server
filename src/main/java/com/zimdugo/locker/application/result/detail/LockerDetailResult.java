@@ -1,6 +1,6 @@
 package com.zimdugo.locker.application.result.detail;
 
-import com.zimdugo.locker.domain.LockerDetail;
+import com.zimdugo.locker.domain.detail.LockerDetail;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Set;

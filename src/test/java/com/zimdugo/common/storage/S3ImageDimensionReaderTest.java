@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,7 +27,7 @@ class S3ImageDimensionReaderTest {
     @Test
     void readWidthFromS3Image() throws Exception {
         S3StorageProperties properties = properties();
-        given(s3Client.getObject(any(software.amazon.awssdk.services.s3.model.GetObjectRequest.class)))
+        given(s3Client.getObject(any(GetObjectRequest.class)))
             .willReturn(responseInputStream(jpegImage(1080, 2400)));
         S3ImageDimensionReader reader = new S3ImageDimensionReader(
             s3Client,

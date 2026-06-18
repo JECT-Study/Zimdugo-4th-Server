@@ -1,7 +1,7 @@
 package com.zimdugo.locker.application.result.report;
 
-import com.zimdugo.locker.application.LockerReportCreateCommand;
-import com.zimdugo.locker.domain.SavedLockerReport;
+import com.zimdugo.locker.application.report.LockerReportCreateCommand;
+import com.zimdugo.locker.domain.report.SavedLockerReport;
 
 public record LockerReportCreateResult(
     Long reportId,

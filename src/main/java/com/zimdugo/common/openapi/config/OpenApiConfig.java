@@ -1,5 +1,7 @@
 package com.zimdugo.common.openapi.config;
 
+import com.zimdugo.common.security.CurrentUser;
+import com.zimdugo.common.security.NullableCurrentUser;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -18,8 +20,8 @@ public class OpenApiConfig {
 
     static {
         SpringDocUtils.getConfig().addAnnotationsToIgnore(
-            com.zimdugo.common.security.CurrentUser.class,
-            com.zimdugo.common.security.NullableCurrentUser.class
+            CurrentUser.class,
+            NullableCurrentUser.class
         );
     }
 

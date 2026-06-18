@@ -1,6 +1,6 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
-import com.zimdugo.locker.domain.LockerReportImageMetadata;
+import com.zimdugo.locker.domain.report.LockerReportImageMetadata;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

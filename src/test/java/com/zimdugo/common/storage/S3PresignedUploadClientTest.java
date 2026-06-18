@@ -1,6 +1,7 @@
 package com.zimdugo.common.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -27,7 +28,7 @@ class S3PresignedUploadClientTest {
     void createPresignedPutObjectSignsContentLength() throws Exception {
         S3StorageProperties properties = properties();
         given(presignedPutObjectRequest.url()).willReturn(URI.create("https://s3.example.com/upload").toURL());
-        given(s3Presigner.presignPutObject(org.mockito.ArgumentMatchers.any(PutObjectPresignRequest.class)))
+        given(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
             .willReturn(presignedPutObjectRequest);
         S3PresignedUploadClient client = new S3PresignedUploadClient(
             s3Presigner,

@@ -4,10 +4,10 @@ import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.infrastructure.LockerRepository;
-import com.zimdugo.locker.infrastructure.LockerTranslationRepository;
-import com.zimdugo.locker.infrastructure.PlaceRepository;
-import com.zimdugo.locker.infrastructure.PlaceTranslationRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerTranslationRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
@@ -16,15 +16,17 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Transactional(readOnly = true)
-@RequiredArgsConstructor(onConstructor_ = @org.springframework.beans.factory.annotation.Autowired)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class TranslationLookupService {
 
     private final CurrentRequestLanguage currentRequestLanguage;
@@ -129,7 +131,7 @@ public class TranslationLookupService {
         if (ids == null) {
             return List.of();
         }
-        return ids.stream().filter(java.util.Objects::nonNull).distinct().toList();
+        return ids.stream().filter(Objects::nonNull).distinct().toList();
     }
 
     private Map<Long, PlaceEntity> requiredPlaces(List<Long> ids) {

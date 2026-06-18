@@ -8,11 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.zimdugo.auth.entrypoint.JwtAuthenticationFilter;
-import com.zimdugo.auth.entrypoint.OAuth2CallbackUrlCaptureFilter;
+import com.zimdugo.auth.entrypoint.filter.JwtAuthenticationFilter;
+import com.zimdugo.auth.entrypoint.filter.OAuth2CallbackUrlCaptureFilter;
 import com.zimdugo.auth.config.SecurityConfig;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.application.LockerReportCommandService;
+import com.zimdugo.locker.application.report.LockerReportCommandService;
 import com.zimdugo.locker.application.result.report.LockerReportCreateResult;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;

@@ -13,6 +13,7 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.core.exception.ExternalApiException;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -73,7 +74,7 @@ public class S3ImageDimensionReader {
     }
 
     private Integer firstValidWidth(Metadata metadata) {
-        return java.util.stream.Stream.of(
+        return Stream.of(
                 validWidth(jpegWidth(metadata)),
                 validWidth(webpWidth(metadata)),
                 validWidth(heifWidth(metadata)),

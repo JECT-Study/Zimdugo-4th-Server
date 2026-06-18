@@ -1,6 +1,6 @@
 package com.zimdugo.locker.application.result.keyword;
 
-import com.zimdugo.locker.domain.LockerPlaceLocker;
+import com.zimdugo.locker.domain.place.LockerPlaceLocker;
 import java.time.LocalDateTime;
 
 public record LockerKeywordLockerResult(

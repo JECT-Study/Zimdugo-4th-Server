@@ -1,20 +1,23 @@
 package com.zimdugo.admin.i18n;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.zimdugo.admin.ui.dto.AdminPlaceI18nRequest;
+import com.zimdugo.admin.i18n.dto.AdminPlaceI18nRequest;
 import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.infrastructure.LockerAliasRepository;
-import com.zimdugo.locker.infrastructure.LockerRepository;
-import com.zimdugo.locker.infrastructure.LockerTranslationRepository;
-import com.zimdugo.locker.infrastructure.PlaceAliasRepository;
-import com.zimdugo.locker.infrastructure.PlaceRepository;
-import com.zimdugo.locker.infrastructure.PlaceTranslationRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerTranslationRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationRepository;
 import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import java.util.List;
 import java.util.Optional;
@@ -67,7 +70,7 @@ class LockerContentI18nAdminServiceTest {
 
         service.replacePlace(1L, request(SupportedLanguage.all()));
 
-        verify(placeTranslationRepository).saveAll(org.mockito.ArgumentMatchers.anyList());
+        verify(placeTranslationRepository).saveAll(anyList());
         verify(eventPublisher).publishEvent(LockerContentI18nChangedEvent.place(1L));
     }
 
@@ -81,13 +84,13 @@ class LockerContentI18nAdminServiceTest {
 
         assertThatThrownBy(() -> service.replacePlace(1L, request(missingTraditionalChinese)))
             .isInstanceOfSatisfying(BusinessException.class, exception ->
-                org.assertj.core.api.Assertions.assertThat(exception.getErrorCode())
+                assertThat(exception.getErrorCode())
                     .isEqualTo(ErrorCode.INVALID_I18N_CONTENT)
             );
 
         verify(placeTranslationRepository, never()).deleteByPlaceId(1L);
         verify(placeAliasRepository, never()).deleteByPlaceId(1L);
-        verify(eventPublisher, never()).publishEvent(org.mockito.ArgumentMatchers.any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     private AdminPlaceI18nRequest request(List<SupportedLanguage> languages) {

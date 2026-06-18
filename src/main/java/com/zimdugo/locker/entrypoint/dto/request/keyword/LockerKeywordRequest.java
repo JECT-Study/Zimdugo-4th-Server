@@ -1,6 +1,6 @@
 package com.zimdugo.locker.entrypoint.dto.request.keyword;
 
-import com.zimdugo.locker.application.LockerKeywordSearchCommand;
+import com.zimdugo.locker.application.keyword.LockerKeywordSearchCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;

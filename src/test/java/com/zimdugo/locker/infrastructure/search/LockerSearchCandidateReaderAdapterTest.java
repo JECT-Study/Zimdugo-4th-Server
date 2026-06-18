@@ -3,12 +3,13 @@ package com.zimdugo.locker.infrastructure.search;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.common.i18n.SupportedLanguage;
-import com.zimdugo.locker.domain.LockerSearchCandidateResult;
-import com.zimdugo.locker.domain.IndoorOutdoorType;
-import com.zimdugo.locker.domain.LockerSearchFilter;
-import com.zimdugo.locker.domain.LockerSearchMatchType;
-import com.zimdugo.locker.domain.LockerSizeType;
-import com.zimdugo.locker.domain.LockerType;
+import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
+import com.zimdugo.locker.domain.locker.LockerSizeType;
+import com.zimdugo.locker.domain.locker.LockerType;
+import com.zimdugo.locker.domain.search.LockerSearchCandidateResult;
+import com.zimdugo.locker.domain.search.LockerSearchFilter;
+import com.zimdugo.locker.domain.search.LockerSearchMatchType;
+import com.zimdugo.locker.domain.search.LockerSuggestCandidate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ class LockerSearchCandidateReaderAdapterTest {
             any(NativeQuery.class),
             eq(LockerSuggestDocument.class)
         )).willReturn(searchHits, searchHits);
-        given(searchHits.getSearchHits()).willReturn(java.util.List.of());
+        given(searchHits.getSearchHits()).willReturn(List.of());
         given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
 
         LockerSearchCandidateResult result = lockerSearchCandidateReaderAdapter.search(
@@ -96,7 +97,7 @@ class LockerSearchCandidateReaderAdapterTest {
         assertThat(result.candidates()).hasSize(1);
         assertThat(result.candidates().getFirst().distanceMeters()).isEqualTo(100L);
         assertThat(result.candidates().getFirst().matchedQueries())
-            .containsExactly(com.zimdugo.locker.domain.LockerSuggestCandidate.PLACE_NAME_QUERY);
+            .containsExactly(LockerSuggestCandidate.PLACE_NAME_QUERY);
         assertRelevanceFirstSort(captor.getValue());
         String query = captor.getValue().getQuery().toString();
         assertThat(query)
@@ -108,8 +109,8 @@ class LockerSearchCandidateReaderAdapterTest {
             )
             .doesNotContain("searchAddresses.autocomplete");
         assertThat(query)
-            .containsOnlyOnce(com.zimdugo.locker.domain.LockerSuggestCandidate.PLACE_NAME_QUERY)
-            .containsOnlyOnce(com.zimdugo.locker.domain.LockerSuggestCandidate.LOCKER_NAME_QUERY);
+            .containsOnlyOnce(LockerSuggestCandidate.PLACE_NAME_QUERY)
+            .containsOnlyOnce(LockerSuggestCandidate.LOCKER_NAME_QUERY);
     }
 
     @Test
@@ -119,7 +120,7 @@ class LockerSearchCandidateReaderAdapterTest {
             any(NativeQuery.class),
             eq(LockerSuggestDocument.class)
         )).willReturn(searchHits, searchHits);
-        given(searchHits.getSearchHits()).willReturn(java.util.List.of());
+        given(searchHits.getSearchHits()).willReturn(List.of());
         given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
         LockerSearchFilter filter = new LockerSearchFilter(
             Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
@@ -204,7 +205,7 @@ class LockerSearchCandidateReaderAdapterTest {
         Map<String, List<String>> highlightFields = Map.of();
         Map<String, SearchHits<?>> innerHits = Map.of();
         Map<String, Double> matchedQueries = Map.of(
-            com.zimdugo.locker.domain.LockerSuggestCandidate.PLACE_NAME_QUERY,
+            LockerSuggestCandidate.PLACE_NAME_QUERY,
             10.0
         );
         return new SearchHit<LockerSuggestDocument>(

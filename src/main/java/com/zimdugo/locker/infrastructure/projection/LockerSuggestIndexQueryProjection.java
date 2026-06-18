@@ -1,0 +1,19 @@
+package com.zimdugo.locker.infrastructure.projection;
+
+import java.time.LocalDateTime;
+
+public interface LockerSuggestIndexQueryProjection {
+    Long getLockerId();
+    String getLockerName();
+    String getRoadAddress();
+    double getLockerLatitude();
+    double getLockerLongitude();
+    String getLockerType();
+    String getIndoorOutdoorType();
+    String getLockerSize();
+    Integer getMinPrice();
+    LocalDateTime getUpdatedAt();
+    Long getPlaceId();
+    String getPlaceName();
+    String getPlaceRoadAddress();
+}

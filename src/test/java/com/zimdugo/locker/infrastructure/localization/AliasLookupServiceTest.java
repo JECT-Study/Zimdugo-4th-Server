@@ -5,8 +5,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.zimdugo.locker.infrastructure.LockerAliasRepository;
-import com.zimdugo.locker.infrastructure.PlaceAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceAliasRepository;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

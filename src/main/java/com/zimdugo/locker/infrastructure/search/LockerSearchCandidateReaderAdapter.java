@@ -2,6 +2,7 @@ package com.zimdugo.locker.infrastructure.search;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.zimdugo.common.i18n.CurrentRequestLanguage;
@@ -10,11 +11,11 @@ import com.zimdugo.common.i18n.SearchTextNormalizer;
 import com.zimdugo.common.util.HangulUtils;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.domain.LockerSearchCandidateResult;
-import com.zimdugo.locker.domain.LockerSearchCandidateReader;
-import com.zimdugo.locker.domain.LockerSearchFilter;
-import com.zimdugo.locker.domain.LockerSuggestCandidate;
-import com.zimdugo.locker.domain.LockerType;
+import com.zimdugo.locker.domain.search.LockerSearchCandidateResult;
+import com.zimdugo.locker.domain.search.LockerSearchCandidateReader;
+import com.zimdugo.locker.domain.search.LockerSearchFilter;
+import com.zimdugo.locker.domain.search.LockerSuggestCandidate;
+import com.zimdugo.locker.domain.locker.LockerType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -129,8 +130,8 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         );
     }
 
-    private co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder buildPlaceNameQuery(
-        co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder type,
+    private BoolQuery.Builder buildPlaceNameQuery(
+        BoolQuery.Builder type,
         String keyword,
         String decomposed,
         SearchTargets targets
@@ -160,8 +161,8 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         return type;
     }
 
-    private co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder buildLockerNameQuery(
-        co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder type,
+    private BoolQuery.Builder buildLockerNameQuery(
+        BoolQuery.Builder type,
         String keyword,
         String decomposed,
         SearchTargets targets
@@ -224,7 +225,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
     }
  
     private <T extends Enum<T>> void addTermsFilter(
-        co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery.Builder builder,
+        BoolQuery.Builder builder,
         String fieldName,
         Set<T> filterValues
     ) {

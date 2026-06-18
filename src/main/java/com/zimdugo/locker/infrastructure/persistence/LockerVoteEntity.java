@@ -1,6 +1,6 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
-import com.zimdugo.locker.domain.LockerVoteType;
+import com.zimdugo.locker.domain.vote.LockerVoteType;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

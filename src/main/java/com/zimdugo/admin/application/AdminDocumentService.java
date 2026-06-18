@@ -5,10 +5,14 @@ import com.zimdugo.admin.domain.AdminDocumentRepository;
 import com.zimdugo.admin.domain.AdminDocumentSection;
 import com.zimdugo.admin.domain.DocumentLanguage;
 import com.zimdugo.admin.domain.DocumentType;
-import com.zimdugo.admin.ui.dto.AdminDocumentForm;
-import com.zimdugo.admin.ui.dto.AdminDocumentTranslationRequest;
-import com.zimdugo.admin.ui.dto.AdminDocumentTranslationsResponse;
-import com.zimdugo.admin.ui.dto.ClientDocumentResponse;
+import com.zimdugo.admin.application.dto.AdminDocumentCommand;
+import com.zimdugo.admin.application.dto.AdminDocumentDetailResult;
+import com.zimdugo.admin.application.dto.AdminDocumentFormResult;
+import com.zimdugo.admin.application.dto.AdminDocumentSummaryResult;
+import com.zimdugo.admin.application.dto.AdminDocumentTranslationCommand;
+import com.zimdugo.admin.application.dto.AdminDocumentTranslationsResult;
+import com.zimdugo.admin.application.dto.AdminDocumentTypeResult;
+import com.zimdugo.admin.application.dto.ClientDocumentResult;
 import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
@@ -30,6 +34,16 @@ public class AdminDocumentService {
     private final AdminDocumentRepository adminDocumentRepository;
     private final AdminNoticeImageValidator adminNoticeImageValidator;
 
+    public AdminDocumentTypeResult getDocumentType(String type) {
+        return AdminDocumentTypeResult.from(toDocumentType(type));
+    }
+
+    public List<AdminDocumentSummaryResult> getDocumentSummaries(String type) {
+        return getDocumentsByType(toDocumentType(type)).stream()
+            .map(AdminDocumentSummaryResult::from)
+            .toList();
+    }
+
     public List<AdminDocument> getDocumentsByType(DocumentType type) {
         return adminDocumentRepository.findByType(type);
     }
@@ -38,18 +52,18 @@ public class AdminDocumentService {
         return adminDocumentRepository.findByTypeAndActive(type, true);
     }
 
-    public List<ClientDocumentResponse> getLocalizedActiveDocumentsByType(
-        DocumentType type,
+    public List<ClientDocumentResult> getLocalizedActiveDocumentsByType(
+        String type,
         SupportedLanguage requestedLanguage
     ) {
-        List<AdminDocument> documents = adminDocumentRepository.findByTypeAndActive(type, true);
+        List<AdminDocument> documents = adminDocumentRepository.findByTypeAndActive(toDocumentType(type), true);
         boolean hasMissingTranslation = documents.stream()
             .anyMatch(document -> !document.hasCompleteTranslation(requestedLanguage.languageTag()));
         if (hasMissingTranslation) {
             throw new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING);
         }
         return documents.stream()
-            .map(document -> new ClientDocumentResponse(document, requestedLanguage))
+            .map(document -> ClientDocumentResult.from(document, requestedLanguage))
             .toList();
     }
 
@@ -58,37 +72,54 @@ public class AdminDocumentService {
             .orElseThrow(() -> new BusinessException(ErrorCode.ADMIN_DOCUMENT_NOT_FOUND));
     }
 
-    public AdminDocumentTranslationsResponse getTranslations(Long id) {
-        return AdminDocumentTranslationsResponse.from(getById(id));
+    public AdminDocumentDetailResult getDocumentDetail(Long id) {
+        return AdminDocumentDetailResult.from(getById(id));
+    }
+
+    public AdminDocumentFormResult getNewDocumentForm(String type) {
+        return AdminDocumentFormResult.newDocument(AdminDocumentTypeResult.from(toDocumentType(type)));
+    }
+
+    public AdminDocumentFormResult getDocumentForm(Long id) {
+        return AdminDocumentFormResult.from(getDocumentDetail(id));
+    }
+
+    public AdminDocumentTranslationsResult getTranslations(Long id) {
+        return AdminDocumentTranslationsResult.from(getById(id));
     }
 
     @Transactional
-    public AdminDocument createDocument(AdminDocumentForm form) {
-        adminNoticeImageValidator.validate(form.getImageUrl());
-        AdminDocument document = form.toEntity();
+    public AdminDocument createDocument(AdminDocumentCommand command) {
+        adminNoticeImageValidator.validate(command.imageUrl());
+        AdminDocument document = toEntity(command);
         return adminDocumentRepository.save(document);
     }
 
     @Transactional
-    public AdminDocument updateDocument(Long id, AdminDocumentForm form) {
+    public AdminDocumentDetailResult createDocumentResult(AdminDocumentCommand command) {
+        return AdminDocumentDetailResult.from(createDocument(command));
+    }
+
+    @Transactional
+    public AdminDocument updateDocument(Long id, AdminDocumentCommand command) {
         AdminDocument document = getById(id);
         
         List<AdminDocumentSection> newSections = new ArrayList<>();
-        if (form.getSections() != null) {
-            for (int i = 0; i < form.getSections().size(); i++) {
-                AdminDocumentForm.SectionForm secForm = form.getSections().get(i);
-                if (secForm.getContent() != null && !secForm.getContent().isBlank()) {
+        if (command.sections() != null) {
+            for (int i = 0; i < command.sections().size(); i++) {
+                AdminDocumentCommand.SectionCommand sectionCommand = command.sections().get(i);
+                if (sectionCommand.content() != null && !sectionCommand.content().isBlank()) {
                     newSections.add(AdminDocumentSection.builder()
-                        .subtitle(secForm.getSubtitle())
-                        .content(secForm.getContent())
+                        .subtitle(sectionCommand.subtitle())
+                        .content(sectionCommand.content())
                         .listOrder(i)
                         .build());
                 }
             }
         }
         
-        adminNoticeImageValidator.validate(form.getImageUrl());
-        document.update(form.getTitle(), form.getImageUrl(), newSections);
+        adminNoticeImageValidator.validate(command.imageUrl());
+        document.update(command.title(), command.imageUrl(), newSections);
         if (document.isActive()) {
             document.deactivate();
         }
@@ -96,10 +127,15 @@ public class AdminDocumentService {
     }
 
     @Transactional
-    public AdminDocumentTranslationsResponse putTranslation(Long id, AdminDocumentTranslationRequest request) {
+    public AdminDocumentDetailResult updateDocumentResult(Long id, AdminDocumentCommand command) {
+        return AdminDocumentDetailResult.from(updateDocument(id, command));
+    }
+
+    @Transactional
+    public AdminDocumentTranslationsResult putTranslation(Long id, AdminDocumentTranslationCommand command) {
         AdminDocument document = getById(id);
-        String language = DocumentLanguage.normalize(request.getLanguage());
-        document.upsertTranslation(language, request.getTitle());
+        String language = DocumentLanguage.normalize(command.language());
+        document.upsertTranslation(language, command.title());
 
         Map<Long, AdminDocumentSection> sectionsById = new HashMap<>();
         for (AdminDocumentSection section : document.getSections()) {
@@ -107,17 +143,16 @@ public class AdminDocumentService {
         }
 
         Set<Long> translatedSectionIds = new HashSet<>();
-        List<AdminDocumentTranslationRequest.SectionTranslationRequest> sectionRequests =
-            request.getSections() == null ? List.of() : request.getSections();
-        for (AdminDocumentTranslationRequest.SectionTranslationRequest sectionRequest : sectionRequests) {
-            AdminDocumentSection section = sectionsById.get(sectionRequest.getSectionId());
+        List<AdminDocumentTranslationCommand.SectionTranslationCommand> sectionRequests = command.sectionsOrEmpty();
+        for (AdminDocumentTranslationCommand.SectionTranslationCommand sectionRequest : sectionRequests) {
+            AdminDocumentSection section = sectionsById.get(sectionRequest.sectionId());
             if (section == null) {
                 throw new BusinessException(ErrorCode.INVALID_ADMIN_DOCUMENT_TRANSLATION);
             }
-            if (!translatedSectionIds.add(sectionRequest.getSectionId())) {
+            if (!translatedSectionIds.add(sectionRequest.sectionId())) {
                 throw new BusinessException(ErrorCode.INVALID_ADMIN_DOCUMENT_TRANSLATION);
             }
-            section.upsertTranslation(language, sectionRequest.getSubtitle(), sectionRequest.getContent());
+            section.upsertTranslation(language, sectionRequest.subtitle(), sectionRequest.content());
         }
 
         document.getSections().stream()
@@ -126,7 +161,7 @@ public class AdminDocumentService {
         if (document.isActive() && !document.hasAllRequiredTranslations()) {
             throw new BusinessException(ErrorCode.CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS);
         }
-        return AdminDocumentTranslationsResponse.from(document);
+        return AdminDocumentTranslationsResult.from(document);
     }
 
     @Transactional
@@ -165,6 +200,36 @@ public class AdminDocumentService {
                 throw new BusinessException(ErrorCode.INVALID_ADMIN_DOCUMENT_ORDER);
             }
             document.updateListOrder(i);
+        }
+    }
+
+    private AdminDocument toEntity(AdminDocumentCommand command) {
+        List<AdminDocumentSection> sectionEntities = new ArrayList<>();
+        List<AdminDocumentCommand.SectionCommand> sections = command.sectionsOrEmpty();
+        for (int i = 0; i < sections.size(); i++) {
+            AdminDocumentCommand.SectionCommand section = sections.get(i);
+            if (section.content() != null && !section.content().isBlank()) {
+                sectionEntities.add(AdminDocumentSection.builder()
+                    .subtitle(section.subtitle())
+                    .content(section.content())
+                    .listOrder(i)
+                    .build());
+            }
+        }
+        AdminDocument document = AdminDocument.builder()
+            .title(command.title())
+            .type(toDocumentType(command.type()))
+            .sections(sectionEntities)
+            .build();
+        document.updateImageUrl(command.imageUrl());
+        return document;
+    }
+
+    private DocumentType toDocumentType(String type) {
+        try {
+            return DocumentType.valueOf(type);
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            throw new BusinessException(ErrorCode.INVALID_ADMIN_DOCUMENT_TYPE);
         }
     }
 }

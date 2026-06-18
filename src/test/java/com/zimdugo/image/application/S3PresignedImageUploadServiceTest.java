@@ -2,6 +2,8 @@ package com.zimdugo.image.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -27,9 +29,9 @@ class S3PresignedImageUploadServiceTest {
     @Test
     void createPresignedUploadUsesReportImageKey() {
         given(presignedUploadClient.createPresignedPutObject(
-            org.mockito.ArgumentMatchers.anyString(),
-            org.mockito.ArgumentMatchers.eq("image/jpeg"),
-            org.mockito.ArgumentMatchers.eq(1024L)
+            anyString(),
+            eq("image/jpeg"),
+            eq(1024L)
         )).willReturn(new PresignedUpload(
             "https://s3.example.com/upload",
             "https://cdn.example.com/reports/test.jpg",
@@ -54,8 +56,8 @@ class S3PresignedImageUploadServiceTest {
         ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
         verify(presignedUploadClient).createPresignedPutObject(
             keyCaptor.capture(),
-            org.mockito.ArgumentMatchers.eq("image/jpeg"),
-            org.mockito.ArgumentMatchers.eq(1024L)
+            eq("image/jpeg"),
+            eq(1024L)
         );
         assertThat(keyCaptor.getValue()).startsWith("reports/");
         assertThat(result.fileUrl()).startsWith("https://cdn.example.com/reports/");

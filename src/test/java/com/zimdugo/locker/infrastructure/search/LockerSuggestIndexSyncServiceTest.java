@@ -1,17 +1,18 @@
 package com.zimdugo.locker.infrastructure.search;
 
 import com.zimdugo.common.i18n.SupportedLanguage;
-import com.zimdugo.locker.infrastructure.LockerRepository;
-import com.zimdugo.locker.infrastructure.LockerAliasRepository;
-import com.zimdugo.locker.infrastructure.PlaceAliasRepository;
-import com.zimdugo.locker.infrastructure.LockerTranslationRepository;
-import com.zimdugo.locker.infrastructure.PlaceTranslationRepository;
-import com.zimdugo.locker.infrastructure.LockerSuggestIndexQueryProjection;
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.locker.infrastructure.persistence.LockerAliasRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
-import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
-import com.zimdugo.locker.infrastructure.persistence.PlaceAliasEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerTranslationRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceAliasEntity;
+import com.zimdugo.locker.infrastructure.persistence.PlaceAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationEntity;
+import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationRepository;
+import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -33,10 +34,12 @@ import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -145,8 +148,8 @@ class LockerSuggestIndexSyncServiceTest {
         given(elasticsearchOperations.save(any(Iterable.class), any(IndexCoordinates.class)))
             .willThrow(new IllegalStateException("bulk indexing failed"));
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(syncService::syncAtStartup)
-            .isInstanceOf(com.zimdugo.core.exception.BusinessException.class);
+        assertThatThrownBy(syncService::syncAtStartup)
+            .isInstanceOf(BusinessException.class);
 
         verify(versionedIndexOperations, never()).alias(any(AliasActions.class));
         verify(versionedIndexOperations).delete();
@@ -198,8 +201,8 @@ class LockerSuggestIndexSyncServiceTest {
         LockerSuggestIndexQueryProjection projection = projection();
         given(lockerRepository.findAllForSuggestIndexByPlaceIds(List.of(101L))).willReturn(List.of(projection));
 
-        LockerTranslationEntity lt = org.mockito.Mockito.mock(LockerTranslationEntity.class);
-        LockerEntity locker = org.mockito.Mockito.mock(LockerEntity.class);
+        LockerTranslationEntity lt = mock(LockerTranslationEntity.class);
+        LockerEntity locker = mock(LockerEntity.class);
         given(lt.getLocker()).willReturn(locker);
         given(locker.getId()).willReturn(10L);
         given(lt.getName()).willReturn("Locker A");
@@ -207,20 +210,20 @@ class LockerSuggestIndexSyncServiceTest {
         given(lt.getLanguage()).willReturn(SupportedLanguage.ENGLISH);
         given(lockerTranslationRepository.findByLockerIdIn(any())).willReturn(List.of(lt));
 
-        PlaceTranslationEntity pt1 = org.mockito.Mockito.mock(PlaceTranslationEntity.class);
-        PlaceEntity place = org.mockito.Mockito.mock(PlaceEntity.class);
+        PlaceTranslationEntity pt1 = mock(PlaceTranslationEntity.class);
+        PlaceEntity place = mock(PlaceEntity.class);
         given(pt1.getPlace()).willReturn(place);
         given(place.getId()).willReturn(101L);
         given(pt1.getName()).willReturn("Sinchon Station Exit 1");
         given(pt1.getLanguage()).willReturn(SupportedLanguage.ENGLISH);
 
-        PlaceTranslationEntity pt2 = org.mockito.Mockito.mock(PlaceTranslationEntity.class);
+        PlaceTranslationEntity pt2 = mock(PlaceTranslationEntity.class);
         given(pt2.getPlace()).willReturn(place);
         given(pt2.getName()).willReturn("Ｓｉｎｃｈｏｎ　Ｓｔａｔｉｏｎ　Ｅｘｉｔ　１");
         given(pt2.getLanguage()).willReturn(SupportedLanguage.KOREAN);
         given(placeTranslationRepository.findByPlaceIdIn(any())).willReturn(List.of(pt1, pt2));
 
-        PlaceAliasEntity pa = org.mockito.Mockito.mock(PlaceAliasEntity.class);
+        PlaceAliasEntity pa = mock(PlaceAliasEntity.class);
         given(pa.getPlace()).willReturn(place);
         given(pa.getAlias()).willReturn("신촌 출구");
         given(placeAliasRepository.findByPlaceIdIn(any())).willReturn(List.of(pa));
@@ -258,7 +261,7 @@ class LockerSuggestIndexSyncServiceTest {
 
     private LockerSuggestIndexQueryProjection projection() {
         LockerSuggestIndexQueryProjection projection =
-            org.mockito.Mockito.mock(LockerSuggestIndexQueryProjection.class);
+            mock(LockerSuggestIndexQueryProjection.class);
         given(projection.getLockerId()).willReturn(10L);
         given(projection.getLockerName()).willReturn("보관함 A");
         given(projection.getRoadAddress()).willReturn("서울 신촌로");

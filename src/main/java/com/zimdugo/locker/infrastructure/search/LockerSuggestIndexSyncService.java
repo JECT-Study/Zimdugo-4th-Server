@@ -4,13 +4,13 @@ import com.zimdugo.common.i18n.SearchTextNormalizer;
 import com.zimdugo.common.util.HangulUtils;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.domain.LockerSizeType;
-import com.zimdugo.locker.infrastructure.LockerRepository;
-import com.zimdugo.locker.infrastructure.LockerAliasRepository;
-import com.zimdugo.locker.infrastructure.PlaceAliasRepository;
-import com.zimdugo.locker.infrastructure.LockerTranslationRepository;
-import com.zimdugo.locker.infrastructure.PlaceTranslationRepository;
-import com.zimdugo.locker.infrastructure.LockerSuggestIndexQueryProjection;
+import com.zimdugo.locker.domain.locker.LockerSizeType;
+import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceAliasRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerTranslationRepository;
+import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationRepository;
+import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
 import com.zimdugo.locker.infrastructure.persistence.LockerAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -162,7 +163,7 @@ public class LockerSuggestIndexSyncService {
         return aliasIndexOperations.getAliasesForIndex(INDEX_ALIAS).entrySet().stream()
             .filter(entry -> entry.getValue().stream().anyMatch(this::isLockerSuggestAlias))
             .map(Map.Entry::getKey)
-            .collect(java.util.stream.Collectors.toSet());
+            .collect(Collectors.toSet());
     }
 
     private boolean hasWriteAlias(IndexOperations aliasIndexOperations) {
@@ -467,7 +468,7 @@ public class LockerSuggestIndexSyncService {
         }
         return Arrays.stream(lockerSizes.split(","))
             .map(LockerSizeType::from)
-            .filter(java.util.Objects::nonNull)
+            .filter(Objects::nonNull)
             .map(Enum::name)
             .distinct()
             .toList();
@@ -477,6 +478,6 @@ public class LockerSuggestIndexSyncService {
         if (ids == null) {
             return List.of();
         }
-        return new ArrayList<>(new LinkedHashSet<>(ids.stream().filter(java.util.Objects::nonNull).toList()));
+        return new ArrayList<>(new LinkedHashSet<>(ids.stream().filter(Objects::nonNull).toList()));
     }
 }

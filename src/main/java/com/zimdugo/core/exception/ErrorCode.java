@@ -28,6 +28,7 @@ public enum ErrorCode implements BaseCode {
         "모든 지원 언어 번역이 완료되지 않은 문서는 활성화할 수 없습니다.",
         HttpStatus.BAD_REQUEST
     ),
+    INVALID_ADMIN_DOCUMENT_TYPE("ADMIN-400-4", "관리자 문서 타입이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
 
     // 인증 (AUTH)
     REFRESH_TOKEN_NOT_FOUND("AUTH-400-1", "리프레시 토큰이 없습니다.", HttpStatus.BAD_REQUEST),
