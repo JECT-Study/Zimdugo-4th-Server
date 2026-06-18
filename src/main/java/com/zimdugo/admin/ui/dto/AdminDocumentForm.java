@@ -5,6 +5,7 @@ import com.zimdugo.admin.domain.AdminDocumentSection;
 import com.zimdugo.admin.domain.DocumentType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -22,6 +23,9 @@ public class AdminDocumentForm {
     @NotNull(message = "문서 타입은 필수 항목입니다.")
     private DocumentType type;
 
+    @Size(max = 500)
+    private String imageUrl;
+
     private List<SectionForm> sections = new ArrayList<>();
 
     @Getter
@@ -30,7 +34,6 @@ public class AdminDocumentForm {
     public static class SectionForm {
         private String subtitle;
 
-        @NotBlank(message = "내용은 필수 입력 항목입니다.")
         private String content;
     }
 
@@ -38,6 +41,7 @@ public class AdminDocumentForm {
         AdminDocumentForm form = new AdminDocumentForm();
         form.setTitle(document.getTitle());
         form.setType(document.getType());
+        form.setImageUrl(document.getImageUrl());
         
         List<SectionForm> sectionForms = new ArrayList<>();
         if (document.getSections() != null) {
@@ -57,7 +61,6 @@ public class AdminDocumentForm {
         if (this.sections != null) {
             for (int i = 0; i < this.sections.size(); i++) {
                 SectionForm sec = this.sections.get(i);
-                // 내용이 비어있으면 저장에서 누락 처리할 수 있으나, 기본 밸리데이션 검사 권장
                 if (sec.getContent() != null && !sec.getContent().isBlank()) {
                     sectionEntities.add(AdminDocumentSection.builder()
                         .subtitle(sec.getSubtitle())
@@ -67,10 +70,12 @@ public class AdminDocumentForm {
                 }
             }
         }
-        return AdminDocument.builder()
+        AdminDocument document = AdminDocument.builder()
             .title(this.title)
             .type(this.type)
             .sections(sectionEntities)
             .build();
+        document.updateImageUrl(this.imageUrl);
+        return document;
     }
 }
