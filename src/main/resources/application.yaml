@@ -122,18 +122,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    defer-datasource-initialization: true
     show-sql: false
     properties:
       hibernate:
         format_sql: true
 
-  sql:
-    init:
-      mode: always
-      separator: ';;'
-      data-locations:
-        - file:scripts/db/01-postgis.sql
+  flyway:
+    enabled: true
+    clean-disabled: false
+    locations: classpath:db/migration
 
 management:
   endpoints:
@@ -161,6 +158,10 @@ storage:
     public-base-url: ${AWS_CLOUDFRONT_PUBLIC_BASE_URL:https://dummy-local.example.com}
     max-upload-bytes: ${AWS_S3_MAX_UPLOAD_BYTES:10485760}
 
+app:
+  flyway:
+    clean-on-start: ${FLYWAY_CLEAN_ON_START:true}
+
 ---
 spring:
   config:
@@ -183,7 +184,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+    clean-disabled: false
+    locations: classpath:db/migration
+
+app:
+  flyway:
+    clean-on-start: ${FLYWAY_CLEAN_ON_START:true}
 
 server:
   forward-headers-strategy: framework

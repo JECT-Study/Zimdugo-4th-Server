@@ -50,6 +50,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
     implementation("org.hibernate.orm:hibernate-spatial")
     implementation("org.locationtech.jts:jts-core")
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
+    implementation("org.flywaydb:flyway-database-postgresql")
 
     // Validation
     implementation("org.springframework.boot:spring-boot-starter-validation")
