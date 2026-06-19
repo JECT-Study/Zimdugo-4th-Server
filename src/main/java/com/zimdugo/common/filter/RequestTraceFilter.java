@@ -20,6 +20,8 @@ public class RequestTraceFilter extends OncePerRequestFilter {
     private static final String MDC_TRACE_ID_KEY = "traceId";
     private static final int SERVER_ERROR_STATUS_THRESHOLD = 500;
     private static final long NANOS_PER_MILLISECOND = 1_000_000L;
+    private static final String ACTUATOR_PATH_PREFIX = "/actuator";
+    private static final String SPRING_BOOT_ADMIN_INSTANCE_PATH = "/instances";
 
     @Override
     protected void doFilterInternal(
@@ -58,6 +60,16 @@ public class RequestTraceFilter extends OncePerRequestFilter {
             );
             return;
         }
+        if (isManagementPollingPath(request.getRequestURI())) {
+            log.debug(
+                "관리용 요청 처리 완료. method={}, path={}, status={}, durationMs={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                status,
+                durationMs
+            );
+            return;
+        }
         log.info(
             "요청 처리 완료. method={}, path={}, status={}, durationMs={}",
             request.getMethod(),
@@ -65,6 +77,11 @@ public class RequestTraceFilter extends OncePerRequestFilter {
             status,
             durationMs
         );
+    }
+
+    private boolean isManagementPollingPath(String path) {
+        return path != null
+            && (path.startsWith(ACTUATOR_PATH_PREFIX) || path.equals(SPRING_BOOT_ADMIN_INSTANCE_PATH));
     }
 
     private String resolveOrCreateTraceId(HttpServletRequest request) {
