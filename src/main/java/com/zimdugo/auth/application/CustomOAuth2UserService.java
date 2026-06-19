@@ -11,6 +11,7 @@ import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.domain.UserStore;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -26,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -46,6 +48,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         validateRequiredFields(userInfo, registrationId);
 
         User user = findOrCreateUser(userInfo);
+        log.info(
+            "OAuth 사용자 인증 완료. provider={}, userId={}, role={}",
+            registrationId,
+            user.getId(),
+            user.getRoleOrDefault()
+        );
 
         Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
         attributes.put("userId", user.getId());
@@ -84,6 +92,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             normalize(userInfo.getProfileImageUrl())
         );
         SocialAccount saved = socialAccountStore.store(socialAccount);
+        log.debug(
+            "OAuth 소셜 계정 동기화 완료. provider={}, userId={}",
+            userInfo.getProvider(),
+            saved.getUser().getId()
+        );
         return saved.getUser();
     }
 
@@ -110,6 +123,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         );
 
         socialAccountStore.store(socialAccount);
+        log.info("OAuth 신규 사용자 생성 완료. provider={}, userId={}", userInfo.getProvider(), savedUser.getId());
 
         return savedUser;
     }

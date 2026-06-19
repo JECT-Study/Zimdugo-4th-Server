@@ -23,10 +23,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -63,6 +65,12 @@ public class LockerContentI18nAdminService {
             .map(item -> new PlaceAliasEntity(place, item.language(), item.alias()))
             .toList());
         eventPublisher.publishEvent(LockerContentI18nChangedEvent.place(placeId));
+        log.info(
+            "장소 다국어 콘텐츠 교체 완료. placeId={}, translationCount={}, aliasCount={}",
+            placeId,
+            request.translations().size(),
+            aliases(request.aliases()).size()
+        );
         return placeResponse(placeId);
     }
 
@@ -85,6 +93,12 @@ public class LockerContentI18nAdminService {
             .map(item -> new LockerAliasEntity(locker, item.language(), item.alias()))
             .toList());
         eventPublisher.publishEvent(LockerContentI18nChangedEvent.locker(lockerId));
+        log.info(
+            "보관함 다국어 콘텐츠 교체 완료. lockerId={}, translationCount={}, aliasCount={}",
+            lockerId,
+            request.translations().size(),
+            lockerAliases(request.aliases()).size()
+        );
         return lockerResponse(lockerId);
     }
 

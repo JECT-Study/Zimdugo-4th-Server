@@ -8,8 +8,10 @@ import com.zimdugo.common.storage.S3StorageProperties;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3PresignedImageUploadService implements PresignedImageUploadService {
@@ -34,6 +36,14 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         String key = createKey(category, extension, userId);
         PresignedUpload upload = presignedUploadClient.createPresignedPutObject(
             key,
+            normalizedContentType,
+            contentLength
+        );
+        log.info(
+            "이미지 업로드 URL 발급 완료. category={}, userId={}, key={}, contentType={}, contentLength={}",
+            category,
+            userId,
+            upload.key(),
             normalizedContentType,
             contentLength
         );

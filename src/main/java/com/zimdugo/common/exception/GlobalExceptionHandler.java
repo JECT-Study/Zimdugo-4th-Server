@@ -51,6 +51,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             );
             return errorResponse(errorCode, errorCode.getMessage(), null, request);
         }
+        log.debug(
+            "비즈니스 예외가 발생했습니다. code={}, method={}, path={}",
+            errorCode.getCode(),
+            request.getMethod(),
+            request.getRequestURI()
+        );
         return errorResponse(errorCode, ex.getMessage(), null, request);
     }
 
@@ -94,6 +100,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         HttpStatusCode status,
         WebRequest request
     ) {
+        HttpServletRequest servletRequest = servletRequest(request);
+        log.warn(
+            "요청 본문 형식이 올바르지 않습니다. method={}, path={}",
+            servletRequest.getMethod(),
+            servletRequest.getRequestURI()
+        );
         return errorResponse(
             ErrorCode.INVALID_JSON_FORMAT,
             ErrorCode.INVALID_JSON_FORMAT.getMessage(),
@@ -109,6 +121,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         HttpStatusCode status,
         WebRequest request
     ) {
+        HttpServletRequest servletRequest = servletRequest(request);
+        log.warn(
+            "요청 파라미터 형식이 올바르지 않습니다. method={}, path={}, field={}",
+            servletRequest.getMethod(),
+            servletRequest.getRequestURI(),
+            ex.getPropertyName() == null ? REQUEST_FIELD : ex.getPropertyName()
+        );
         ValidationError validationError = ValidationError.of(
             ex.getPropertyName() == null ? REQUEST_FIELD : ex.getPropertyName(),
             ErrorCode.INVALID_PARAMETER_FORMAT.getMessage(),
@@ -303,5 +322,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return null;
         }
         return traceId;
+    }
+
+    private HttpServletRequest servletRequest(WebRequest request) {
+        return ((ServletWebRequest) request).getRequest();
     }
 }

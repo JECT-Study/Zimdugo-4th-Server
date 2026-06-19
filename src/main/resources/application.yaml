@@ -142,7 +142,10 @@ management:
         include: "*"
 
 logging:
+  pattern:
+    level: "%5p [traceId:%X{traceId:-}]"
   level:
+    com.zimdugo: debug
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
 
@@ -202,3 +205,12 @@ management:
     web:
       exposure:
         include: health,info,metrics
+
+logging:
+  pattern:
+    level: "%5p [traceId:%X{traceId:-}]"
+  level:
+    root: info
+    com.zimdugo: info
+    org.hibernate.SQL: warn
+    org.hibernate.orm.jdbc.bind: warn

@@ -13,7 +13,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public record LockerSearchFilter(
     Set<LockerSizeType> sizeTypes,
     Set<IndoorOutdoorType> indoorOutdoorTypes,
@@ -41,9 +43,12 @@ public record LockerSearchFilter(
         Set<String> indoorOutdoorTypes,
         Set<String> lockerTypes
     ) {
-        System.out.println("[DEBUG] LockerSearchFilter.from - sizeTypes: " + sizeTypes);
-        System.out.println("[DEBUG] LockerSearchFilter.from - indoorOutdoorTypes: " + indoorOutdoorTypes);
-        System.out.println("[DEBUG] LockerSearchFilter.from - lockerTypes: " + lockerTypes);
+        log.debug(
+            "검색 필터 파싱 시작. sizeTypes={}, indoorOutdoorTypes={}, lockerTypes={}",
+            sizeTypes,
+            indoorOutdoorTypes,
+            lockerTypes
+        );
 
         Set<LockerSizeType> parsedSizeTypes = parseEnumSet(sizeTypes, LockerSizeType::from);
         Set<IndoorOutdoorType> parsedIndoorOutdoorTypes =
