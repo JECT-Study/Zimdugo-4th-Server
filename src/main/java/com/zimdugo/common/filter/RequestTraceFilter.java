@@ -61,13 +61,6 @@ public class RequestTraceFilter extends OncePerRequestFilter {
             return;
         }
         if (isManagementPollingPath(request.getRequestURI())) {
-            log.debug(
-                "관리용 요청 처리 완료. method={}, path={}, status={}, durationMs={}",
-                request.getMethod(),
-                request.getRequestURI(),
-                status,
-                durationMs
-            );
             return;
         }
         log.info(
