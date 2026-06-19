@@ -3,6 +3,8 @@ package com.zimdugo.locker.domain.search;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -77,6 +79,21 @@ class LockerSearchFilterTest {
         assertThat(filter.sizeTypes()).containsExactlyInAnyOrder(LockerSizeType.SMALL, LockerSizeType.LARGE);
         assertThat(filter.indoorOutdoorTypes()).containsExactly(IndoorOutdoorType.INDOOR);
         assertThat(filter.lockerTypes()).containsExactly(LockerType.SUBWAY_STATION);
+    }
+
+    @Test
+    @DisplayName("필터 파싱은 표준 출력에 디버그 로그를 쓰지 않는다")
+    void parsingDoesNotWriteToStandardOutput() {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(output));
+        try {
+            LockerSearchFilter.from(Set.of("SMALL"), Set.of("INDOOR"), Set.of("ETC"));
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        assertThat(output.toString()).isBlank();
     }
 
     @Test

@@ -9,9 +9,11 @@ import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.domain.UserStore;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -35,6 +37,7 @@ public class AccountWithdrawalService {
         Long userId = jwtTokenProvider.getUserId(accessToken);
         User user = userQueryService.findById(userId);
         if (user.getStatus() == UserStatus.DELETED) {
+            log.warn("이미 탈퇴한 사용자의 탈퇴 요청입니다. userId={}", userId);
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
@@ -43,5 +46,6 @@ public class AccountWithdrawalService {
 
         socialAccountStore.deleteAllByUserId(userId);
         refreshTokenRepository.deleteAllByUserId(userId);
+        log.info("회원 탈퇴 완료. userId={}", userId);
     }
 }

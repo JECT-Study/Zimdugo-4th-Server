@@ -6,12 +6,13 @@ import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.domain.search.LockerSearchCandidateReader;
 import com.zimdugo.locker.domain.search.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.search.LockerSearchFilter;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -45,14 +46,23 @@ public class LockerSearchQueryService {
             keyword,
             filter
         );
+        log.debug(
+            "보관함 검색 후보 조회 완료. keywordPresent={}, filterEmpty={}, matchType={}, resultCount={}",
+            keyword != null && !keyword.isBlank(),
+            filter.isEmpty(),
+            candidateResult.matchType(),
+            candidateResult.candidates().size()
+        );
         if (candidateResult.candidates().isEmpty()) {
             return List.of();
         }
 
-        return lockerSearchAssembler.assemble(
+        List<LockerSuggestItemResult> results = lockerSearchAssembler.assemble(
             candidateResult.candidates(),
             candidateResult.matchType()
         );
+        log.debug("보관함 검색 응답 생성 완료. resultCount={}", results.size());
+        return results;
     }
 
 

@@ -9,9 +9,11 @@ import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.domain.UserReader;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -28,14 +30,17 @@ public class FavoriteLockerCommandService {
             throw new BusinessException(ErrorCode.LOCKER_NOT_FOUND);
         }
         if (favoriteLockerReader.exists(userId, lockerId)) {
+            log.debug("이미 등록된 즐겨찾기 요청입니다. userId={}, lockerId={}", userId, lockerId);
             return;
         }
         favoriteLockerStore.save(userId, lockerId);
+        log.info("즐겨찾기 등록 완료. userId={}, lockerId={}", userId, lockerId);
     }
 
     public void remove(Long userId, Long lockerId) {
         validateUser(userId);
         favoriteLockerStore.delete(userId, lockerId);
+        log.info("즐겨찾기 삭제 요청 처리 완료. userId={}, lockerId={}", userId, lockerId);
     }
 
     private void validateUser(Long userId) {

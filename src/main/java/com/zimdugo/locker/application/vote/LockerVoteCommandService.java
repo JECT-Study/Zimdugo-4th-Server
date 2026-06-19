@@ -11,9 +11,11 @@ import com.zimdugo.locker.domain.vote.LockerVoteType;
 import com.zimdugo.locker.domain.detail.LockerDetailStore;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -37,23 +39,42 @@ public class LockerVoteCommandService {
 
         Optional<LockerVote> existingVote = lockerVoteReader.find(userId, lockerId);
 
-        if (existingVote.isPresent()) {
-            LockerVote vote = existingVote.get();
-            if (vote.voteType() == voteType) {
-                // 같은 타입 투표 -> 투표 취소
-                lockerVoteStore.delete(userId, lockerId);
-                lockerDetail = lockerDetail.cancelVote(voteType);
-            } else {
-                // 다른 타입 투표 -> 투표 타입 변경 (이전 투표 취소 및 새 투표 추가)
-                lockerVoteStore.save(userId, lockerId, voteType);
-                lockerDetail = lockerDetail.vote(voteType).cancelVote(vote.voteType());
-            }
-        } else {
-            // 투표 없음 -> 신규 투표 생성
+        VoteUpdateResult result = updateVote(userId, lockerId, voteType, lockerDetail, existingVote);
+        lockerDetailStore.save(result.lockerDetail());
+        log.info(
+            "보관함 투표 처리 완료. userId={}, lockerId={}, voteType={}, action={}",
+            userId,
+            lockerId,
+            voteType,
+            result.action()
+        );
+    }
+
+    private VoteUpdateResult updateVote(
+        Long userId,
+        Long lockerId,
+        LockerVoteType voteType,
+        LockerDetail lockerDetail,
+        Optional<LockerVote> existingVote
+    ) {
+        if (existingVote.isEmpty()) {
             lockerVoteStore.save(userId, lockerId, voteType);
-            lockerDetail = lockerDetail.vote(voteType);
+            return new VoteUpdateResult(lockerDetail.vote(voteType), "CREATE");
         }
 
-        lockerDetailStore.save(lockerDetail);
+        LockerVote vote = existingVote.get();
+        if (vote.voteType() == voteType) {
+            lockerVoteStore.delete(userId, lockerId);
+            return new VoteUpdateResult(lockerDetail.cancelVote(voteType), "CANCEL");
+        }
+
+        lockerVoteStore.save(userId, lockerId, voteType);
+        return new VoteUpdateResult(lockerDetail.vote(voteType).cancelVote(vote.voteType()), "CHANGE");
+    }
+
+    private record VoteUpdateResult(
+        LockerDetail lockerDetail,
+        String action
+    ) {
     }
 }
