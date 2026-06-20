@@ -2,9 +2,6 @@ spring:
   application:
     name: zimdugo-be
 
-  profiles:
-    active: local
-
   jpa:
     open-in-view: false
 
@@ -80,15 +77,6 @@ springdoc:
   paths-to-exclude:
     - /admin/**
 
-auth:
-  callback:
-    frontend-base-url: http://localhost:3000
-    allowed-origins: http://localhost:3000,http://localhost:5173
-  cookie:
-    refresh:
-      secure: false
-      same-site: Strict
-
 storage:
   s3:
     region: ${AWS_REGION:ap-northeast-2}
@@ -115,117 +103,3 @@ translation:
     model: ${GEMINI_TRANSLATION_MODEL:gemini-2.5-flash-lite}
     connect-timeout-millis: ${GEMINI_CONNECT_TIMEOUT_MILLIS:1500}
     read-timeout-millis: ${GEMINI_READ_TIMEOUT_MILLIS:30000}
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
-    import: optional:classpath:application-private.yaml
-
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:zimdugo}
-    username: ${DB_USERNAME:zimdugo}
-    password: ${DB_PASSWORD:zimdugo}
-    driver-class-name: org.postgresql.Driver
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    defer-datasource-initialization: true
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-
-  sql:
-    init:
-      mode: always
-      separator: ';;'
-      data-locations:
-        - file:scripts/db/01-postgis.sql
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-logging:
-  pattern:
-    level: "%5p [traceId:%X{traceId:-}]"
-  level:
-    com.zimdugo: debug
-    org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
-
-auth:
-  callback:
-    frontend-base-url: http://localhost:3000
-    allowed-origins: http://localhost:3000,http://localhost:5173
-  cookie:
-    refresh:
-      secure: false
-      same-site: Strict
-
-storage:
-  s3:
-    bucket: ${AWS_S3_BUCKET:dummy-local-bucket}
-    public-base-url: ${AWS_CLOUDFRONT_PUBLIC_BASE_URL:https://dummy-local.example.com}
-    max-upload-bytes: ${AWS_S3_MAX_UPLOAD_BYTES:10485760}
-
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-
-  elasticsearch:
-    uris: ${ELASTICSEARCH_URIS}
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-
-server:
-  forward-headers-strategy: framework
-
-auth:
-  callback:
-    frontend-base-url: https://zimdugo.com
-    allowed-origins: https://zimdugo.com,https://www.zimdugo.com,https://zimdugo-web.vercel.app
-  cookie:
-    refresh:
-      secure: true
-      same-site: None
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-
-logging:
-  pattern:
-    level: "%5p [traceId:%X{traceId:-}]"
-  level:
-    root: info
-    com.zimdugo: info
-    org.hibernate.SQL: warn
-    org.hibernate.orm.jdbc.bind: warn

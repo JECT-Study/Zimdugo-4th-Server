@@ -1,0 +1,49 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+server:
+  forward-headers-strategy: framework
+
+auth:
+  callback:
+    frontend-base-url: https://zimdugo.com
+    allowed-origins: https://zimdugo.com,https://www.zimdugo.com,https://zimdugo-web.vercel.app
+  cookie:
+    refresh:
+      secure: true
+      same-site: None
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  pattern:
+    level: "%5p [traceId:%X{traceId:-}]"
+  level:
+    root: info
+    com.zimdugo: info
+    org.hibernate.SQL: warn
+    org.hibernate.orm.jdbc.bind: warn
