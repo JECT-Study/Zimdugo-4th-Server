@@ -51,7 +51,14 @@ class LockerReportCommandServiceTest {
             assertThat(result.reportId()).isEqualTo(100L);
             assertThat(result.reportStatus()).isEqualTo("SUBMITTED");
             verify(activeUserValidator).validate(1L);
-            verify(lockerReportStore).create(any(LockerReportCreateInfo.class));
+
+            ArgumentCaptor<LockerReportCreateInfo> captor =
+                ArgumentCaptor.forClass(LockerReportCreateInfo.class);
+            verify(lockerReportStore).create(captor.capture());
+
+            LockerReportCreateInfo createInfo = captor.getValue();
+            assertThat(createInfo.priceType()).isEqualTo("UNKNOWN");
+            assertThat(createInfo.operatingTimeType()).isEqualTo("UNKNOWN");
         }
 
         @Test
