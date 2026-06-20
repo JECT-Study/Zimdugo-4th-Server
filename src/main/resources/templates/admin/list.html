@@ -239,9 +239,13 @@
                     location.reload();
                     return;
                 }
-                readErrorMessage(response, '적용 상태 변경에 실패했습니다.')
-                    .then(message => {
-                        alert(message);
+                readErrorResponse(response, '적용 상태 변경에 실패했습니다.')
+                    .then(error => {
+                        alert(error.message);
+                        if (error.code === 'ADMIN-400-3') {
+                            window.location.href = '/admin/documents/' + id + '/translations';
+                            return;
+                        }
                         location.reload();
                     });
             })
@@ -265,22 +269,30 @@
             return false;
         }
 
-        function readErrorMessage(response, fallbackMessage) {
+        function readErrorResponse(response, fallbackMessage) {
             const contentType = response.headers.get('content-type') || '';
             if (contentType.includes('application/json')) {
                 return response.json()
-                    .then(errorData => errorData.message || fallbackMessage)
-                    .catch(() => fallbackMessage);
+                    .then(errorData => ({
+                        code: errorData.code || null,
+                        message: errorData.message || fallbackMessage
+                    }))
+                    .catch(() => ({code: null, message: fallbackMessage}));
             }
             return response.text()
                 .then(text => {
                     const message = text.trim();
                     if (!message || message.startsWith('<')) {
-                        return fallbackMessage;
+                        return {code: null, message: fallbackMessage};
                     }
-                    return message;
+                    return {code: null, message};
                 })
-                .catch(() => fallbackMessage);
+                .catch(() => ({code: null, message: fallbackMessage}));
+        }
+
+        function readErrorMessage(response, fallbackMessage) {
+            return readErrorResponse(response, fallbackMessage)
+                .then(error => error.message);
         }
 
         function saveDocumentsOrder() {

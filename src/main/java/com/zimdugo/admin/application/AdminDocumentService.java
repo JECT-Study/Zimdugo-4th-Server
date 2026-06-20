@@ -177,10 +177,7 @@ public class AdminDocumentService {
         
         if (nextActiveState) {
             if (!document.hasAllRequiredTranslations()) {
-                throw new BusinessException(
-                    ErrorCode.CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS,
-                    missingTranslationMessage(document)
-                );
+                throw new BusinessException(ErrorCode.CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS);
             }
             if (document.getType() == DocumentType.TERMS || document.getType() == DocumentType.PRIVACY) {
                 List<AdminDocument> activeDocs = adminDocumentRepository
@@ -193,17 +190,6 @@ public class AdminDocumentService {
         } else {
             document.deactivate();
         }
-    }
-
-    private String missingTranslationMessage(AdminDocument document) {
-        List<String> missingLanguages = SupportedLanguage.all().stream()
-            .filter(language -> !document.hasCompleteTranslation(language.languageTag()))
-            .map(SupportedLanguage::languageTag)
-            .toList();
-
-        return "번역이 완료되지 않아 적용할 수 없습니다. 누락 언어: "
-            + String.join(", ", missingLanguages)
-            + ". 번역 확인 화면에서 제목과 모든 섹션 본문을 저장해 주세요.";
     }
 
     @Transactional
