@@ -426,7 +426,9 @@
             const confirmed = confirm('저장하지 않고 이동하면 작성한 번역 내용이 사라집니다. 이동하시겠습니까?');
             if (!confirmed) {
                 event.preventDefault();
+                return;
             }
+            safeSubmit = true;
         }
 
         window.addEventListener('beforeunload', event => {

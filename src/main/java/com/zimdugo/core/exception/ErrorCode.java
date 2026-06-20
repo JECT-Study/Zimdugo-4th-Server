@@ -25,7 +25,7 @@ public enum ErrorCode implements BaseCode {
     INVALID_ADMIN_DOCUMENT_ORDER("ADMIN-400-2", "관리자 문서 순서 변경 요청이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS(
         "ADMIN-400-3",
-        "모든 지원 언어 번역이 완료되지 않은 문서는 활성화할 수 없습니다.",
+        "번역이 완료되지 않았습니다.",
         HttpStatus.BAD_REQUEST
     ),
     INVALID_ADMIN_DOCUMENT_TYPE("ADMIN-400-4", "관리자 문서 타입이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
