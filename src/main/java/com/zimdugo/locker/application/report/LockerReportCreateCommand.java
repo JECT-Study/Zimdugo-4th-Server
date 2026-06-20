@@ -46,14 +46,14 @@ public record LockerReportCreateCommand(
 
     private String resolvePriceType() {
         if (minPrice == null && maxPrice == null) {
-            return "FREE";
+            return "UNKNOWN";
         }
         return "PAID";
     }
 
     private String resolveOperatingTimeType() {
         if (startTime == null && endTime == null) {
-            return "OPEN_24_HOURS";
+            return "UNKNOWN";
         }
         return "TIME_RANGE";
     }
