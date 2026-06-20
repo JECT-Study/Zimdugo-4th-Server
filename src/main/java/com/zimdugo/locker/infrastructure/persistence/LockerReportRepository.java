@@ -22,6 +22,14 @@ public interface LockerReportRepository extends JpaRepository<LockerReportEntity
     @Query("SELECT lr FROM LockerReportEntity lr WHERE lr.id = :reportId")
     Optional<LockerReportEntity> findActiveById(@Param("reportId") Long reportId);
 
+    @Query("""
+        SELECT lr
+        FROM LockerReportEntity lr
+        LEFT JOIN FETCH lr.image
+        WHERE lr.id = :reportId
+        """)
+    Optional<LockerReportEntity> findActiveByIdWithImage(@Param("reportId") Long reportId);
+
     @Query("SELECT COUNT(lr) FROM LockerReportEntity lr WHERE lr.user.id = :userId")
     long countLockerReportsByUserId(@Param("userId") Long userId);
 

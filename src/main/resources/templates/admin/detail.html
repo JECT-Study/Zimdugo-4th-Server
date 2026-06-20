@@ -73,6 +73,16 @@
             border-top: 1px solid #e5e5e5;
             padding-top: 1.25rem;
         }
+
+        .alert {
+            border: 1px solid #fca5a5;
+            background: #fef2f2;
+            color: #b91c1c;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.88rem;
+        }
     </style>
 
     <div class="page-header">
@@ -86,6 +96,10 @@
     </div>
 
     <div class="card">
+        <div class="alert" th:if="${errorMessage != null}" th:text="${errorMessage}">
+            적용 실패 메시지
+        </div>
+
         <!-- 메타 정보 -->
         <div class="doc-meta">
             <span>
@@ -147,6 +161,9 @@
                         <i class="fa-solid fa-trash-can"></i> 삭제하기
                     </button>
                 </form>
+                <a th:href="@{/admin/documents/{id}/translations(id=${document.id})}" class="btn btn-secondary">
+                    <i class="fa-solid fa-language"></i> 번역 확인
+                </a>
                 <a th:href="@{/admin/documents/{id}/edit(id=${document.id})}" class="btn btn-primary">
                     <i class="fa-solid fa-pen"></i> 수정하기
                 </a>

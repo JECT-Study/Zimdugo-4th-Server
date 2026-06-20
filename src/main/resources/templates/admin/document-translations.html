@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>문서 번역 확인</title>
+</head>
+<body>
+<main>
+    <style>
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .translation-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.35rem;
+        }
+        .translation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .translation-row {
+            display: grid;
+            grid-template-columns: minmax(300px, 1fr) 52px minmax(360px, 1fr);
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+        .translation-panel {
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #fff;
+            min-width: 0;
+        }
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.8rem;
+        }
+        .panel-head h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .panel-head span {
+            font-size: 0.78rem;
+            color: #888;
+        }
+        .copy-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .copy-button {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            border: 1px solid #d4d4d4;
+            background: #fff;
+            color: #4f46e5;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, transform 0.15s;
+        }
+        .copy-button:hover:not(:disabled) {
+            background: #eef2ff;
+            border-color: #a5b4fc;
+            transform: translateX(2px);
+        }
+        .copy-button:disabled {
+            color: #bbb;
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            margin-bottom: 0.7rem;
+        }
+        .field label {
+            font-size: 0.78rem;
+            color: #666;
+            font-weight: 600;
+        }
+        .field input,
+        .field textarea {
+            width: 100%;
+            border: 1px solid #d4d4d4;
+            border-radius: 6px;
+            padding: 0.55rem 0.65rem;
+            font-family: inherit;
+            font-size: 0.88rem;
+        }
+        .field textarea {
+            min-height: 96px;
+            resize: vertical;
+            line-height: 1.55;
+        }
+        .field input[readonly],
+        .field textarea[readonly] {
+            background: #fafafa;
+            color: #555;
+        }
+        .muted { color: #888; font-size: 0.82rem; }
+        .alert {
+            border: 1px solid #fca5a5;
+            background: #fef2f2;
+            color: #b91c1c;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.88rem;
+        }
+        .alert-success {
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .empty-draft {
+            min-height: 148px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #d4d4d4;
+            border-radius: 6px;
+            color: #888;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 1rem;
+        }
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.72);
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .loading-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #4f46e5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 1060px) {
+            .translation-row {
+                grid-template-columns: 1fr;
+            }
+            .copy-cell {
+                min-height: 40px;
+            }
+            .copy-button {
+                transform: rotate(90deg);
+            }
+            .copy-button:hover:not(:disabled) {
+                transform: rotate(90deg) translateX(2px);
+            }
+        }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="page-header type-label">DOCUMENT TRANSLATIONS</div>
+            <h1 th:text="${page.document.title}">문서 번역 확인</h1>
+        </div>
+        <div class="toolbar">
+            <a th:href="@{/admin/documents/{id}(id=${page.document.id})}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> 상세로
+            </a>
+            <form th:action="@{/admin/documents/{id}/translations/draft(id=${page.document.id})}"
+                  method="post"
+                  id="draftForm">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-language"></i> 번역 초안 생성
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="alert" th:if="${draftError != null}" th:text="${draftError}">
+        번역 초안 생성 실패
+    </div>
+    <div class="alert alert-success" th:if="${successMessage != null}" th:text="${successMessage}">
+        저장되었습니다.
+    </div>
+
+    <div class="card">
+        <div class="translation-actions">
+            <div>
+                <div class="section-title">번역 초안 / 저장된 번역</div>
+                <div class="muted">화살표는 초안을 오른쪽 저장 폼에 복사합니다.</div>
+            </div>
+            <div class="toolbar">
+                <button type="button" class="btn btn-secondary" id="applyAllDrafts" th:disabled="${draft == null}">
+                    <i class="fa-solid fa-angles-right"></i> 일괄 적용
+                </button>
+                <button type="submit" class="btn btn-primary" form="translationsForm" id="saveAllTranslations">
+                    <i class="fa-solid fa-floppy-disk"></i> 저장하기
+                </button>
+            </div>
+        </div>
+
+        <form id="translationsForm"
+              th:action="@{/admin/documents/{id}/translations/all(id=${page.document.id})}"
+              method="post">
+            <div class="translation-list">
+                <div class="translation-row"
+                     th:each="languageReview, langIter : ${page.languages}"
+                     th:with="tag=${languageReview.language.languageTag()},
+                              draftTranslation=${draft == null ? null : draft.translationFor(tag)}"
+                     th:data-language="${tag}">
+                    <section class="translation-panel draft-side">
+                        <div class="panel-head">
+                            <h2 th:text="${tag} + ' 번역 초안'">en 번역 초안</h2>
+                            <span th:if="${draftTranslation != null}">초안</span>
+                        </div>
+
+                        <div th:if="${draftTranslation == null}" class="empty-draft">
+                            번역 초안을 생성하면 여기에 표시됩니다.
+                        </div>
+
+                        <div th:if="${draftTranslation != null}">
+                            <div class="field">
+                                <label>제목</label>
+                                <textarea readonly
+                                          class="draft-title"
+                                          th:text="${draftTranslation.title}">title</textarea>
+                            </div>
+                            <div th:each="draftSection, draftIter : ${draftTranslation.sections}">
+                                <div class="field">
+                                    <label th:text="'섹션 ' + ${draftIter.count} + ' 소제목'">소제목</label>
+                                    <input readonly
+                                           class="draft-subtitle"
+                                           th:data-section-id="${draftSection.sectionId}"
+                                           th:value="${draftSection.subtitle}">
+                                </div>
+                                <div class="field">
+                                    <label th:text="'섹션 ' + ${draftIter.count} + ' 본문'">본문</label>
+                                    <textarea readonly
+                                              class="draft-content"
+                                              th:data-section-id="${draftSection.sectionId}"
+                                              th:text="${draftSection.content}">content</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="copy-cell">
+                        <button type="button"
+                                class="copy-button apply-language-draft"
+                                title="이 언어 초안 적용"
+                                th:disabled="${draftTranslation == null}">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <section class="translation-panel saved-side">
+                        <div class="panel-head">
+                            <h2 th:text="${tag} + ' 저장된 번역'">en 저장된 번역</h2>
+                        </div>
+
+                        <input type="hidden"
+                               th:name="'translations[' + ${langIter.index} + '].language'"
+                               th:value="${tag}">
+                        <div class="field">
+                            <label>제목</label>
+                            <input class="saved-title"
+                                   th:name="'translations[' + ${langIter.index} + '].title'"
+                                   th:value="${languageReview.title}"
+                                   required>
+                        </div>
+
+                        <div th:each="section, sectionIter : ${languageReview.sections}">
+                            <input type="hidden"
+                                   th:name="'translations[' + ${langIter.index} + '].sections['
+                                            + ${sectionIter.index} + '].sectionId'"
+                                   th:value="${section.sectionId}">
+                            <div class="field">
+                                <label th:text="'섹션 ' + ${sectionIter.count} + ' 소제목'">소제목</label>
+                                <input class="saved-subtitle"
+                                       th:data-section-id="${section.sectionId}"
+                                       th:name="'translations[' + ${langIter.index} + '].sections['
+                                                + ${sectionIter.index} + '].subtitle'"
+                                       th:value="${section.subtitle}"
+                                       th:placeholder="${section.sourceSubtitle}">
+                            </div>
+                            <div class="field">
+                                <label th:text="'섹션 ' + ${sectionIter.count} + ' 본문'">본문</label>
+                                <textarea class="saved-content"
+                                          th:data-section-id="${section.sectionId}"
+                                          th:name="'translations[' + ${langIter.index} + '].sections['
+                                                   + ${sectionIter.index} + '].content'"
+                                          required
+                                          th:placeholder="${section.sourceContent}"
+                                          th:text="${section.content}">본문</textarea>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-hidden="true">
+        <div class="loading-box">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <span>번역 초안을 생성하는 중입니다.</span>
+        </div>
+    </div>
+
+    <script>
+        const translationsForm = document.getElementById('translationsForm');
+        const applyAllButton = document.getElementById('applyAllDrafts');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        let dirty = false;
+        let safeSubmit = false;
+
+        function showLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('active');
+                loadingOverlay.setAttribute('aria-hidden', 'false');
+            }
+        }
+
+        function applyDraft(row) {
+            const draftTitle = row.querySelector('.draft-title');
+            if (!draftTitle) {
+                return;
+            }
+
+            row.querySelector('.saved-title').value = draftTitle.value;
+            row.querySelectorAll('.draft-subtitle').forEach(draftField => {
+                const sectionId = draftField.dataset.sectionId;
+                const target = row.querySelector('.saved-subtitle[data-section-id="' + sectionId + '"]');
+                if (target) {
+                    target.value = draftField.value;
+                }
+            });
+            row.querySelectorAll('.draft-content').forEach(draftField => {
+                const sectionId = draftField.dataset.sectionId;
+                const target = row.querySelector('.saved-content[data-section-id="' + sectionId + '"]');
+                if (target) {
+                    target.value = draftField.value;
+                }
+            });
+            dirty = true;
+        }
+
+        document.querySelectorAll('.apply-language-draft').forEach(button => {
+            button.addEventListener('click', event => {
+                applyDraft(event.currentTarget.closest('.translation-row'));
+            });
+        });
+
+        if (applyAllButton) {
+            applyAllButton.addEventListener('click', () => {
+                document.querySelectorAll('.translation-row').forEach(applyDraft);
+            });
+        }
+
+        translationsForm.addEventListener('input', () => {
+            dirty = true;
+        });
+
+        translationsForm.addEventListener('submit', () => {
+            safeSubmit = true;
+            dirty = false;
+        });
+
+        const draftForm = document.getElementById('draftForm');
+        if (draftForm) {
+            draftForm.addEventListener('submit', event => {
+                if (!dirty) {
+                    showLoading();
+                    return;
+                }
+                const confirmed = confirm('저장하지 않고 초안을 다시 생성하면 작성한 번역 내용이 사라집니다. 계속하시겠습니까?');
+                if (!confirmed) {
+                    event.preventDefault();
+                } else {
+                    safeSubmit = true;
+                    showLoading();
+                }
+            });
+        }
+
+        function confirmNavigation(event) {
+            if (!dirty) {
+                return;
+            }
+            const confirmed = confirm('저장하지 않고 이동하면 작성한 번역 내용이 사라집니다. 이동하시겠습니까?');
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        }
+
+        window.addEventListener('beforeunload', event => {
+            if (!dirty || safeSubmit) {
+                return;
+            }
+            event.preventDefault();
+            event.returnValue = '';
+        });
+
+        document.addEventListener('click', event => {
+            const link = event.target.closest('a[href]');
+            if (!link) {
+                return;
+            }
+            confirmNavigation(event);
+        });
+    </script>
+</main>
+</body>
+</html>

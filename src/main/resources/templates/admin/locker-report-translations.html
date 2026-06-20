@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>제보 번역 확인</title>
+</head>
+<body>
+<main>
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(280px, 0.8fr) minmax(360px, 1.2fr);
+            gap: 1rem;
+            align-items: start;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1a1a1a;
+        }
+        .definition-list {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 0.55rem 0.75rem;
+            font-size: 0.88rem;
+        }
+        .definition-list dt { color: #888; font-weight: 600; }
+        .definition-list dd { color: #333; overflow-wrap: anywhere; }
+        .translation-block {
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: #fff;
+        }
+        .translation-block h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.65rem;
+            color: #4f46e5;
+        }
+        .muted { color: #888; font-size: 0.82rem; }
+        .alert {
+            border: 1px solid #fca5a5;
+            background: #fef2f2;
+            color: #b91c1c;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.88rem;
+        }
+        .panel {
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .panel-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+        .alias-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+        .alias-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.18rem 0.5rem;
+            border-radius: 4px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.72);
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .loading-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #4f46e5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 980px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="page-header type-label">REPORT TRANSLATIONS</div>
+            <h1 th:text="'제보 #' + ${page.report.id} + ' 번역 확인'">제보 번역 확인</h1>
+        </div>
+        <a th:href="@{/admin/locker-reports}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> 목록으로
+        </a>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="section-title">제보 원문</div>
+            <dl class="definition-list">
+                <dt>상태</dt><dd th:text="${page.report.status}">SUBMITTED</dd>
+                <dt>이름</dt><dd th:text="${page.report.name} ?: '-'">-</dd>
+                <dt>주소</dt><dd th:text="${page.report.roadAddress} ?: '-'">-</dd>
+                <dt>층</dt>
+                <dd th:text="${page.report.groundLevelType} + ' / ' + (${page.report.floor} ?: '-')">-</dd>
+                <dt>위치</dt>
+                <dd th:text="${page.report.latitude} + ', ' + ${page.report.longitude}">0, 0</dd>
+                <dt>타입</dt>
+                <dd th:text="${page.report.indoorOutdoorType} + ' / ' + ${page.report.lockerType}">-</dd>
+                <dt>크기</dt><dd th:text="${page.report.lockerSize}">-</dd>
+                <dt>요금</dt>
+                <dd th:text="${page.report.priceType} + ' / ' + (${page.report.minPrice} ?: '-') + '~' + (${page.report.maxPrice} ?: '-')">-</dd>
+                <dt>운영시간</dt>
+                <dd th:text="${page.report.operatingTimeType} + ' / ' + (${page.report.startTime} ?: '-') + '~' + (${page.report.endTime} ?: '-')">-</dd>
+                <dt>추가정보</dt><dd th:text="${page.report.additionalInfo} ?: '-'">-</dd>
+                <dt>적용 장소</dt><dd th:text="${page.report.appliedPlaceId} ?: '-'">-</dd>
+                <dt>적용 보관함</dt><dd th:text="${page.report.appliedLockerId} ?: '-'">-</dd>
+            </dl>
+            <div th:if="${page.report.imageUrl != null}" style="margin-top: 1rem;">
+                <img th:src="${page.report.imageUrl}" alt="제보 이미지" style="width: 100%; border-radius: 8px;">
+            </div>
+        </div>
+
+        <div>
+            <div class="card" style="margin-bottom: 1rem;">
+                <div class="panel-actions">
+                    <form th:action="@{/admin/locker-reports/{id}/translations/draft(id=${page.report.id})}"
+                          method="post"
+                          id="draftForm">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-language"></i> 번역 초안 생성
+                        </button>
+                    </form>
+                </div>
+                <div class="alert" th:if="${draftError != null}" th:text="${draftError}">
+                    번역 초안 생성 실패
+                </div>
+                <div th:if="${draft != null}">
+                    <div class="section-title">번역 초안</div>
+                    <div class="translation-block" th:each="item : ${draft.translations}">
+                        <h3 th:text="${item.language.languageTag()}">ko</h3>
+                        <dl class="definition-list">
+                            <dt>이름</dt><dd th:text="${item.name}">name</dd>
+                            <dt>주소</dt><dd th:text="${item.roadAddress}">address</dd>
+                            <dt>상세</dt><dd th:text="${item.detailInfo}">detail</dd>
+                            <dt>별칭</dt>
+                            <dd>
+                                <div class="alias-list" th:if="${not #lists.isEmpty(item.aliases)}">
+                                    <span class="alias-chip" th:each="alias : ${item.aliases}" th:text="${alias}">
+                                        alias
+                                    </span>
+                                </div>
+                                <span class="muted" th:if="${#lists.isEmpty(item.aliases)}">-</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="muted" th:if="${draft == null}">
+                    초안은 운영 데이터에 자동 반영되지 않습니다. 관리자 검수 후 기존 i18n API로 저장해야 합니다.
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-title">적용된 장소 번역</div>
+                <div class="muted" th:if="${page.placeI18n == null}">적용된 장소 ID가 없습니다.</div>
+                <div class="translation-block" th:each="item : ${page.placeI18n?.translations}">
+                    <h3 th:text="${item.language.languageTag()}">ko</h3>
+                    <dl class="definition-list">
+                        <dt>이름</dt><dd th:text="${item.name}">name</dd>
+                        <dt>주소</dt><dd th:text="${item.roadAddress}">address</dd>
+                    </dl>
+                </div>
+                <div th:if="${page.placeI18n != null and not #lists.isEmpty(page.placeI18n.aliases)}">
+                    <div class="section-title">적용된 장소 별칭</div>
+                    <div class="translation-block">
+                        <dl class="definition-list">
+                            <th:block th:each="alias : ${page.placeI18n.aliases}">
+                                <dt th:text="${alias.language.languageTag()}">ko</dt>
+                                <dd><span class="alias-chip" th:text="${alias.alias}">alias</span></dd>
+                            </th:block>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-title">적용된 보관함 번역</div>
+                <div class="muted" th:if="${page.lockerI18n == null}">적용된 보관함 ID가 없습니다.</div>
+                <div class="translation-block" th:each="item : ${page.lockerI18n?.translations}">
+                    <h3 th:text="${item.language.languageTag()}">ko</h3>
+                    <dl class="definition-list">
+                        <dt>이름</dt><dd th:text="${item.name}">name</dd>
+                        <dt>주소</dt><dd th:text="${item.roadAddress}">address</dd>
+                        <dt>상세</dt><dd th:text="${item.detailInfo}">detail</dd>
+                    </dl>
+                </div>
+                <div th:if="${page.lockerI18n != null and not #lists.isEmpty(page.lockerI18n.aliases)}">
+                    <div class="section-title">적용된 보관함 별칭</div>
+                    <div class="translation-block">
+                        <dl class="definition-list">
+                            <th:block th:each="alias : ${page.lockerI18n.aliases}">
+                                <dt th:text="${alias.language.languageTag()}">ko</dt>
+                                <dd><span class="alias-chip" th:text="${alias.alias}">alias</span></dd>
+                            </th:block>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-hidden="true">
+        <div class="loading-box">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <span>번역 초안을 생성하는 중입니다.</span>
+        </div>
+    </div>
+
+    <script>
+        const draftForm = document.getElementById('draftForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        if (draftForm && loadingOverlay) {
+            draftForm.addEventListener('submit', () => {
+                loadingOverlay.classList.add('active');
+                loadingOverlay.setAttribute('aria-hidden', 'false');
+            });
+        }
+    </script>
+</main>
+</body>
+</html>

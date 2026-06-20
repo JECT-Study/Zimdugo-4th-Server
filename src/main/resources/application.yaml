@@ -108,6 +108,14 @@ management:
         readiness:
           include: readinessState,lockerSuggestIndex,db,redis,elasticsearch
 
+translation:
+  gemini:
+    base-url: ${GEMINI_API_BASE_URL:https://generativelanguage.googleapis.com}
+    api-key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_TRANSLATION_MODEL:gemini-2.5-flash-lite}
+    connect-timeout-millis: ${GEMINI_CONNECT_TIMEOUT_MILLIS:1500}
+    read-timeout-millis: ${GEMINI_READ_TIMEOUT_MILLIS:30000}
+
 ---
 spring:
   config:

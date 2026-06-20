@@ -476,9 +476,11 @@ class AdminDocumentServiceTest {
 
         // when & then
         assertThatThrownBy(() -> adminDocumentService.toggleActive(doc.getId()))
-            .isInstanceOfSatisfying(BusinessException.class, exception ->
-                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS)
-            );
+            .isInstanceOfSatisfying(BusinessException.class, exception -> {
+                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CANNOT_ACTIVATE_WITHOUT_REQUIRED_TRANSLATIONS);
+                assertThat(exception.getMessage()).contains("누락 언어");
+                assertThat(exception.getMessage()).contains("ko");
+            });
     }
 
     private void addAllTranslations(AdminDocument document) {
