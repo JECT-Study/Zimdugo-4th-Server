@@ -44,3 +44,5 @@ src/main/resources/application-h2.yaml
 src/main/resources/application-private.yaml
 /zimdugo-server-keypair.pem
 /scripts/db/03-i18n.sql
+/docs/solutions/
+/docs/superpowers/
