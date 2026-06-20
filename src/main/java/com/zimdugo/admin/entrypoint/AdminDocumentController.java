@@ -4,6 +4,7 @@ import com.zimdugo.admin.application.AdminDocumentService;
 import com.zimdugo.admin.application.dto.AdminDocumentDetailResult;
 import com.zimdugo.admin.application.dto.AdminDocumentSummaryResult;
 import com.zimdugo.admin.entrypoint.dto.AdminDocumentForm;
+import com.zimdugo.core.exception.BusinessException;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +16,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/documents")
@@ -125,8 +127,15 @@ public class AdminDocumentController {
     }
 
     @PostMapping("/{id}/toggle-active/detail")
-    public String toggleActiveForDetail(@PathVariable(name = "id") Long id) {
-        adminDocumentService.toggleActive(id);
+    public String toggleActiveForDetail(
+        @PathVariable(name = "id") Long id,
+        RedirectAttributes redirectAttributes
+    ) {
+        try {
+            adminDocumentService.toggleActive(id);
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/admin/documents/" + id;
     }
 

@@ -34,6 +34,8 @@ services:
       - .env
     environment:
       ELASTICSEARCH_URIS: ${ELASTICSEARCH_URIS:-http://elasticsearch:9200}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_TRANSLATION_MODEL: ${GEMINI_TRANSLATION_MODEL:-gemini-2.5-flash-lite}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro

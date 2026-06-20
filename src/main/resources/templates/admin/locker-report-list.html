@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>보관함 제보 관리</title>
+</head>
+<body>
+<main>
+    <style>
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table th {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e5e5;
+            text-align: left;
+        }
+        .admin-table td {
+            padding: 0.85rem 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+        .title-link {
+            color: #1a1a1a;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .title-link:hover { color: #4f46e5; text-decoration: underline; }
+        .muted { color: #888; font-size: 0.82rem; }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            background: #f0f0f0;
+            color: #555;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .empty-state { text-align: center; padding: 3rem 1rem; color: #999; }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="page-header type-label">LOCKER REPORTS</div>
+            <h1>보관함 제보 관리</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <table class="admin-table" th:if="${not #lists.isEmpty(reports)}">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">ID</th>
+                    <th>제보 내용</th>
+                    <th style="width: 130px;">상태</th>
+                    <th style="width: 180px;">운영 반영 대상</th>
+                    <th style="width: 160px;">등록일시</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="report : ${reports}">
+                    <td class="muted" th:text="${report.id}">1</td>
+                    <td>
+                        <a class="title-link"
+                           th:href="@{/admin/locker-reports/{id}/translations(id=${report.id})}"
+                           th:text="${report.name != null and !report.name.isBlank()} ? ${report.name} : '이름 미입력'">
+                            보관함 이름
+                        </a>
+                        <div class="muted" th:text="${report.roadAddress}">도로명 주소</div>
+                    </td>
+                    <td><span class="badge" th:text="${report.status}">SUBMITTED</span></td>
+                    <td class="muted">
+                        <div th:text="'place: ' + (${report.appliedPlaceId} ?: '-')">place: -</div>
+                        <div th:text="'locker: ' + (${report.appliedLockerId} ?: '-')">locker: -</div>
+                    </td>
+                    <td class="muted" th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}">
+                        2026-06-19 12:00
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(reports)}">
+            <p>등록된 보관함 제보가 없습니다.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>
