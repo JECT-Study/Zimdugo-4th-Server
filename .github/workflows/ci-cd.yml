@@ -171,13 +171,13 @@ jobs:
               sleep 2
             done
             sudo docker compose -f docker-compose.deploy.yml up -d app
-            for i in {1..30}; do
+            for i in {1..90}; do
               status_code="$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/actuator/health/readiness || true)"
               if [ "$status_code" = "200" ] || [ "$status_code" = "401" ]; then
                 echo "Health check passed with HTTP ${status_code}"
                 break
               fi
-              if [ "$i" -eq 30 ]; then
+              if [ "$i" -eq 90 ]; then
                 echo "Health check failed. Dumping app logs..."
                 sudo docker compose -f docker-compose.deploy.yml logs app --tail=200
                 exit 1
