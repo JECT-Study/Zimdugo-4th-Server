@@ -39,6 +39,7 @@ import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,15 +58,21 @@ public class LockerSuggestIndexSyncService {
     private final PlaceAliasRepository placeAliasRepository;
     private final LockerTranslationRepository lockerTranslationRepository;
     private final PlaceTranslationRepository placeTranslationRepository;
+    private final LockerSuggestIndexAvailability indexAvailability;
 
     @EventListener(ApplicationReadyEvent.class)
+    @Async("lockerSuggestIndexSyncExecutor")
     @Transactional(readOnly = true)
     public void syncAtStartup() {
         String targetIndex = newVersionedIndexName();
         log.info("보관함 검색 인덱스 동기화 시작...");
         try {
+            if (hasServingIndex()) {
+                indexAvailability.markAvailable();
+            }
             List<LockerSuggestDocument> documents = toDocuments(lockerRepository.findAllForSuggestIndex());
             rebuildAndSwitchAlias(targetIndex, documents);
+            indexAvailability.markAvailable();
         } catch (DataAccessException e) {
             deleteIndexQuietly(targetIndex);
             log.error("검색 인덱스 동기화 실패: DB 조회 중 오류 발생 [사유: {}]", e.getMessage());
@@ -116,6 +123,11 @@ public class LockerSuggestIndexSyncService {
         if (!aliasIndexOperations.exists() || !hasWriteAlias(aliasIndexOperations)) {
             throw new BusinessException(ErrorCode.INDEX_SYNC_FAILED);
         }
+    }
+
+    private boolean hasServingIndex() {
+        IndexOperations aliasIndexOperations = elasticsearchOperations.indexOps(IndexCoordinates.of(INDEX_ALIAS));
+        return aliasIndexOperations.exists() && hasWriteAlias(aliasIndexOperations);
     }
 
     private void saveDocuments(List<LockerSuggestDocument> documents) {
