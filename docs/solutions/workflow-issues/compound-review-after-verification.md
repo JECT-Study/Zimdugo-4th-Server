@@ -47,6 +47,18 @@ private static final long NANOS_PER_MILLISECOND = 1_000_000L;
 
 Use named constants for logging thresholds and duration conversion. If adding logs to an already dense method, check method length before finishing; extracting a small result method can keep behavior and logs readable.
 
+The same pattern appeared again while adding Gemini document translation drafts: a JSON schema builder method exceeded the 30-line method limit. For nested request or response schemas, split builders by schema level from the start:
+
+```java
+private Map<String, Object> responseSchema() {
+    return Map.of("properties", Map.of("translations", translationSchema()));
+}
+
+private Map<String, Object> translationSchema() {
+    return Map.of("properties", Map.of("sections", sectionSchema()));
+}
+```
+
 ## Why This Matters
 
 The value of the final review is not only proving the current diff works. It should also reduce the chance that the next similar change repeats the same avoidable failure. Capturing the lesson in `docs/solutions/` turns a one-off correction into searchable project knowledge.
