@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -41,6 +42,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,7 +84,21 @@ class LockerSuggestIndexSyncServiceTest {
     @Mock
     private Document mapping;
 
+    @Mock
+    private LockerSuggestIndexAvailability indexAvailability;
+
     private LockerSuggestIndexSyncService syncService;
+
+    @Test
+    @DisplayName("시작 동기화는 전용 실행기에서 비동기로 실행한다")
+    void runsStartupSyncOnDedicatedExecutor() throws NoSuchMethodException {
+        Async async = LockerSuggestIndexSyncService.class
+            .getMethod("syncAtStartup")
+            .getAnnotation(Async.class);
+
+        assertThat(async).isNotNull();
+        assertThat(async.value()).isEqualTo("lockerSuggestIndexSyncExecutor");
+    }
 
     @BeforeEach
     void setUp() {
@@ -93,7 +109,8 @@ class LockerSuggestIndexSyncServiceTest {
             lockerAliasRepository,
             placeAliasRepository,
             lockerTranslationRepository,
-            placeTranslationRepository
+            placeTranslationRepository,
+            indexAvailability
         );
         lenient().when(elasticsearchOperations.indexOps(LockerSuggestDocument.class)).thenReturn(entityIndexOperations);
         lenient().when(elasticsearchOperations.indexOps(any(IndexCoordinates.class))).thenAnswer(invocation -> {
@@ -110,6 +127,37 @@ class LockerSuggestIndexSyncServiceTest {
         lenient().when(lockerAliasRepository.findByLockerIdIn(any())).thenReturn(List.of());
         lenient().when(placeTranslationRepository.findByPlaceIdIn(any())).thenReturn(List.of());
         lenient().when(placeAliasRepository.findByPlaceIdIn(any())).thenReturn(List.of());
+    }
+
+    @Test
+    @DisplayName("기존 검색 alias가 있으면 전체 동기화 전에 UP 상태로 전환한다")
+    void marksExistingAliasAvailableBeforeFullSync() {
+        given(lockerRepository.findAllForSuggestIndex())
+            .willThrow(new IllegalStateException("sync still running"));
+
+        assertThatThrownBy(syncService::syncAtStartup)
+            .isInstanceOf(BusinessException.class);
+
+        var ordered = inOrder(indexAvailability, lockerRepository);
+        ordered.verify(indexAvailability).markAvailable();
+        ordered.verify(lockerRepository).findAllForSuggestIndex();
+    }
+
+    @Test
+    @DisplayName("최초 검색 인덱스는 alias 전환 성공 후 UP 상태로 전환한다")
+    void marksFirstIndexAvailableAfterAliasSwitch() {
+        given(aliasIndexOperations.exists()).willReturn(false);
+        given(lockerRepository.findAllForSuggestIndex()).willReturn(List.of());
+        given(entityIndexOperations.createSettings()).willReturn(settings);
+        given(entityIndexOperations.createMapping()).willReturn(mapping);
+        given(versionedIndexOperations.create(settings, mapping)).willReturn(true);
+        given(versionedIndexOperations.alias(any(AliasActions.class))).willReturn(true);
+
+        syncService.syncAtStartup();
+
+        var ordered = inOrder(versionedIndexOperations, indexAvailability);
+        ordered.verify(versionedIndexOperations).alias(any(AliasActions.class));
+        ordered.verify(indexAvailability).markAvailable();
     }
 
     @Test

@@ -101,6 +101,13 @@ admin:
   notice-image:
     required-width-pixels: ${ADMIN_NOTICE_IMAGE_REQUIRED_WIDTH_PIXELS:1080}
 
+management:
+  endpoint:
+    health:
+      group:
+        readiness:
+          include: readinessState,lockerSuggestIndex,db,redis,elasticsearch
+
 ---
 spring:
   config:
