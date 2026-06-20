@@ -1,0 +1,54 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:zimdugo}
+    username: ${DB_USERNAME:zimdugo}
+    password: ${DB_PASSWORD:zimdugo}
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+      separator: ';;'
+      data-locations:
+        - file:scripts/db/01-postgis.sql
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  pattern:
+    level: "%5p [traceId:%X{traceId:-}]"
+  level:
+    com.zimdugo: debug
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+
+auth:
+  callback:
+    frontend-base-url: http://localhost:3000
+    allowed-origins: http://localhost:3000,http://localhost:5173
+  cookie:
+    refresh:
+      secure: false
+      same-site: Strict
