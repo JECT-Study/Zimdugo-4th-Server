@@ -530,6 +530,10 @@
                     body: JSON.stringify(requestBody)
                 });
 
+                if (redirectToLoginIfNeeded(response)) {
+                    return;
+                }
+
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(errorData.message || 'Presigned URL 생성에 실패했습니다.');
@@ -579,6 +583,19 @@
                 alert('업로드 처리 에러: ' + error.message);
                 progressWrapper.style.display = 'none';
             }
+        }
+
+        function redirectToLoginIfNeeded(response) {
+            const contentType = response.headers.get('content-type') || '';
+            if (response.redirected && response.url.includes('/admin/login')) {
+                window.location.href = response.url;
+                return true;
+            }
+            if (response.ok && contentType.includes('text/html') && response.url.includes('/admin/login')) {
+                window.location.href = response.url;
+                return true;
+            }
+            return false;
         }
 
         function clearSelectedImage() {

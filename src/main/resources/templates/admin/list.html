@@ -27,10 +27,35 @@
             font-size: 0.9rem;
             color: #333;
             border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s ease, border-color 0.15s ease, padding 0.15s ease;
         }
 
         .admin-table tbody tr:hover td {
             background: #fafafa;
+        }
+
+        .admin-table tbody tr.sortable-row {
+            cursor: grab;
+            transition: transform 0.16s ease, opacity 0.16s ease;
+        }
+
+        .admin-table tbody tr.sortable-row:active {
+            cursor: grabbing;
+        }
+
+        .admin-table tbody tr.dragging td {
+            opacity: 0.45;
+            background: #f8fafc;
+        }
+
+        .admin-table tbody tr.drop-before td {
+            border-top: 8px solid #c7d2fe;
+            padding-top: 1.2rem;
+        }
+
+        .admin-table tbody tr.drop-after td {
+            border-bottom: 8px solid #c7d2fe;
+            padding-bottom: 1.2rem;
         }
 
         .title-link {
@@ -57,46 +82,6 @@
         .date-text {
             font-size: 0.82rem;
             color: #999;
-        }
-
-        .actions-cell {
-            display: flex;
-            gap: 0.4rem;
-            justify-content: center;
-        }
-
-        .btn-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #e5e5e5;
-            background: #fff;
-            color: #888;
-            cursor: pointer;
-            transition: all 0.15s;
-            text-decoration: none;
-            font-size: 0.8rem;
-        }
-
-        .btn-icon:hover {
-            color: #1a1a1a;
-            border-color: #ccc;
-            background: #f5f5f5;
-        }
-
-        .btn-icon-edit:hover {
-            color: #d97706;
-            border-color: #fbbf24;
-            background: #fffbeb;
-        }
-
-        .btn-icon-delete:hover {
-            color: #dc2626;
-            border-color: #fca5a5;
-            background: #fef2f2;
         }
 
         .empty-state {
@@ -188,7 +173,6 @@
                 <thead>
                     <tr>
                         <th style="width: 60px;">번호</th>
-                        <th th:if="${currentType.name() == 'NOTICE'}" style="width: 90px; text-align: center;">순서</th>
                         <th>대표 제목</th>
                         <th style="width: 120px;">적용 여부</th>
                         <th style="width: 160px;">등록일시</th>
@@ -197,18 +181,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="doc, iterStat : ${documents}" th:data-id="${doc.id}">
+                    <tr th:each="doc, iterStat : ${documents}"
+                        th:data-id="${doc.id}"
+                        th:classappend="${currentType.name() == 'NOTICE'} ? 'sortable-row'"
+                        th:attr="draggable=${currentType.name() == 'NOTICE'} ? 'true' : 'false'">
                         <td class="date-text" th:text="${iterStat.count}">1</td>
-                        <td th:if="${currentType.name() == 'NOTICE'}">
-                            <div class="actions-cell">
-                                <button type="button" class="btn-icon" onclick="moveRowUp(this)" title="위로 이동">
-                                    <i class="fa-solid fa-chevron-up"></i>
-                                </button>
-                                <button type="button" class="btn-icon" onclick="moveRowDown(this)" title="아래로 이동">
-                                    <i class="fa-solid fa-chevron-down"></i>
-                                </button>
-                            </div>
-                        </td>
                         <td>
                             <a th:href="@{/admin/documents/{id}(id=${doc.id})}" class="title-link" th:text="${doc.title}">
                                 공지사항 제목
@@ -255,12 +232,18 @@
                 }
             })
             .then(response => {
+                if (redirectToLoginIfNeeded(response)) {
+                    return;
+                }
                 if (response.ok) {
                     location.reload();
-                } else {
-                    alert('적용 상태 변경에 실패했습니다.');
-                    location.reload();
+                    return;
                 }
+                readErrorMessage(response, '적용 상태 변경에 실패했습니다.')
+                    .then(message => {
+                        alert(message);
+                        location.reload();
+                    });
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -269,22 +252,35 @@
             });
         }
 
-        function moveRowUp(button) {
-            const row = button.closest('tr');
-            const prevRow = row.previousElementSibling;
-            if (prevRow) {
-                row.parentNode.insertBefore(row, prevRow);
-                saveDocumentsOrder();
+        function redirectToLoginIfNeeded(response) {
+            const contentType = response.headers.get('content-type') || '';
+            if (response.redirected && response.url.includes('/admin/login')) {
+                window.location.href = response.url;
+                return true;
             }
+            if (response.ok && contentType.includes('text/html') && response.url.includes('/admin/login')) {
+                window.location.href = response.url;
+                return true;
+            }
+            return false;
         }
 
-        function moveRowDown(button) {
-            const row = button.closest('tr');
-            const nextRow = row.nextElementSibling;
-            if (nextRow) {
-                row.parentNode.insertBefore(row, nextRow.nextSibling);
-                saveDocumentsOrder();
+        function readErrorMessage(response, fallbackMessage) {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                return response.json()
+                    .then(errorData => errorData.message || fallbackMessage)
+                    .catch(() => fallbackMessage);
             }
+            return response.text()
+                .then(text => {
+                    const message = text.trim();
+                    if (!message || message.startsWith('<')) {
+                        return fallbackMessage;
+                    }
+                    return message;
+                })
+                .catch(() => fallbackMessage);
         }
 
         function saveDocumentsOrder() {
@@ -302,11 +298,17 @@
                 body: JSON.stringify(ids)
             })
             .then(response => {
+                if (redirectToLoginIfNeeded(response)) {
+                    return;
+                }
                 if (response.ok) {
                     location.reload();
                 } else {
-                    alert('순서 변경 저장에 실패했습니다.');
-                    location.reload();
+                    readErrorMessage(response, '순서 변경 저장에 실패했습니다.')
+                        .then(message => {
+                            alert(message);
+                            location.reload();
+                        });
                 }
             })
             .catch(error => {
@@ -315,6 +317,66 @@
                 location.reload();
             });
         }
+
+        let draggedRow = null;
+
+        function clearDropMarkers() {
+            document.querySelectorAll('.drop-before, .drop-after').forEach(row => {
+                row.classList.remove('drop-before', 'drop-after');
+            });
+        }
+
+        function isInteractiveDragTarget(target) {
+            return target.closest('a, button, input, label, textarea, select');
+        }
+
+        document.querySelectorAll('.sortable-row').forEach(row => {
+            row.addEventListener('dragstart', event => {
+                if (isInteractiveDragTarget(event.target)) {
+                    event.preventDefault();
+                    return;
+                }
+                draggedRow = row;
+                row.classList.add('dragging');
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', row.dataset.id);
+            });
+
+            row.addEventListener('dragover', event => {
+                if (!draggedRow || draggedRow === row) {
+                    return;
+                }
+                event.preventDefault();
+                clearDropMarkers();
+                const rect = row.getBoundingClientRect();
+                const isBefore = event.clientY < rect.top + rect.height / 2;
+                row.classList.add(isBefore ? 'drop-before' : 'drop-after');
+            });
+
+            row.addEventListener('drop', event => {
+                if (!draggedRow || draggedRow === row) {
+                    return;
+                }
+                event.preventDefault();
+                const rect = row.getBoundingClientRect();
+                const isBefore = event.clientY < rect.top + rect.height / 2;
+                if (isBefore) {
+                    row.parentNode.insertBefore(draggedRow, row);
+                } else {
+                    row.parentNode.insertBefore(draggedRow, row.nextSibling);
+                }
+                clearDropMarkers();
+                saveDocumentsOrder();
+            });
+
+            row.addEventListener('dragend', () => {
+                if (draggedRow) {
+                    draggedRow.classList.remove('dragging');
+                }
+                draggedRow = null;
+                clearDropMarkers();
+            });
+        });
     </script>
 </main>
 </body>
