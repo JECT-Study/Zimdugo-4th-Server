@@ -2,6 +2,7 @@ package com.zimdugo.admin.application.dto;
 
 import com.zimdugo.admin.domain.AdminDocument;
 import com.zimdugo.admin.domain.AdminDocumentSection;
+import com.zimdugo.admin.domain.AdminDocumentImage;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Getter;
@@ -13,6 +14,7 @@ public class AdminDocumentDetailResult {
     private final AdminDocumentTypeResult type;
     private final String title;
     private final String imageUrl;
+    private final List<ImageResult> images;
     private final boolean active;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
@@ -24,6 +26,9 @@ public class AdminDocumentDetailResult {
         this.type = AdminDocumentTypeResult.from(document.getType());
         this.title = document.getTitle();
         this.imageUrl = document.getImageUrl();
+        this.images = document.getImages().stream()
+            .map(ImageResult::from)
+            .toList();
         this.active = document.isActive();
         this.createdAt = document.getCreatedAt();
         this.updatedAt = document.getUpdatedAt();
@@ -35,6 +40,13 @@ public class AdminDocumentDetailResult {
 
     public static AdminDocumentDetailResult from(AdminDocument document) {
         return new AdminDocumentDetailResult(document);
+    }
+
+    public record ImageResult(Long id, String imageUrl, int listOrder) {
+
+        private static ImageResult from(AdminDocumentImage image) {
+            return new ImageResult(image.getId(), image.getImageUrl(), image.getListOrder());
+        }
     }
 
     @Getter

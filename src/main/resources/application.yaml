@@ -2,6 +2,11 @@ spring:
   application:
     name: zimdugo-be
 
+  servlet:
+    multipart:
+      max-file-size: ${ADMIN_NOTICE_IMAGE_MAX_FILE_SIZE:10MB}
+      max-request-size: ${ADMIN_NOTICE_IMAGE_MAX_REQUEST_SIZE:105MB}
+
   jpa:
     open-in-view: false
 
@@ -87,7 +92,7 @@ storage:
 
 admin:
   notice-image:
-    required-width-pixels: ${ADMIN_NOTICE_IMAGE_REQUIRED_WIDTH_PIXELS:1080}
+    max-pixel-count: ${ADMIN_NOTICE_IMAGE_MAX_PIXEL_COUNT:50000000}
 
 management:
   endpoint:

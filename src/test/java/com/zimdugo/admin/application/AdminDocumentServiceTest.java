@@ -7,6 +7,7 @@ import com.zimdugo.admin.domain.DocumentType;
 import com.zimdugo.admin.entrypoint.dto.AdminDocumentForm;
 import com.zimdugo.admin.entrypoint.dto.AdminDocumentTranslationRequest;
 import com.zimdugo.admin.application.dto.AdminDocumentTranslationsResult;
+import com.zimdugo.admin.application.dto.AdminDocumentCommand;
 import com.zimdugo.admin.application.dto.ClientDocumentResult;
 import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.BusinessException;
@@ -19,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,9 +36,6 @@ class AdminDocumentServiceTest {
 
     @Autowired
     private AdminDocumentRepository adminDocumentRepository;
-
-    @MockitoBean
-    private AdminNoticeImageValidator adminNoticeImageValidator;
 
     @Test
     @DisplayName("새로운 문서를 저장할 때 1:N 관계의 덩어리(Section)들도 함께 저장된다")
@@ -88,6 +85,67 @@ class AdminDocumentServiceTest {
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/notice.jpg");
         assertThat(saved.getSections()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("여러 공지 이미지를 전달한 순서대로 저장한다")
+    void createDocumentWithOrderedImages() {
+        AdminDocumentCommand command = new AdminDocumentCommand(
+            "다중 이미지 공지",
+            DocumentType.NOTICE.name(),
+            null,
+            List.of("https://cdn.example.com/second.png", "https://cdn.example.com/first.png"),
+            List.of()
+        );
+
+        AdminDocument saved = adminDocumentService.createDocument(command);
+
+        assertThat(saved.getImageUrls()).containsExactly(
+            "https://cdn.example.com/second.png",
+            "https://cdn.example.com/first.png"
+        );
+        assertThat(saved.getImageUrl()).isEqualTo("https://cdn.example.com/second.png");
+    }
+
+    @Test
+    @DisplayName("공지 이미지 순서를 수정하면 자식 이미지도 새 순서로 영속화한다")
+    void updateDocumentImageOrder() {
+        AdminDocumentCommand createCommand = new AdminDocumentCommand(
+            "이미지 순서",
+            DocumentType.NOTICE.name(),
+            null,
+            List.of("https://cdn.example.com/first.png", "https://cdn.example.com/second.png"),
+            List.of()
+        );
+        AdminDocument saved = adminDocumentService.createDocument(createCommand);
+        adminDocumentRepository.flush();
+
+        AdminDocumentCommand updateCommand = createCommand.withImageUrls(List.of(
+            "https://cdn.example.com/second.png",
+            "https://cdn.example.com/first.png"
+        ));
+        AdminDocument updated = adminDocumentService.updateDocument(saved.getId(), updateCommand);
+        adminDocumentRepository.flush();
+
+        assertThat(updated.getImageUrls()).containsExactly(
+            "https://cdn.example.com/second.png",
+            "https://cdn.example.com/first.png"
+        );
+    }
+
+    @Test
+    @DisplayName("이미지와 내용이 모두 없는 공지는 저장할 수 없다")
+    void rejectNoticeWithoutImagesAndSections() {
+        AdminDocumentCommand command = new AdminDocumentCommand(
+            "빈 공지",
+            DocumentType.NOTICE.name(),
+            null,
+            List.of(),
+            List.of()
+        );
+
+        assertThatThrownBy(() -> adminDocumentService.createDocument(command))
+            .isInstanceOf(BusinessException.class);
     }
 
     @Test
@@ -237,6 +295,7 @@ class AdminDocumentServiceTest {
         AdminDocumentForm form = new AdminDocumentForm();
         form.setTitle("최초 생성");
         form.setType(DocumentType.NOTICE.name());
+        form.setImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
         AdminDocument doc = adminDocumentService.createDocument(form.toCommand());
         addAllTranslations(doc);
         
@@ -259,6 +318,7 @@ class AdminDocumentServiceTest {
         AdminDocumentForm updateForm = new AdminDocumentForm();
         updateForm.setTitle("수정된 제목");
         updateForm.setType(DocumentType.NOTICE.name());
+        updateForm.setImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
         adminDocumentService.updateDocument(doc.getId(), updateForm.toCommand());
 
         // then: updatedAt이 새롭게 갱신되어 초기 수정 시점보다 미래여야 함

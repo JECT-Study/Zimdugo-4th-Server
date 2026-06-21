@@ -73,4 +73,4 @@ storage:
 
 admin:
   notice-image:
-    required-width-pixels: 1080
+    max-pixel-count: 50000000

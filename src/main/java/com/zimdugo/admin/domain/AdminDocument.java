@@ -29,6 +29,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AdminDocument {
 
+    public static final int MAX_NOTICE_IMAGE_COUNT = 10;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -42,6 +44,10 @@ public class AdminDocument {
 
     @Column(length = 500)
     private String imageUrl;
+
+    @OneToMany(mappedBy = "adminDocument", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("listOrder ASC")
+    private List<AdminDocumentImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "adminDocument", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("listOrder ASC")
@@ -93,8 +99,12 @@ public class AdminDocument {
     }
 
     public void update(String title, String imageUrl, List<AdminDocumentSection> newSections) {
+        update(title, imageUrl == null ? List.of() : List.of(imageUrl), newSections);
+    }
+
+    public void update(String title, List<String> imageUrls, List<AdminDocumentSection> newSections) {
         this.title = title;
-        this.imageUrl = normalizeImageUrl(imageUrl);
+        replaceImages(imageUrls);
         this.sections.clear();
         if (newSections != null) {
             newSections.forEach(this::addSection);
@@ -143,7 +153,38 @@ public class AdminDocument {
     }
 
     public void updateImageUrl(String imageUrl) {
-        this.imageUrl = normalizeImageUrl(imageUrl);
+        String normalizedImageUrl = normalizeImageUrl(imageUrl);
+        if (normalizedImageUrl == null) {
+            replaceImages(List.of());
+            return;
+        }
+        replaceImages(List.of(normalizedImageUrl));
+    }
+
+    public void replaceImages(List<String> imageUrls) {
+        List<String> normalizedImageUrls = imageUrls == null ? List.of() : imageUrls.stream()
+            .map(this::normalizeImageUrl)
+            .filter(java.util.Objects::nonNull)
+            .toList();
+        if (normalizedImageUrls.size() > MAX_NOTICE_IMAGE_COUNT) {
+            throw new BusinessException(ErrorCode.TOO_MANY_NOTICE_IMAGES);
+        }
+
+        images.clear();
+        for (int index = 0; index < normalizedImageUrls.size(); index++) {
+            images.add(new AdminDocumentImage(this, normalizedImageUrls.get(index), index));
+        }
+        imageUrl = normalizedImageUrls.isEmpty() ? null : normalizedImageUrls.getFirst();
+    }
+
+    public List<String> getImageUrls() {
+        if (!images.isEmpty()) {
+            return images.stream()
+                .map(AdminDocumentImage::getImageUrl)
+                .toList();
+        }
+        String normalizedImageUrl = normalizeImageUrl(imageUrl);
+        return normalizedImageUrl == null ? List.of() : List.of(normalizedImageUrl);
     }
 
     private String normalizeImageUrl(String imageUrl) {

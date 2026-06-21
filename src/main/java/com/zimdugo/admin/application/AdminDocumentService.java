@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminDocumentService {
 
     private final AdminDocumentRepository adminDocumentRepository;
-    private final AdminNoticeImageValidator adminNoticeImageValidator;
 
     public AdminDocumentTypeResult getDocumentType(String type) {
         return AdminDocumentTypeResult.from(toDocumentType(type));
@@ -72,6 +71,10 @@ public class AdminDocumentService {
             .orElseThrow(() -> new BusinessException(ErrorCode.ADMIN_DOCUMENT_NOT_FOUND));
     }
 
+    public List<String> getDocumentImageUrls(Long id) {
+        return List.copyOf(getById(id).getImageUrls());
+    }
+
     public AdminDocumentDetailResult getDocumentDetail(Long id) {
         return AdminDocumentDetailResult.from(getById(id));
     }
@@ -90,8 +93,8 @@ public class AdminDocumentService {
 
     @Transactional
     public AdminDocument createDocument(AdminDocumentCommand command) {
-        adminNoticeImageValidator.validate(command.imageUrl());
         AdminDocument document = toEntity(command);
+        validateNoticeContent(document);
         return adminDocumentRepository.save(document);
     }
 
@@ -118,8 +121,8 @@ public class AdminDocumentService {
             }
         }
         
-        adminNoticeImageValidator.validate(command.imageUrl());
-        document.update(command.title(), command.imageUrl(), newSections);
+        document.update(command.title(), command.imageUrlsOrEmpty(), newSections);
+        validateNoticeContent(document);
         if (document.isActive()) {
             document.deactivate();
         }
@@ -221,8 +224,16 @@ public class AdminDocumentService {
             .type(toDocumentType(command.type()))
             .sections(sectionEntities)
             .build();
-        document.updateImageUrl(command.imageUrl());
+        document.replaceImages(command.imageUrlsOrEmpty());
         return document;
+    }
+
+    private void validateNoticeContent(AdminDocument document) {
+        if (document.getType() == DocumentType.NOTICE
+            && document.getImageUrls().isEmpty()
+            && document.getSections().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_ADMIN_DOCUMENT_CONTENT);
+        }
     }
 
     private DocumentType toDocumentType(String type) {

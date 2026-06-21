@@ -83,6 +83,21 @@
             margin-bottom: 1rem;
             font-size: 0.88rem;
         }
+
+        .detail-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-images img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            border: 1px solid #e5e5e5;
+        }
     </style>
 
     <div class="page-header">
@@ -122,6 +137,10 @@
                 <i class="fa-solid" th:classappend="${document.active} ? 'fa-circle-check' : 'fa-circle-minus'" th:style="${document.active} ? 'color: #10b981;' : 'color: #9ca3af;'"></i> 적용 상태:
                 <strong th:text="${document.active} ? '적용 중' : '미적용'" th:style="${document.active} ? 'color: #10b981;' : 'color: #9ca3af;'">적용 중</strong>
             </span>
+        </div>
+
+        <div class="detail-images" th:if="${!document.images.isEmpty()}">
+            <img th:each="image : ${document.images}" th:src="${image.imageUrl}" alt="공지 이미지">
         </div>
 
         <!-- 섹션 내용 -->
