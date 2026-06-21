@@ -1,10 +1,13 @@
 package com.zimdugo.admin.entrypoint;
 
 import com.zimdugo.admin.application.AdminDocumentService;
+import com.zimdugo.admin.application.AdminDocumentImageWorkflow;
+import com.zimdugo.admin.application.AdminNoticeImageProperties;
 import com.zimdugo.admin.application.dto.AdminDocumentDetailResult;
 import com.zimdugo.admin.application.dto.AdminDocumentSummaryResult;
 import com.zimdugo.admin.entrypoint.dto.AdminDocumentForm;
 import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.common.storage.S3StorageProperties;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminDocumentController {
 
     private final AdminDocumentService adminDocumentService;
+    private final AdminDocumentImageWorkflow documentImageWorkflow;
+    private final AdminNoticeImageProperties noticeImageProperties;
+    private final S3StorageProperties storageProperties;
+
+    @ModelAttribute
+    public void addNoticeImageConfiguration(Model model) {
+        model.addAttribute("maxNoticeImagePixels", noticeImageProperties.maxPixelCount());
+        model.addAttribute("maxNoticeImageBytes", storageProperties.maxUploadBytes());
+    }
 
     @GetMapping
     public String list(@RequestParam(name = "type", defaultValue = "NOTICE") String type, Model model) {
@@ -71,7 +83,15 @@ public class AdminDocumentController {
             return "admin/form";
         }
         
-        AdminDocumentDetailResult created = adminDocumentService.createDocumentResult(form.toCommand());
+        AdminDocumentDetailResult created;
+        try {
+            created = documentImageWorkflow.create(form.toCommand(), form.getImageFiles(), form.getImageOrder());
+        } catch (BusinessException exception) {
+            bindingResult.rejectValue("imageOrder", exception.getErrorCode().getCode(), exception.getMessage());
+            model.addAttribute("isEdit", false);
+            model.addAttribute("activeMenu", form.getType().toLowerCase());
+            return "admin/form";
+        }
         return "redirect:/admin/documents?type=" + created.getType().name();
     }
 
@@ -106,7 +126,18 @@ public class AdminDocumentController {
             return "admin/form";
         }
         
-        AdminDocumentDetailResult updated = adminDocumentService.updateDocumentResult(id, form.toCommand());
+        AdminDocumentDetailResult updated;
+        try {
+            updated = documentImageWorkflow.update(id, form.toCommand(), form.getImageFiles(), form.getImageOrder());
+        } catch (BusinessException exception) {
+            bindingResult.rejectValue("imageOrder", exception.getErrorCode().getCode(), exception.getMessage());
+            AdminDocumentForm existingForm = AdminDocumentForm.fromResult(adminDocumentService.getDocumentForm(id));
+            form.setImages(existingForm.getImages());
+            model.addAttribute("isEdit", true);
+            model.addAttribute("documentId", id);
+            model.addAttribute("activeMenu", form.getType().toLowerCase());
+            return "admin/form";
+        }
         return "redirect:/admin/documents/" + updated.getId();
     }
 

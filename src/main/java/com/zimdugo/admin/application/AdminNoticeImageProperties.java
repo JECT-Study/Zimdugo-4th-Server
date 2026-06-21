@@ -8,6 +8,6 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "admin.notice-image")
 public record AdminNoticeImageProperties(
     @Positive
-    int requiredWidthPixels
+    long maxPixelCount
 ) {
 }

@@ -34,6 +34,10 @@ class ClientDocumentResultTest {
             .sections(List.of(section1, section2))
             .build();
         document.updateImageUrl("https://cdn.example.com/admin/notice-images/notice.jpg");
+        document.replaceImages(List.of(
+            "https://cdn.example.com/admin/notice-images/notice.jpg",
+            "https://cdn.example.com/admin/notice-images/detail.jpg"
+        ));
         document.upsertTranslation("ko", "테스트 문서 제목");
         section1.upsertTranslation("ko", "소제목 1", "내용 1");
         section2.upsertTranslation("ko", "소제목 2", "내용 2");
@@ -46,6 +50,10 @@ class ClientDocumentResultTest {
         assertThat(response.getTitle()).isEqualTo("테스트 문서 제목");
         assertThat(response.getType()).isEqualTo(DocumentType.NOTICE.name());
         assertThat(response.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/notice.jpg");
+        assertThat(response.getImageUrls()).containsExactly(
+            "https://cdn.example.com/admin/notice-images/notice.jpg",
+            "https://cdn.example.com/admin/notice-images/detail.jpg"
+        );
         assertThat(response.getSections()).hasSize(2);
 
         ClientDocumentResult.SectionResult secResp1 = response.getSections().get(0);

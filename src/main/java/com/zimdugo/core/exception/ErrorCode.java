@@ -29,6 +29,13 @@ public enum ErrorCode implements BaseCode {
         HttpStatus.BAD_REQUEST
     ),
     INVALID_ADMIN_DOCUMENT_TYPE("ADMIN-400-4", "관리자 문서 타입이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_ADMIN_DOCUMENT_CONTENT(
+        "ADMIN-400-5",
+        "공지에는 이미지 또는 내용이 하나 이상 필요합니다.",
+        HttpStatus.BAD_REQUEST
+    ),
+    TOO_MANY_NOTICE_IMAGES("ADMIN-400-6", "공지 이미지는 최대 10장까지 등록할 수 있습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_NOTICE_IMAGE_ORDER("ADMIN-400-7", "공지 이미지 순서 정보가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
 
     // 인증 (AUTH)
     REFRESH_TOKEN_NOT_FOUND("AUTH-400-1", "리프레시 토큰이 없습니다.", HttpStatus.BAD_REQUEST),
@@ -63,8 +70,10 @@ public enum ErrorCode implements BaseCode {
     IMAGE_METADATA_PARSE_FAILED("IMAGE-400-3", "이미지 메타데이터를 해석할 수 없습니다.", HttpStatus.BAD_REQUEST),
     INVALID_IMAGE_URL("IMAGE-400-4", "이미지 URL이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_IMAGE_WIDTH("IMAGE-400-5", "이미지 가로 크기가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_IMAGE_DIMENSIONS("IMAGE-400-6", "이미지 해상도가 너무 큽니다.", HttpStatus.BAD_REQUEST),
     IMAGE_STORAGE_CONFIGURATION_MISSING("IMAGE-500-1", "이미지 저장소 설정이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
-    IMAGE_STORAGE_READ_FAILED("IMAGE-500-2", "이미지 저장소에서 파일을 읽을 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+    IMAGE_STORAGE_READ_FAILED("IMAGE-500-2", "이미지 저장소에서 파일을 읽을 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    IMAGE_STORAGE_WRITE_FAILED("IMAGE-500-3", "이미지 저장소에 파일을 저장할 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     @Getter
     private final String code;

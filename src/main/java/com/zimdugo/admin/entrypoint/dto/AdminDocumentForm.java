@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -26,6 +27,14 @@ public class AdminDocumentForm {
     @Size(max = 500)
     private String imageUrl;
 
+    @Size(max = 10, message = "공지 이미지는 최대 10장까지 등록할 수 있습니다.")
+    private List<String> imageOrder = new ArrayList<>();
+
+    @Size(max = 10, message = "공지 이미지는 최대 10장까지 등록할 수 있습니다.")
+    private List<MultipartFile> imageFiles = new ArrayList<>();
+
+    private List<ImageForm> images = new ArrayList<>();
+
     private List<SectionForm> sections = new ArrayList<>();
 
     @Getter
@@ -37,12 +46,18 @@ public class AdminDocumentForm {
         private String content;
     }
 
+    public record ImageForm(Long id, String imageUrl) {
+    }
+
     public static AdminDocumentForm fromResult(AdminDocumentFormResult result) {
         AdminDocumentForm form = new AdminDocumentForm();
         form.setTitle(result.getTitle());
         form.setType(result.getType());
         form.setTypeDescription(result.getTypeDescription());
         form.setImageUrl(result.getImageUrl());
+        form.setImages(result.getImages().stream()
+            .map(image -> new ImageForm(image.id(), image.imageUrl()))
+            .toList());
 
         List<SectionForm> sectionForms = new ArrayList<>();
         for (AdminDocumentFormResult.SectionResult section : result.getSections()) {

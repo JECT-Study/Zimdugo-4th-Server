@@ -14,6 +14,7 @@ public class ClientDocumentResult {
     private final String type;
     private final String title;
     private final String imageUrl;
+    private final List<String> imageUrls;
     private final LocalDateTime appliedAt;
     private final List<SectionResult> sections;
 
@@ -22,6 +23,7 @@ public class ClientDocumentResult {
         this.type = document.getType().name();
         this.title = document.localizedTitle(requestedLanguage);
         this.imageUrl = document.getImageUrl();
+        this.imageUrls = document.getImageUrls();
         this.appliedAt = document.getAppliedAt();
         this.sections = document.getSections().stream()
             .map(section -> SectionResult.from(section, requestedLanguage))

@@ -24,7 +24,33 @@ class AdminDocumentTemplateTest {
             .contains("data-max-files=\"10\"")
             .contains("draggable=\"true\"")
             .contains("new DataTransfer()")
+            .contains(".upload-item img")
+            .contains("height: auto")
+            .contains("data-max-pixels")
+            .contains("image.naturalWidth * image.naturalHeight")
+            .contains("top: 8px")
+            .contains("right: 8px")
+            .doesNotContain("top: -8px")
+            .doesNotContain("right: -8px")
+            .doesNotContain("aspect-ratio: 1")
+            .doesNotContain("object-fit: cover")
+            .doesNotContain("data-required-width")
+            .doesNotContain("가로 1080px")
             .doesNotContain("/admin/api/uploads")
             .doesNotContain("XMLHttpRequest");
+    }
+
+    @Test
+    void noticeDetailKeepsOriginalImageRatio() throws IOException {
+        String template = Files.readString(
+            Path.of("src/main/resources/templates/admin/detail.html"),
+            StandardCharsets.UTF_8
+        );
+
+        assertThat(template)
+            .contains(".detail-images img")
+            .contains("height: auto")
+            .doesNotContain("aspect-ratio: 1")
+            .doesNotContain("object-fit: cover");
     }
 }
