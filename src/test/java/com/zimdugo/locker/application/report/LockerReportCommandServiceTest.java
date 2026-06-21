@@ -93,6 +93,38 @@ class LockerReportCommandServiceTest {
             assertThat(createInfo.longitude()).isEqualTo(126.923);
         }
 
+        @Test
+        @DisplayName("0원 가격과 전체 운영 시간을 별도 타입으로 전달한다")
+        void saveFreeAndAllDayReportTypes() {
+            given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
+                .willReturn(testReport());
+
+            lockerReportCommandService.create(1L, createFreeAllDayCommand());
+
+            ArgumentCaptor<LockerReportCreateInfo> captor =
+                ArgumentCaptor.forClass(LockerReportCreateInfo.class);
+            verify(lockerReportStore).create(captor.capture());
+
+            LockerReportCreateInfo createInfo = captor.getValue();
+            assertThat(createInfo.priceType()).isEqualTo("FREE");
+            assertThat(createInfo.operatingTimeType()).isEqualTo("OPEN_24_HOURS");
+        }
+
+        @Test
+        @DisplayName("00:00부터 23:59까지 운영하면 24시간 타입으로 전달한다")
+        void saveAlmostFullDayReportType() {
+            given(lockerReportStore.create(any(LockerReportCreateInfo.class)))
+                .willReturn(testReport());
+
+            lockerReportCommandService.create(1L, createAlmostFullDayCommand());
+
+            ArgumentCaptor<LockerReportCreateInfo> captor =
+                ArgumentCaptor.forClass(LockerReportCreateInfo.class);
+            verify(lockerReportStore).create(captor.capture());
+
+            assertThat(captor.getValue().operatingTimeType()).isEqualTo("OPEN_24_HOURS");
+        }
+
 
     }
 
@@ -136,6 +168,46 @@ class LockerReportCommandServiceTest {
             null,
             null,
             null,
+            true
+        );
+    }
+
+    private LockerReportCreateCommand createFreeAllDayCommand() {
+        return new LockerReportCreateCommand(
+            ROAD_ADDRESS,
+            37.556,
+            126.923,
+            "UNDERGROUND",
+            2,
+            "INDOOR",
+            "SUBWAY_STATION",
+            List.of("SMALL", "MEDIUM"),
+            0,
+            0,
+            LocalTime.MIDNIGHT,
+            LocalTime.MIDNIGHT,
+            ADDITIONAL_INFO,
+            "https://cdn.example.com/locker/1.jpg",
+            true
+        );
+    }
+
+    private LockerReportCreateCommand createAlmostFullDayCommand() {
+        return new LockerReportCreateCommand(
+            ROAD_ADDRESS,
+            37.556,
+            126.923,
+            "UNDERGROUND",
+            2,
+            "INDOOR",
+            "SUBWAY_STATION",
+            List.of("SMALL", "MEDIUM"),
+            1000,
+            3000,
+            LocalTime.MIDNIGHT,
+            LocalTime.of(23, 59),
+            ADDITIONAL_INFO,
+            "https://cdn.example.com/locker/1.jpg",
             true
         );
     }

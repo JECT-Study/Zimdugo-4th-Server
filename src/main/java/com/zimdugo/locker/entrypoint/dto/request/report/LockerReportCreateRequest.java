@@ -91,6 +91,17 @@ public record LockerReportCreateRequest(
         );
     }
 
+    @AssertTrue(message = "validation.invalid_floor")
+    public boolean isFloorInputValid() {
+        if ((floorType == null || floorType.isBlank()) && floorNumber == null) {
+            return true;
+        }
+        if (floorType == null || floorType.isBlank() || floorNumber == null) {
+            return false;
+        }
+        return floorNumber > 0 && isValidEnumValue(floorType, Set.of("ABOVE_GROUND", "UNDERGROUND"));
+    }
+
     @AssertTrue(message = "validation.invalid_price")
     public boolean isPriceInputValid() {
         if (minPrice == null && maxPrice == null) {
@@ -99,10 +110,10 @@ public record LockerReportCreateRequest(
         if (minPrice == null || maxPrice == null) {
             return false;
         }
-        if (minPrice < 0) {
-            return false;
+        if (minPrice == 0 && maxPrice == 0) {
+            return true;
         }
-        if (maxPrice <= 0) {
+        if (minPrice <= 0 || maxPrice <= 0) {
             return false;
         }
         return minPrice <= maxPrice;

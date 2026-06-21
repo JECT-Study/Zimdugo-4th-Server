@@ -81,6 +81,40 @@ class S3PresignedImageUploadServiceTest {
         )).isInstanceOf(BusinessException.class);
     }
 
+    @Test
+    void createPresignedUploadNormalizesContentTypeParameter() {
+        given(presignedUploadClient.createPresignedPutObject(
+            anyString(),
+            eq("image/jpeg"),
+            eq(1024L)
+        )).willReturn(new PresignedUpload(
+            "https://s3.example.com/upload",
+            "https://cdn.example.com/reports/test.jpg",
+            "reports/test.jpg",
+            Instant.parse("2026-06-18T00:00:00Z")
+        ));
+        S3PresignedImageUploadService service = new S3PresignedImageUploadService(
+            properties(),
+            new ImageUploadPolicy(),
+            new S3ImagePathResolver(properties()),
+            presignedUploadClient
+        );
+
+        service.createPresignedUpload(
+            UploadCategory.LOCKER_REPORT,
+            "locker.jpg",
+            "image/jpeg; charset=binary",
+            1024L,
+            1L
+        );
+
+        verify(presignedUploadClient).createPresignedPutObject(
+            anyString(),
+            eq("image/jpeg"),
+            eq(1024L)
+        );
+    }
+
     private S3StorageProperties properties() {
         return new S3StorageProperties(
             "ap-northeast-2",

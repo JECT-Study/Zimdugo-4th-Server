@@ -30,7 +30,12 @@ public class ImageUploadPolicy {
         if (contentType == null) {
             return null;
         }
-        return contentType.trim().toLowerCase(Locale.ROOT);
+        String normalizedContentType = contentType.trim().toLowerCase(Locale.ROOT);
+        int parameterIndex = normalizedContentType.indexOf(';');
+        if (parameterIndex >= 0) {
+            return normalizedContentType.substring(0, parameterIndex).trim();
+        }
+        return normalizedContentType;
     }
 
     public String validateContentType(String contentType) {
