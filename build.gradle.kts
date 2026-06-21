@@ -63,13 +63,15 @@ dependencies {
 
     // AWS S3
     implementation("software.amazon.awssdk:s3")
+    implementation("software.amazon.awssdk:sso")
+    implementation("software.amazon.awssdk:ssooidc")
 
     // Image metadata
     implementation("com.drewnoakes:metadata-extractor:2.19.0")
 
     // DB
     runtimeOnly("org.postgresql:postgresql")
-    runtimeOnly("com.h2database:h2")
+    testRuntimeOnly("com.h2database:h2")
 
     // Netty DNS (mac OS 관련입니다)
     runtimeOnly("io.netty:netty-resolver-dns-native-macos") {
