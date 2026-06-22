@@ -35,7 +35,7 @@ public class AdminLockerReportApprovalWriter {
     ) {
         LockerReportEntity report = requireReportForUpdate(reportId);
         PlaceEntity place = resolvePlace(command, report);
-        LockerEntity locker = lockerRepository.save(new LockerEntity(
+        LockerEntity locker = lockerRepository.save(LockerEntity.draft(
             command.lockerName(),
             command.roadAddress(),
             command.latitude(),
@@ -79,7 +79,7 @@ public class AdminLockerReportApprovalWriter {
             return placeRepository.findById(command.existingPlaceId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PLACE_NOT_FOUND));
         }
-        return placeRepository.save(new PlaceEntity(
+        return placeRepository.save(PlaceEntity.draft(
             command.placeName(),
             command.latitude(),
             command.longitude(),
