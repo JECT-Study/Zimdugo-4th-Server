@@ -21,6 +21,9 @@ public record LockerReportCreateCommand(
     String imageUrl,
     boolean locationConsentAgreed
 ) {
+    private static final LocalTime ALL_DAY_START = LocalTime.MIDNIGHT;
+    private static final LocalTime ALL_DAY_END = LocalTime.of(23, 59);
+
     public LockerReportCreateInfo toCreateInfo(Long userId) {
         return new LockerReportCreateInfo(
             userId,
@@ -48,12 +51,18 @@ public record LockerReportCreateCommand(
         if (minPrice == null && maxPrice == null) {
             return "UNKNOWN";
         }
+        if (minPrice == 0 && maxPrice == 0) {
+            return "FREE";
+        }
         return "PAID";
     }
 
     private String resolveOperatingTimeType() {
         if (startTime == null && endTime == null) {
             return "UNKNOWN";
+        }
+        if (startTime.equals(endTime) || startTime.equals(ALL_DAY_START) && endTime.equals(ALL_DAY_END)) {
+            return "OPEN_24_HOURS";
         }
         return "TIME_RANGE";
     }
