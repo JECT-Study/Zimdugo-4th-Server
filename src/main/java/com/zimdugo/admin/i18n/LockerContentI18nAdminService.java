@@ -104,7 +104,7 @@ public class LockerContentI18nAdminService {
 
     private void validateLanguages(List<SupportedLanguage> languages) {
         Set<SupportedLanguage> unique = new HashSet<>(languages);
-        Set<SupportedLanguage> required = new HashSet<>(SupportedLanguage.all());
+        Set<SupportedLanguage> required = new HashSet<>(SupportedLanguage.translationTargets());
         if (unique.size() != languages.size() || !unique.equals(required)) {
             throw new BusinessException(ErrorCode.INVALID_I18N_CONTENT);
         }
