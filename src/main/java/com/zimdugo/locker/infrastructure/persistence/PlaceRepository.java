@@ -2,6 +2,7 @@ package com.zimdugo.locker.infrastructure.persistence;
 
 import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import com.zimdugo.locker.infrastructure.projection.PlaceDetailQueryProjection;
+import com.zimdugo.locker.infrastructure.projection.AdminPlaceCandidateProjection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,4 +30,32 @@ public interface PlaceRepository extends JpaRepository<PlaceEntity, Long> {
     );
 
     List<PlaceEntity> findAllByRoadAddressOrderByNameAscIdAsc(String roadAddress);
+
+    @Query(value = """
+        WITH candidate_places AS (
+            SELECT
+                p.id AS placeId,
+                p.name AS placeName,
+                p.road_address AS roadAddress,
+                p.latitude AS latitude,
+                p.longitude AS longitude,
+                ST_Distance(
+                    ST_SetSRID(ST_MakePoint(p.longitude, p.latitude), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography
+                ) AS distanceMeters,
+                LOWER(TRIM(p.road_address)) = LOWER(TRIM(:roadAddress)) AS exactAddress
+            FROM places p
+        )
+        SELECT *
+        FROM candidate_places
+        WHERE exactAddress OR distanceMeters <= :radiusMeters
+        ORDER BY exactAddress DESC, distanceMeters ASC, placeId ASC
+        LIMIT 10
+        """, nativeQuery = true)
+    List<AdminPlaceCandidateProjection> findAdminCandidates(
+        @Param("roadAddress") String roadAddress,
+        @Param("latitude") double latitude,
+        @Param("longitude") double longitude,
+        @Param("radiusMeters") int radiusMeters
+    );
 }

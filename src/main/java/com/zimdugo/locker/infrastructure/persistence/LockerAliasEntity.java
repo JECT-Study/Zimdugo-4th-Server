@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
     uniqueConstraints = {
         @UniqueConstraint(
             name = "uk_locker_aliases_locker_normalized",
-            columnNames = {"locker_id", "normalized_alias"}
+            columnNames = {"locker_id", "language_code", "normalized_alias"}
         )
     }
 )
