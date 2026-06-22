@@ -1,12 +1,13 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
-import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
-import com.zimdugo.locker.infrastructure.projection.AdminLockerReportDashboardProjection;
+import com.zimdugo.locker.domain.report.LockerReportStatus;
+import com.zimdugo.locker.infrastructure.projection.AdminLockerReportListProjection;
 import com.zimdugo.locker.infrastructure.projection.MyLockerReportHistoryQueryProjection;
 import jakarta.persistence.LockModeType;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import com.zimdugo.locker.domain.report.LockerReportStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,11 +15,14 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-
-
 public interface LockerReportRepository extends JpaRepository<LockerReportEntity, Long> {
 
-    long countByStatus(LockerReportStatus status);
+    long countByStatusIn(Collection<LockerReportStatus> statuses);
+
+    long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+        LocalDateTime start,
+        LocalDateTime end
+    );
 
     @Query("""
         SELECT
@@ -31,7 +35,7 @@ public interface LockerReportRepository extends JpaRepository<LockerReportEntity
         FROM LockerReportEntity lr
         ORDER BY lr.createdAt DESC, lr.id DESC
         """)
-    List<AdminLockerReportDashboardProjection> findRecentForAdminDashboard(Pageable pageable);
+    List<AdminLockerReportListProjection> findRecentForAdminReportList(Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT lr FROM LockerReportEntity lr WHERE lr.id = :reportId")
