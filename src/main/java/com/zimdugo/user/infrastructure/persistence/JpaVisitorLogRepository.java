@@ -20,6 +20,5 @@ public interface JpaVisitorLogRepository extends JpaRepository<VisitorLogEntity,
         @Param("userId") Long userId
     );
 
-    @Query("SELECT COUNT(v) FROM VisitorLogEntity v WHERE v.accessedAt >= :start AND v.accessedAt < :end")
-    long countVisitorsBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    long countByAccessedDate(LocalDate date);
 }

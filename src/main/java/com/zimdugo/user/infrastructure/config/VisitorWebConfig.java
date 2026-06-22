@@ -1,7 +1,10 @@
 package com.zimdugo.user.infrastructure.config;
 
 import com.zimdugo.user.infrastructure.visitor.VisitorInterceptor;
+import java.time.Clock;
+import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,12 +18,22 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class VisitorWebConfig implements WebMvcConfigurer {
 
+    private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
+
     private final ApplicationEventPublisher eventPublisher;
     private final StringRedisTemplate stringRedisTemplate;
 
+    @Value("${visitor.cookie.secure:false}")
+    private boolean visitorCookieSecure;
+
     @Bean
     public VisitorInterceptor visitorInterceptor() {
-        return new VisitorInterceptor(eventPublisher, stringRedisTemplate);
+        return new VisitorInterceptor(
+            eventPublisher,
+            stringRedisTemplate,
+            Clock.system(SEOUL_ZONE),
+            visitorCookieSecure
+        );
     }
 
     @Override

@@ -47,10 +47,7 @@ public class AdminDashboardService {
 
         return new AdminDashboardResult(
             today,
-            visitorLogRepository.countVisitorsBetween(
-                dayStart,
-                nextDayStart
-            ),
+            visitorLogRepository.countVisitorsByDate(today),
             lockerReportRepository.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
                 dayStart,
                 nextDayStart

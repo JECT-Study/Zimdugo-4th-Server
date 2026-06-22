@@ -42,12 +42,10 @@ class AdminDashboardServiceTest {
 
     @Test
     void summarizesTodayVisitorsReportsAndPendingReports() {
+        LocalDate today = LocalDate.of(2026, 6, 22);
         LocalDateTime dayStart = LocalDateTime.of(2026, 6, 22, 0, 0);
         LocalDateTime nextDayStart = LocalDateTime.of(2026, 6, 23, 0, 0);
-        when(visitorLogRepository.countVisitorsBetween(
-            dayStart,
-            nextDayStart
-        )).thenReturn(17L);
+        when(visitorLogRepository.countVisitorsByDate(today)).thenReturn(17L);
         when(lockerReportRepository.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
             dayStart,
             nextDayStart
@@ -64,10 +62,7 @@ class AdminDashboardServiceTest {
         assertThat(result.todayVisitors()).isEqualTo(17L);
         assertThat(result.todayReports()).isEqualTo(4L);
         assertThat(result.pendingReports()).isEqualTo(10L);
-        verify(visitorLogRepository).countVisitorsBetween(
-            dayStart,
-            nextDayStart
-        );
+        verify(visitorLogRepository).countVisitorsByDate(today);
         verify(lockerReportRepository).countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
             dayStart,
             nextDayStart
