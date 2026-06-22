@@ -1,5 +1,9 @@
 package com.zimdugo.admin.application;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.zimdugo.common.storage.ImageUploadPolicy;
 import com.zimdugo.common.storage.S3ImagePathResolver;
 import com.zimdugo.common.storage.S3StorageProperties;
@@ -10,12 +14,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockMultipartFile;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,6 +63,47 @@ class S3AdminNoticeImageStorageTest {
             .isInstanceOf(BusinessException.class);
 
         verifyNoInteractions(s3Client);
+    }
+
+    @Test
+    void logUploadContextAndCauseWhenS3UploadFails() {
+        MockMultipartFile image = file("notice.png");
+        given(imageUploadPolicy.extractValidExtension("notice.png")).willReturn("png");
+        given(imageUploadPolicy.validateContentType("image/png")).willReturn("image/png");
+        given(pathResolver.createImageKey("admin/notice-images/", "png"))
+            .willReturn("admin/notice-images/generated.png");
+        doThrow(SdkClientException.builder().message("credentials unavailable").build())
+            .when(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        S3AdminNoticeImageStorage storage = new S3AdminNoticeImageStorage(
+            s3Client,
+            properties(),
+            pathResolver,
+            imageUploadPolicy,
+            fileValidator
+        );
+        Logger logger = (Logger) LoggerFactory.getLogger(S3AdminNoticeImageStorage.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+
+        try {
+            assertThatThrownBy(() -> storage.uploadAll(List.of(image)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.IMAGE_STORAGE_WRITE_FAILED.getMessage());
+
+            assertThat(appender.list).singleElement().satisfies(event -> {
+                assertThat(event.getLevel()).isEqualTo(Level.ERROR);
+                assertThat(event.getFormattedMessage())
+                    .contains("bucket=bucket")
+                    .contains("key=admin/notice-images/generated.png")
+                    .contains("contentType=image/png")
+                    .contains("fileSize=1");
+                assertThat(event.getThrowableProxy().getClassName())
+                    .isEqualTo(SdkClientException.class.getName());
+            });
+        } finally {
+            logger.detachAppender(appender);
+        }
     }
 
     private MockMultipartFile file(String name) {

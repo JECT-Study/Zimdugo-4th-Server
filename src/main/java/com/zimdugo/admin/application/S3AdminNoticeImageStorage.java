@@ -75,6 +75,14 @@ public class S3AdminNoticeImageStorage implements AdminNoticeImageStorage {
             s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
             return pathResolver.buildPublicUrl(key);
         } catch (IOException | SdkException exception) {
+            log.error(
+                "공지 이미지 S3 업로드 실패. bucket={}, key={}, contentType={}, fileSize={}",
+                properties.bucket(),
+                key,
+                contentType,
+                file.getSize(),
+                exception
+            );
             throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED, exception);
         }
     }
