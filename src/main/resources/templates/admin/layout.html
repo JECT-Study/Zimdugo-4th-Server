@@ -44,6 +44,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none;
         }
 
         .sidebar-brand i { color: #4f46e5; }
@@ -77,6 +78,7 @@
             color: #1a1a1a;
         }
 
+        .sidebar-brand:focus-visible,
         .sidebar-menu-item a:focus-visible,
         .btn:focus-visible {
             outline: 3px solid rgba(79, 70, 229, 0.28);
@@ -205,18 +207,10 @@
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-brand">
+        <a class="sidebar-brand" th:href="@{/admin}">
             <i class="fa-solid fa-gear"></i>
             Zimdugo Admin
-        </div>
-        <div class="sidebar-label">운영</div>
-        <ul class="sidebar-menu">
-            <li class="sidebar-menu-item" th:classappend="${activeMenu == 'home'} ? 'active'">
-                <a th:href="@{/admin}">
-                    <i class="fa-solid fa-chart-line"></i> 홈
-                </a>
-            </li>
-        </ul>
+        </a>
         <div class="sidebar-label">콘텐츠 관리</div>
         <ul class="sidebar-menu">
             <li class="sidebar-menu-item" th:classappend="${activeMenu == 'notice'} ? 'active'">

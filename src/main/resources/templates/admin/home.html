@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>관리자 홈</title>
+</head>
+<body>
+<main>
+    <style>
+        .dashboard-shell {
+            max-width: 1120px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            margin-bottom: 1.75rem;
+            animation: rise-in 0.35s ease-out both;
+        }
+
+        .dashboard-eyebrow {
+            color: #4f46e5;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            margin-bottom: 0.4rem;
+        }
+
+        .dashboard-header h1 {
+            font-size: clamp(1.7rem, 3vw, 2.35rem);
+            line-height: 1.25;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            animation: rise-in 0.4s 0.05s ease-out both;
+        }
+
+        .metric {
+            min-height: 250px;
+            padding: 2rem;
+            border-right: 1px solid #e5e5e5;
+        }
+
+        .metric:last-child {
+            border-right: 0;
+        }
+
+        .metric-label {
+            display: block;
+            color: #737373;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            display: block;
+            margin: 2.25rem 0 1.15rem;
+            font-size: clamp(3.25rem, 7vw, 5rem);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+        }
+
+        .metric-action {
+            position: relative;
+            display: block;
+            min-height: 250px;
+            padding: 2rem;
+            background: #171717;
+            color: #fff;
+            text-decoration: none;
+            transition: background 0.18s ease;
+        }
+
+        .metric-action .metric-label {
+            color: #a3a3a3;
+        }
+
+        .metric-action:hover {
+            background: #262626;
+        }
+
+        .metric-action:focus-visible {
+            z-index: 1;
+            outline: 3px solid #818cf8;
+            outline-offset: -3px;
+        }
+
+        .metric-arrow {
+            position: absolute;
+            right: 2rem;
+            bottom: 2rem;
+            color: #a5b4fc;
+            font-size: 1rem;
+            transition: transform 0.18s ease;
+        }
+
+        .metric-action:hover .metric-arrow {
+            transform: translateX(4px);
+        }
+
+        @keyframes rise-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metric,
+            .metric-action {
+                min-height: 210px;
+            }
+
+            .metric {
+                border-right: 0;
+                border-bottom: 1px solid #e5e5e5;
+            }
+
+            .metric-value {
+                margin-top: 1.6rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .dashboard-header,
+            .metric-grid {
+                animation: none;
+            }
+
+            .metric-action,
+            .metric-arrow {
+                transition: none;
+            }
+        }
+    </style>
+
+    <div class="dashboard-shell">
+        <header class="dashboard-header">
+            <time class="dashboard-eyebrow"
+                  th:datetime="${dashboard.date}"
+                  th:text="${#temporals.format(dashboard.date, 'yyyy년 M월 d일')}">2026년 6월 22일</time>
+            <h1>오늘 브리핑</h1>
+        </header>
+
+        <section class="metric-grid" aria-label="오늘의 주요 운영 지표">
+            <article class="metric">
+                <span class="metric-label">오늘의 접속자</span>
+                <strong class="metric-value" th:text="${dashboard.todayVisitors}">17</strong>
+            </article>
+
+            <article class="metric">
+                <span class="metric-label">오늘의 제보 접수</span>
+                <strong class="metric-value" th:text="${dashboard.todayReports}">4</strong>
+            </article>
+
+            <a class="metric-action" th:href="@{/admin/locker-reports}">
+                <span class="metric-label">제보 처리 대기</span>
+                <strong class="metric-value" th:text="${dashboard.pendingReports}">10</strong>
+                <i class="fa-solid fa-arrow-right metric-arrow" aria-hidden="true"></i>
+            </a>
+        </section>
+    </div>
+</main>
+</body>
+</html>
