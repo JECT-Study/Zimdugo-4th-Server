@@ -8,6 +8,8 @@ import com.zimdugo.admin.entrypoint.dto.AdminDocumentTranslationsForm;
 import com.zimdugo.admin.translation.dto.AdminDocumentTranslationDraftResult;
 import com.zimdugo.admin.translation.dto.AdminDocumentTranslationReviewPageResult;
 import com.zimdugo.admin.translation.dto.AdminDocumentTranslationSource;
+import com.zimdugo.common.i18n.SupportedLanguage;
+import com.zimdugo.core.exception.ExternalApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +27,26 @@ public class AdminDocumentTranslationReviewService {
     }
 
     public AdminDocumentTranslationDraftResult generateDraft(Long documentId) {
+        return draftGenerator.generate(translationSource(documentId));
+    }
+
+    public AdminDocumentTranslationDraftResult generateDraft(
+        Long documentId,
+        SupportedLanguage language
+    ) {
+        AdminDocumentTranslationDraftResult draft = draftGenerator.generate(
+            translationSource(documentId),
+            language
+        );
+        if (draft.translationFor(language.languageTag()) == null) {
+            throw new ExternalApiException("요청한 언어의 번역 응답이 없습니다.");
+        }
+        return draft;
+    }
+
+    private AdminDocumentTranslationSource translationSource(Long documentId) {
         AdminDocument document = adminDocumentService.getById(documentId);
-        return draftGenerator.generate(AdminDocumentTranslationSource.from(document));
+        return AdminDocumentTranslationSource.from(document);
     }
 
     @Transactional

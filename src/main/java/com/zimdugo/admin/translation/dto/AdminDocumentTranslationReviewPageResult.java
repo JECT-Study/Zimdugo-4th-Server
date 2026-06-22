@@ -57,7 +57,7 @@ public record AdminDocumentTranslationReviewPageResult(
 
         return new AdminDocumentTranslationReviewPageResult(
             resultDocument,
-            SupportedLanguage.all().stream()
+            SupportedLanguage.translationTargets().stream()
                 .map(language -> languageReview(document, language))
                 .toList()
         );

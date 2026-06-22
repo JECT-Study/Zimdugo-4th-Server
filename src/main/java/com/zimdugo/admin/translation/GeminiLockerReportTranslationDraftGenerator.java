@@ -9,6 +9,7 @@ import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.ExternalApiException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,18 +30,36 @@ public class GeminiLockerReportTranslationDraftGenerator implements LockerReport
 
     @Override
     public AdminTranslationDraftResult generate(LockerReportTranslationSource source) {
+        return generate(source, SupportedLanguage.translationTargets());
+    }
+
+    @Override
+    public AdminTranslationDraftResult generate(
+        LockerReportTranslationSource source,
+        SupportedLanguage language
+    ) {
+        return generate(source, List.of(language));
+    }
+
+    private AdminTranslationDraftResult generate(
+        LockerReportTranslationSource source,
+        List<SupportedLanguage> languages
+    ) {
         if (!properties.hasApiKey()) {
             throw new ExternalApiException("번역 API 키가 설정되지 않았습니다.");
         }
 
-        GeminiGenerateContentRequest request = createRequest(source);
+        GeminiGenerateContentRequest request = createRequest(source, languages);
         GeminiGenerateContentResponse response = callGemini(request);
         return parseDraft(response);
     }
 
-    private GeminiGenerateContentRequest createRequest(LockerReportTranslationSource source) {
+    private GeminiGenerateContentRequest createRequest(
+        LockerReportTranslationSource source,
+        List<SupportedLanguage> languages
+    ) {
         try {
-            return request(source);
+            return request(source, languages);
         } catch (JsonProcessingException e) {
             throw new ExternalApiException("번역 요청 생성에 실패했습니다.", e);
         }
@@ -72,7 +91,10 @@ public class GeminiLockerReportTranslationDraftGenerator implements LockerReport
         }
     }
 
-    private GeminiGenerateContentRequest request(LockerReportTranslationSource source)
+    GeminiGenerateContentRequest request(
+        LockerReportTranslationSource source,
+        List<SupportedLanguage> languages
+    )
         throws JsonProcessingException {
         String prompt = """
             You are translating a Korean locker report for a production travel app.
@@ -81,15 +103,16 @@ public class GeminiLockerReportTranslationDraftGenerator implements LockerReport
             Rules:
             - Preserve Korean station, building, and place names by natural transliteration when needed.
             - Keep addresses searchable and do not invent missing administrative details.
-            - Make name short enough for a mobile UI.
-            - Make detailInfo natural as user-facing guidance.
+            - Translate placeName and lockerName separately. Do not replace one with the other.
+            - Make locker name short enough for a mobile UI.
+            - Make locker detailInfo natural as user-facing guidance.
             - aliases are search keywords, 2 to 5 per language.
             - If the source field is empty, return an empty string for that translated field.
 
             Requested language tags: %s
             Source report JSON:
             %s
-            """.formatted(languageTags(), objectMapper.writeValueAsString(source));
+            """.formatted(languageTags(languages), objectMapper.writeValueAsString(source));
 
         return new GeminiGenerateContentRequest(
             List.of(new Content(List.of(new Part(prompt)))),
@@ -97,15 +120,28 @@ public class GeminiLockerReportTranslationDraftGenerator implements LockerReport
         );
     }
 
-    private String languageTags() {
-        return SupportedLanguage.all().stream()
+    private String languageTags(List<SupportedLanguage> languages) {
+        return languages.stream()
             .map(SupportedLanguage::languageTag)
-            .reduce((left, right) -> left + ", " + right)
-            .orElse("");
+            .collect(Collectors.joining(", "));
     }
 
+    @SuppressWarnings("checkstyle:MethodLength")
     private Map<String, Object> responseSchema() {
-        Map<String, Object> translationSchema = Map.of(
+        Map<String, Object> placeTranslationSchema = Map.of(
+            "type", "OBJECT",
+            "properties", Map.of(
+                "language", Map.of("type", "STRING"),
+                "name", Map.of("type", "STRING"),
+                "roadAddress", Map.of("type", "STRING"),
+                "aliases", Map.of(
+                    "type", "ARRAY",
+                    "items", Map.of("type", "STRING")
+                )
+            ),
+            "required", List.of("language", "name", "roadAddress", "aliases")
+        );
+        Map<String, Object> lockerTranslationSchema = Map.of(
             "type", "OBJECT",
             "properties", Map.of(
                 "language", Map.of("type", "STRING"),
@@ -123,12 +159,16 @@ public class GeminiLockerReportTranslationDraftGenerator implements LockerReport
         return Map.of(
             "type", "OBJECT",
             "properties", Map.of(
-                "translations", Map.of(
+                "placeTranslations", Map.of(
                     "type", "ARRAY",
-                    "items", translationSchema
+                    "items", placeTranslationSchema
+                ),
+                "lockerTranslations", Map.of(
+                    "type", "ARRAY",
+                    "items", lockerTranslationSchema
                 )
             ),
-            "required", List.of("translations")
+            "required", List.of("placeTranslations", "lockerTranslations")
         );
     }
 

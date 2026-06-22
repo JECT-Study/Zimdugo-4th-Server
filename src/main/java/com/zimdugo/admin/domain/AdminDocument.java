@@ -129,6 +129,9 @@ public class AdminDocument {
     }
 
     public String localizedTitle(SupportedLanguage language) {
+        if (language == SupportedLanguage.KOREAN) {
+            return title;
+        }
         return translations.stream()
             .filter(translation -> translation.getLanguageCode().equals(language.languageTag()))
             .map(AdminDocumentTranslation::getTitle)
@@ -138,13 +141,16 @@ public class AdminDocument {
 
     public boolean hasCompleteTranslation(String languageCode) {
         String normalizedLanguage = DocumentLanguage.normalize(languageCode);
+        if (SupportedLanguage.KOREAN.languageTag().equals(normalizedLanguage)) {
+            return true;
+        }
         boolean titleTranslated = translations.stream()
             .anyMatch(translation -> translation.getLanguageCode().equals(normalizedLanguage));
         return titleTranslated && sections.stream().allMatch(section -> section.hasTranslation(normalizedLanguage));
     }
 
     public boolean hasAllRequiredTranslations() {
-        return SupportedLanguage.all().stream()
+        return SupportedLanguage.translationTargets().stream()
             .allMatch(language -> hasCompleteTranslation(language.languageTag()));
     }
 

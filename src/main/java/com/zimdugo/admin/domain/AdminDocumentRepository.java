@@ -9,6 +9,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AdminDocumentRepository extends JpaRepository<AdminDocument, Long> {
+    long countByType(DocumentType type);
+
+    long countByTypeAndActive(DocumentType type, boolean active);
+
     @Query("select d from AdminDocument d left join fetch d.sections "
         + "where d.type = :type order by d.listOrder asc, d.createdAt desc")
     List<AdminDocument> findByType(@Param("type") DocumentType type);
