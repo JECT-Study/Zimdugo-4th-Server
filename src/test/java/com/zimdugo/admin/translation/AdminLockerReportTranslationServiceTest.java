@@ -306,6 +306,8 @@ class AdminLockerReportTranslationServiceTest {
         assertThat(report.getAppliedAt())
             .isNotNull()
             .isBetween(beforeCompletion, LocalDateTime.now());
+        verify(place).activate();
+        verify(locker).activate();
         verify(lockerReportRepository).findByIdForUpdate(1L);
         verify(lockerReportRepository, never()).findActiveByIdWithImage(1L);
         verify(eventPublisher).publishEvent(new com.zimdugo.admin.report.LockerReportApprovedEvent(20L));
@@ -333,6 +335,8 @@ class AdminLockerReportTranslationServiceTest {
         assertThat(report.getStatus())
             .isEqualTo(com.zimdugo.locker.domain.report.LockerReportStatus.READY_FOR_APPROVAL);
         assertThat(report.getAppliedAt()).isNull();
+        verify(place, never()).activate();
+        verify(locker, never()).activate();
         verify(lockerReportRepository).findByIdForUpdate(1L);
         verify(lockerReportRepository, never()).findActiveByIdWithImage(1L);
     }
