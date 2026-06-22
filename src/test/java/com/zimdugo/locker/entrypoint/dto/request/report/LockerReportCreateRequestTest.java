@@ -62,41 +62,54 @@ class LockerReportCreateRequestTest {
         LocalTime startTime,
         LocalTime endTime
     ) {
-        return request("ABOVE_GROUND", 1, minPrice, maxPrice, startTime, endTime);
+        return request(
+            new FloorInput("ABOVE_GROUND", 1),
+            new PriceInput(minPrice, maxPrice),
+            new OperatingHours(startTime, endTime)
+        );
     }
 
     private LockerReportCreateRequest requestWithFloor(
         String floorType,
         Integer floorNumber
     ) {
-        return request(floorType, floorNumber, null, null, null, null);
+        return request(
+            new FloorInput(floorType, floorNumber),
+            new PriceInput(null, null),
+            new OperatingHours(null, null)
+        );
     }
 
-    @SuppressWarnings("checkstyle:ParameterNumber")
     private LockerReportCreateRequest request(
-        String floorType,
-        Integer floorNumber,
-        Integer minPrice,
-        Integer maxPrice,
-        LocalTime startTime,
-        LocalTime endTime
+        FloorInput floor,
+        PriceInput price,
+        OperatingHours operatingHours
     ) {
         return new LockerReportCreateRequest(
             "서울 중구 세종대로 1",
             37.55,
             126.97,
-            floorType,
-            floorNumber,
+            floor.type(),
+            floor.number(),
             "INDOOR",
             "SUBWAY_STATION",
             List.of("SMALL"),
-            minPrice,
-            maxPrice,
-            startTime,
-            endTime,
+            price.min(),
+            price.max(),
+            operatingHours.start(),
+            operatingHours.end(),
             null,
             null,
             false
         );
+    }
+
+    private record FloorInput(String type, Integer number) {
+    }
+
+    private record PriceInput(Integer min, Integer max) {
+    }
+
+    private record OperatingHours(LocalTime start, LocalTime end) {
     }
 }

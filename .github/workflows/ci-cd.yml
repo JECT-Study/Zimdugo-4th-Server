@@ -127,7 +127,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: docker-compose.deploy.yml
+          source: docker-compose.deploy.yml,docker/nginx/zimdugo-upload-size.conf
           target: /opt/zimdugo
 
       - name: Deploy on EC2 via SSH
@@ -146,6 +146,9 @@ jobs:
           script: |
             set -e
             cd /opt/zimdugo
+            sudo install -m 644 docker/nginx/zimdugo-upload-size.conf /etc/nginx/conf.d/zimdugo-upload-size.conf
+            sudo nginx -t
+            sudo systemctl reload nginx
             grep -q '^GHCR_OWNER=' .env || echo "GHCR_OWNER=${OWNER_LOWER}" >> .env
             grep -q '^GHCR_REPO=' .env || echo "GHCR_REPO=${REPO_LOWER}" >> .env
             grep -q '^ELASTICSEARCH_URIS=' .env || echo "ELASTICSEARCH_URIS=http://elasticsearch:9200" >> .env

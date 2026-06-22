@@ -23,7 +23,7 @@ public enum UploadCategory {
                 return category;
             }
         }
-        throw new IllegalArgumentException("Unsupported upload category: " + value);
+        throw new IllegalArgumentException("지원하지 않는 업로드 카테고리입니다: " + value);
     }
 
     @JsonValue
