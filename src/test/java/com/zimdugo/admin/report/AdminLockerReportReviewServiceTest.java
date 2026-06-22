@@ -16,6 +16,7 @@ import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.locker.domain.report.LockerReportOperatingTimeType;
 import com.zimdugo.locker.domain.report.LockerReportPriceType;
 import com.zimdugo.locker.domain.report.LockerReportStatus;
+import com.zimdugo.locker.domain.publication.PublicationStatus;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
@@ -142,9 +143,13 @@ class AdminLockerReportReviewServiceTest {
 
         service.approve(1L, approval(10L), "admin");
 
+        ArgumentCaptor<LockerEntity> lockerCaptor = ArgumentCaptor.forClass(LockerEntity.class);
+        verify(lockerRepository).save(lockerCaptor.capture());
         assertThat(report.getStatus()).isEqualTo(LockerReportStatus.TRANSLATION_REQUIRED);
         assertThat(report.getName()).isEqualTo("서울역 물품보관함");
         assertThat(report.getAppliedLockerId()).isEqualTo(20L);
+        assertThat(place.getPublicationStatus()).isEqualTo(PublicationStatus.ACTIVE);
+        assertThat(lockerCaptor.getValue().getPublicationStatus()).isEqualTo(PublicationStatus.DRAFT);
         verify(detailRepository).save(any(LockerDetailEntity.class));
     }
 
@@ -172,7 +177,12 @@ class AdminLockerReportReviewServiceTest {
 
         service.approve(1L, approval(null), "admin");
 
-        verify(placeRepository).save(any(PlaceEntity.class));
+        ArgumentCaptor<PlaceEntity> placeCaptor = ArgumentCaptor.forClass(PlaceEntity.class);
+        ArgumentCaptor<LockerEntity> lockerCaptor = ArgumentCaptor.forClass(LockerEntity.class);
+        verify(placeRepository).save(placeCaptor.capture());
+        verify(lockerRepository).save(lockerCaptor.capture());
+        assertThat(placeCaptor.getValue().getPublicationStatus()).isEqualTo(PublicationStatus.DRAFT);
+        assertThat(lockerCaptor.getValue().getPublicationStatus()).isEqualTo(PublicationStatus.DRAFT);
         assertThat(report.getAppliedPlaceId()).isEqualTo(10L);
         assertThat(report.getAppliedLockerId()).isEqualTo(20L);
     }
