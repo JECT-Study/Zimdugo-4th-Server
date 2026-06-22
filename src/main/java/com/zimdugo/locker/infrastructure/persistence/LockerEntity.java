@@ -1,7 +1,10 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
+import com.zimdugo.locker.domain.publication.PublicationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -43,6 +46,10 @@ public class LockerEntity {
     @Column(columnDefinition = "geography(Point,4326)", insertable = false, updatable = false)
     private Point location;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PublicationStatus publicationStatus = PublicationStatus.ACTIVE;
+
     public LockerEntity(String name, String roadAddress, double latitude, double longitude) {
         this(name, roadAddress, latitude, longitude, null);
     }
@@ -53,5 +60,21 @@ public class LockerEntity {
         this.latitude = latitude;
         this.longitude = longitude;
         this.place = place;
+    }
+
+    public static LockerEntity draft(
+        String name,
+        String roadAddress,
+        double latitude,
+        double longitude,
+        PlaceEntity place
+    ) {
+        LockerEntity locker = new LockerEntity(name, roadAddress, latitude, longitude, place);
+        locker.publicationStatus = PublicationStatus.DRAFT;
+        return locker;
+    }
+
+    public void activate() {
+        this.publicationStatus = PublicationStatus.ACTIVE;
     }
 }
