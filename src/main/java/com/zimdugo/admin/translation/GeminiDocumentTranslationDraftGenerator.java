@@ -89,7 +89,7 @@ public class GeminiDocumentTranslationDraftGenerator implements DocumentTranslat
                 message
             );
             throw new ExternalApiException(
-                "문서 번역 초안 생성 실패: HTTP " + e.getStatusCode().value() + " - " + message,
+                GeminiTranslationErrorMessage.from(e.getStatusCode()),
                 e
             );
         } catch (RestClientException e) {

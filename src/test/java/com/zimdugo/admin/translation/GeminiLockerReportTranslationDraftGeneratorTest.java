@@ -1,12 +1,18 @@
 package com.zimdugo.admin.translation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimdugo.admin.translation.dto.LockerReportTranslationSource;
 import com.zimdugo.common.i18n.SupportedLanguage;
+import com.zimdugo.core.exception.ExternalApiException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 class GeminiLockerReportTranslationDraftGeneratorTest {
@@ -27,9 +33,31 @@ class GeminiLockerReportTranslationDraftGeneratorTest {
         );
     }
 
+    @Test
+    void translatesServiceUnavailableResponseToKoreanMessage() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://example.com");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(request -> { })
+            .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                    {"error":{"message":"This model is currently experiencing high demand."}}
+                    """));
+        GeminiLockerReportTranslationDraftGenerator generator = generator(builder.build());
+
+        assertThatThrownBy(() -> generator.generate(source()))
+            .isInstanceOf(ExternalApiException.class)
+            .hasMessage("번역 모델에 요청이 몰려 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        server.verify();
+    }
+
     private GeminiLockerReportTranslationDraftGenerator generator() {
+        return generator(RestClient.create("https://example.com"));
+    }
+
+    private GeminiLockerReportTranslationDraftGenerator generator(RestClient restClient) {
         return new GeminiLockerReportTranslationDraftGenerator(
-            RestClient.create("https://example.com"),
+            restClient,
             new GeminiTranslationProperties(
                 "https://example.com",
                 "api-key",
