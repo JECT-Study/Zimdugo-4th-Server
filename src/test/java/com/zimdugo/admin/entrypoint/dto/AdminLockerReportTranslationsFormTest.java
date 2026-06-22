@@ -77,10 +77,12 @@ class AdminLockerReportTranslationsFormTest {
 
         AdminLockerReportTranslationsForm form = AdminLockerReportTranslationsForm.from(page);
 
-        assertThat(form.getPlaceTranslations()).hasSize(SupportedLanguage.all().size());
-        assertThat(form.getLockerTranslations()).hasSize(SupportedLanguage.all().size());
-        assertThat(form.getPlaceTranslations().get(1).getName()).isEqualTo("Seoul Station");
-        assertThat(form.getLockerTranslations().get(1).getDetailInfo()).isEqualTo("Detail");
+        assertThat(form.getPlaceTranslations())
+            .hasSize(SupportedLanguage.translationTargets().size());
+        assertThat(form.getLockerTranslations())
+            .hasSize(SupportedLanguage.translationTargets().size());
+        assertThat(form.getPlaceTranslations().getFirst().getName()).isEqualTo("Seoul Station");
+        assertThat(form.getLockerTranslations().getFirst().getDetailInfo()).isEqualTo("Detail");
     }
 
     private AdminLockerReportTranslationsForm.PlaceTranslationForm placeTranslation() {

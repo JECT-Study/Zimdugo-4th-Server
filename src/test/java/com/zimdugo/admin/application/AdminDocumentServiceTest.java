@@ -383,8 +383,8 @@ class AdminDocumentServiceTest {
     }
 
     @Test
-    @DisplayName("요청 언어의 번역만 반환한다")
-    void localizesDocumentWithRequestedLanguageOnly() {
+    @DisplayName("한국어 요청은 기존 번역보다 원문을 반환한다")
+    void returnsOriginalDocumentForKoreanEvenWhenLegacyTranslationExists() {
         AdminDocumentSection section1 = section("원문 소제목 1", "원문 내용 1", 0);
         AdminDocumentSection section2 = section("원문 소제목 2", "원문 내용 2", 1);
         AdminDocument document = adminDocumentRepository.save(AdminDocument.builder()
@@ -403,10 +403,10 @@ class AdminDocumentServiceTest {
             .getLocalizedActiveDocumentsByType(DocumentType.NOTICE.name(), SupportedLanguage.KOREAN)
             .getFirst();
 
-        assertThat(response.getTitle()).isEqualTo("한국어 제목");
+        assertThat(response.getTitle()).isEqualTo("원문 제목");
         assertThat(response.getImageUrl()).isEqualTo("https://cdn.example.com/admin/notice-images/notice.jpg");
-        assertThat(response.getSections().get(0).getContent()).isEqualTo("한국어 내용 1");
-        assertThat(response.getSections().get(1).getContent()).isEqualTo("한국어 내용 2");
+        assertThat(response.getSections().get(0).getContent()).isEqualTo("원문 내용 1");
+        assertThat(response.getSections().get(1).getContent()).isEqualTo("원문 내용 2");
     }
 
     @Test
@@ -543,7 +543,7 @@ class AdminDocumentServiceTest {
     }
 
     private void addAllTranslations(AdminDocument document) {
-        for (SupportedLanguage language : SupportedLanguage.all()) {
+        for (SupportedLanguage language : SupportedLanguage.translationTargets()) {
             document.upsertTranslation(language.languageTag(), language.languageTag() + " title");
             for (AdminDocumentSection section : document.getSections()) {
                 section.upsertTranslation(

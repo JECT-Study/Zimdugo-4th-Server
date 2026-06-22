@@ -2,6 +2,8 @@ package com.zimdugo.locker.infrastructure.localization;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -105,20 +107,15 @@ class TranslationLookupServiceTest {
     }
 
     @Test
-    void resolvesKoreanFromRequiredTranslationInsteadOfOriginalContent() {
+    void resolvesKoreanFromOriginalContentWithoutTranslationLookup() {
         PlaceEntity place = new PlaceEntity("원문 장소", 37.5609, 126.9863, "원문 주소");
-        PlaceTranslationEntity korean = new PlaceTranslationEntity(
-            place, SupportedLanguage.KOREAN, "한국어 번역 장소", "한국어 번역 주소"
-        );
-        when(placeTranslationRepository.findByPlaceIdAndLanguage(
-            place.getId(),
-            SupportedLanguage.KOREAN
-        )).thenReturn(Optional.of(korean));
 
         LocalizedPlaceContent content = service.resolvePlace(place, SupportedLanguage.KOREAN);
 
-        assertThat(content.name()).isEqualTo("한국어 번역 장소");
-        assertThat(content.roadAddress()).isEqualTo("한국어 번역 주소");
+        assertThat(content.name()).isEqualTo("원문 장소");
+        assertThat(content.roadAddress()).isEqualTo("원문 주소");
+        assertThat(content.language()).isEqualTo(SupportedLanguage.KOREAN);
+        verify(placeTranslationRepository, never()).findByPlaceIdAndLanguage(any(), any());
     }
 
     @Test
