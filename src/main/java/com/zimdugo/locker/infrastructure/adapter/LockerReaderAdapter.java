@@ -1,6 +1,7 @@
 package com.zimdugo.locker.infrastructure.adapter;
 
 import com.zimdugo.locker.domain.locker.LockerReader;
+import com.zimdugo.locker.domain.publication.PublicationStatus;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,6 @@ public class LockerReaderAdapter implements LockerReader {
 
     @Override
     public boolean existsById(Long lockerId) {
-        return lockerRepository.existsById(lockerId);
+        return lockerRepository.existsByIdAndPublicationStatus(lockerId, PublicationStatus.ACTIVE);
     }
 }

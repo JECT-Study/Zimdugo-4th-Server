@@ -23,6 +23,7 @@ public interface PlaceRepository extends JpaRepository<PlaceEntity, Long> {
         FROM places p
         LEFT JOIN place_translations pt ON pt.place_id = p.id AND pt.language_code = :languageCode
         WHERE p.id = :placeId
+          AND p.publication_status = 'ACTIVE'
         """, nativeQuery = true)
     Optional<PlaceDetailQueryProjection> findPlaceDetailById(
         @Param("placeId") Long placeId,
@@ -45,6 +46,7 @@ public interface PlaceRepository extends JpaRepository<PlaceEntity, Long> {
                 ) AS distanceMeters,
                 LOWER(TRIM(p.road_address)) = LOWER(TRIM(:roadAddress)) AS exactAddress
             FROM places p
+            WHERE p.publication_status = 'ACTIVE'
         )
         SELECT *
         FROM candidate_places
