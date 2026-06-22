@@ -5,6 +5,7 @@ import com.zimdugo.locker.infrastructure.projection.LockerDetailQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerPlaceLockerQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.NearbyLockerPlaceQueryProjection;
+import com.zimdugo.locker.domain.publication.PublicationStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -57,6 +58,8 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         LEFT JOIN locker_translations lt ON lt.locker_id = l.id AND lt.language_code = :languageCode
         LEFT JOIN place_translations pt ON pt.place_id = p.id AND pt.language_code = :languageCode
         WHERE l.id = :lockerId
+          AND l.publication_status = 'ACTIVE'
+          AND p.publication_status = 'ACTIVE'
         """, nativeQuery = true)
     Optional<LockerDetailQueryProjection> findDetailById(
         @Param("lockerId") Long lockerId,
@@ -74,9 +77,12 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             ST_X(l.location::geometry) AS lockerLongitude,
             l.place_id AS placeId
         FROM lockers l
+        JOIN places p ON p.id = l.place_id
         CROSS JOIN target
         WHERE ST_DWithin(l.location, target.point, :radiusMeters)
           AND l.place_id IS NOT NULL
+          AND l.publication_status = 'ACTIVE'
+          AND p.publication_status = 'ACTIVE'
         ORDER BY ST_Distance(l.location, target.point) ASC
         """, nativeQuery = true)
     List<NearbyLockerPlaceQueryProjection> findNearbyLockers(
@@ -104,6 +110,8 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         JOIN places p ON p.id = l.place_id
         JOIN locker_details ld ON ld.locker_id = l.id
         WHERE l.place_id IS NOT NULL
+          AND l.publication_status = 'ACTIVE'
+          AND p.publication_status = 'ACTIVE'
         """, nativeQuery = true)
     List<LockerSuggestIndexQueryProjection> findAllForSuggestIndex();
 
@@ -126,13 +134,24 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         JOIN places p ON p.id = l.place_id
         JOIN locker_details ld ON ld.locker_id = l.id
         WHERE l.place_id IN (:placeIds)
+          AND l.publication_status = 'ACTIVE'
+          AND p.publication_status = 'ACTIVE'
         """, nativeQuery = true)
     List<LockerSuggestIndexQueryProjection> findAllForSuggestIndexByPlaceIds(
         @Param("placeIds") List<Long> placeIds
     );
 
-    @Query("SELECT DISTINCT l.place.id FROM LockerEntity l WHERE l.id IN :lockerIds AND l.place IS NOT NULL")
+    @Query("""
+        SELECT DISTINCT l.place.id
+        FROM LockerEntity l
+        WHERE l.id IN :lockerIds
+          AND l.place IS NOT NULL
+          AND l.publicationStatus = com.zimdugo.locker.domain.publication.PublicationStatus.ACTIVE
+          AND l.place.publicationStatus = com.zimdugo.locker.domain.publication.PublicationStatus.ACTIVE
+        """)
     List<Long> findPlaceIdsByLockerIds(@Param("lockerIds") List<Long> lockerIds);
+
+    boolean existsByIdAndPublicationStatus(Long id, PublicationStatus publicationStatus);
 
     @Query(value = """
         WITH target AS (
@@ -153,9 +172,12 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             ld.updated_at AS updatedAt
         FROM lockers l
         JOIN locker_details ld ON ld.locker_id = l.id
+        JOIN places p ON p.id = l.place_id
         LEFT JOIN locker_translations lt ON lt.locker_id = l.id AND lt.language_code = :languageCode
         CROSS JOIN target
         WHERE l.place_id IN (:placeIds)
+          AND l.publication_status = 'ACTIVE'
+          AND p.publication_status = 'ACTIVE'
         ORDER BY l.place_id ASC, ST_Distance(l.location, target.point) ASC
         """, nativeQuery = true)
     List<LockerPlaceLockerQueryProjection> findByPlaceIds(

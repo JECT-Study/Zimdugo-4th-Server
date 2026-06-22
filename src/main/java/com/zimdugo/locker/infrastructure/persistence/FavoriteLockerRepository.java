@@ -22,6 +22,7 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
             JOIN lockers l ON l.id = fl.locker_id
             JOIN locker_details ld ON ld.locker_id = l.id
             WHERE fl.user_id = :userId
+              AND l.publication_status = 'ACTIVE'
             """,
         nativeQuery = true
     )
@@ -42,6 +43,7 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
         FROM FavoriteLockerEntity fl
         WHERE fl.user.id = :userId
           AND fl.locker.id IN :lockerIds
+          AND fl.locker.publicationStatus = com.zimdugo.locker.domain.publication.PublicationStatus.ACTIVE
         """)
     Set<Long> findFavoriteLockerIds(
         @Param("userId") Long userId,
@@ -67,6 +69,7 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
             JOIN locker_details ld ON ld.locker_id = l.id
             CROSS JOIN target
             WHERE fl.user_id = :userId
+              AND l.publication_status = 'ACTIVE'
             ORDER BY fl.created_at DESC, fl.id DESC
             """,
         countQuery = """
@@ -75,6 +78,7 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
             JOIN lockers l ON l.id = fl.locker_id
             JOIN locker_details ld ON ld.locker_id = l.id
             WHERE fl.user_id = :userId
+              AND l.publication_status = 'ACTIVE'
             """,
         nativeQuery = true
     )
