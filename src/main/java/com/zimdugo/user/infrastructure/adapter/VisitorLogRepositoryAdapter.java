@@ -19,7 +19,7 @@ public class VisitorLogRepositoryAdapter implements VisitorLogRepository {
     }
 
     @Override
-    public long countVisitorsBetween(LocalDateTime start, LocalDateTime end) {
-        return jpaVisitorLogRepository.countVisitorsBetween(start, end);
+    public long countVisitorsByDate(LocalDate date) {
+        return jpaVisitorLogRepository.countByAccessedDate(date);
     }
 }

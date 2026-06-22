@@ -17,7 +17,7 @@ public class VisitorLogService {
 
     private final VisitorLogRepository visitorLogRepository;
 
-    @Async
+    @Async("visitorLogExecutor")
     @EventListener
     @Transactional
     public void handleVisitorAccessEvent(VisitorAccessEvent event) {
@@ -29,9 +29,9 @@ public class VisitorLogService {
                 event.accessedAt()
             );
         } catch (DataAccessException exception) {
-            log.error("접속 로그 RDB 적재 실패 (데이터베이스 오류) [visitor: {}]", event.visitorIdentifier(), exception);
+            log.error("접속 로그 RDB 적재 실패 (데이터베이스 오류)", exception);
         } catch (Exception exception) {
-            log.error("접속 로그 기록 실패 (예상치 못한 시스템 오류) [visitor: {}]", event.visitorIdentifier(), exception);
+            log.error("접속 로그 기록 실패 (예상치 못한 시스템 오류)", exception);
         }
     }
 }
