@@ -14,6 +14,7 @@ import com.zimdugo.admin.i18n.dto.AdminPlaceI18nResponse;
 import com.zimdugo.admin.entrypoint.dto.AdminLockerReportTranslationsForm;
 import com.zimdugo.admin.i18n.dto.AdminLockerI18nRequest;
 import com.zimdugo.admin.i18n.dto.AdminPlaceI18nRequest;
+import com.zimdugo.admin.translation.dto.AdminLockerReportSummaryResult;
 import com.zimdugo.admin.translation.dto.AdminLockerReportTranslationPageResult;
 import com.zimdugo.admin.translation.dto.AdminTranslationDraftResult;
 import com.zimdugo.admin.translation.dto.LockerReportTranslationSource;
@@ -29,6 +30,7 @@ import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceRepository;
+import com.zimdugo.locker.infrastructure.projection.AdminLockerReportListProjection;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
@@ -43,6 +45,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class AdminLockerReportTranslationServiceTest {
@@ -72,6 +75,36 @@ class AdminLockerReportTranslationServiceTest {
             draftGenerator,
             eventPublisher
         );
+    }
+
+    @Test
+    void getsRecentReportsFromListProjection() {
+        AdminLockerReportListProjection projection =
+            org.mockito.Mockito.mock(AdminLockerReportListProjection.class);
+        LocalDateTime createdAt = LocalDateTime.of(2026, 6, 22, 16, 0);
+        when(projection.getId()).thenReturn(1L);
+        when(projection.getName()).thenReturn("서울역 보관함");
+        when(projection.getRoadAddress()).thenReturn("서울 중구 한강대로 405");
+        when(projection.getStatus())
+            .thenReturn(com.zimdugo.locker.domain.report.LockerReportStatus.SUBMITTED);
+        when(projection.getCreatedAt()).thenReturn(createdAt);
+        when(lockerReportRepository.findRecentForAdminReportList(any()))
+            .thenReturn(List.of(projection));
+
+        List<AdminLockerReportSummaryResult> reports = service.getRecentReports();
+
+        assertThat(reports).containsExactly(new AdminLockerReportSummaryResult(
+            1L,
+            "서울역 보관함",
+            "서울 중구 한강대로 405",
+            com.zimdugo.locker.domain.report.LockerReportStatus.SUBMITTED,
+            null,
+            createdAt
+        ));
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(lockerReportRepository).findRecentForAdminReportList(pageableCaptor.capture());
+        assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(50);
+        verify(lockerReportRepository, never()).findAll(any(Pageable.class));
     }
 
     @Test

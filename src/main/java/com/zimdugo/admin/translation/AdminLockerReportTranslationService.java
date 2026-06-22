@@ -24,7 +24,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,13 +42,9 @@ public class AdminLockerReportTranslationService {
     private final ApplicationEventPublisher eventPublisher;
 
     public List<AdminLockerReportSummaryResult> getRecentReports() {
-        PageRequest pageRequest = PageRequest.of(
-            0,
-            REPORT_LIST_SIZE,
-            Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"))
-        );
+        PageRequest pageRequest = PageRequest.of(0, REPORT_LIST_SIZE);
 
-        return lockerReportRepository.findAll(pageRequest).stream()
+        return lockerReportRepository.findRecentForAdminReportList(pageRequest).stream()
             .map(AdminLockerReportSummaryResult::from)
             .toList();
     }
