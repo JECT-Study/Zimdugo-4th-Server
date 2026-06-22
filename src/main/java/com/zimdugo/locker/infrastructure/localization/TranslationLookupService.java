@@ -61,18 +61,34 @@ public class TranslationLookupService {
         
         Map<Long, LocalizedPlaceContent> contents = new LinkedHashMap<>();
         for (Long id : ids) {
-            PlaceEntity place = places.get(id);
-            PlaceTranslationEntity content = translations.get(id);
-            if (content == null) {
-                throw new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING);
-            }
-            contents.put(id, new LocalizedPlaceContent(
-                content.getName(),
-                content.getRoadAddress(),
-                content.getLanguage()
-            ));
+            contents.put(
+                id,
+                toLocalizedPlaceContent(places.get(id), translations.get(id), requestedLanguage)
+            );
         }
         return Map.copyOf(contents);
+    }
+
+    private LocalizedPlaceContent toLocalizedPlaceContent(
+        PlaceEntity place,
+        PlaceTranslationEntity translation,
+        SupportedLanguage requestedLanguage
+    ) {
+        if (requestedLanguage == SupportedLanguage.KOREAN) {
+            return new LocalizedPlaceContent(
+                place.getName(),
+                place.getRoadAddress(),
+                requestedLanguage
+            );
+        }
+        if (translation == null) {
+            throw new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING);
+        }
+        return new LocalizedPlaceContent(
+            translation.getName(),
+            translation.getRoadAddress(),
+            translation.getLanguage()
+        );
     }
 
     public Map<Long, LocalizedLockerContent> resolveLockers(Collection<Long> lockerIds) {
@@ -89,22 +105,46 @@ public class TranslationLookupService {
         
         Map<Long, LocalizedLockerContent> contents = new LinkedHashMap<>();
         for (Long id : ids) {
-            LockerEntity locker = lockers.get(id);
-            LockerTranslationEntity content = translations.get(id);
-            if (content == null) {
-                throw new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING);
-            }
-            contents.put(id, new LocalizedLockerContent(
-                content.getName(),
-                content.getRoadAddress(),
-                content.getDetailInfo(),
-                content.getLanguage()
-            ));
+            contents.put(
+                id,
+                toLocalizedLockerContent(lockers.get(id), translations.get(id), requestedLanguage)
+            );
         }
         return Map.copyOf(contents);
     }
 
+    private LocalizedLockerContent toLocalizedLockerContent(
+        LockerEntity locker,
+        LockerTranslationEntity translation,
+        SupportedLanguage requestedLanguage
+    ) {
+        if (requestedLanguage == SupportedLanguage.KOREAN) {
+            return new LocalizedLockerContent(
+                locker.getName(),
+                locker.getRoadAddress(),
+                null,
+                requestedLanguage
+            );
+        }
+        if (translation == null) {
+            throw new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING);
+        }
+        return new LocalizedLockerContent(
+            translation.getName(),
+            translation.getRoadAddress(),
+            translation.getDetailInfo(),
+            translation.getLanguage()
+        );
+    }
+
     public LocalizedPlaceContent resolvePlace(PlaceEntity place, SupportedLanguage requestedLanguage) {
+        if (requestedLanguage == SupportedLanguage.KOREAN) {
+            return new LocalizedPlaceContent(
+                place.getName(),
+                place.getRoadAddress(),
+                requestedLanguage
+            );
+        }
         PlaceTranslationEntity content = placeTranslationRepository
             .findByPlaceIdAndLanguage(place.getId(), requestedLanguage)
             .orElseThrow(() -> new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING));
@@ -116,6 +156,14 @@ public class TranslationLookupService {
     }
 
     public LocalizedLockerContent resolveLocker(LockerEntity locker, SupportedLanguage requestedLanguage) {
+        if (requestedLanguage == SupportedLanguage.KOREAN) {
+            return new LocalizedLockerContent(
+                locker.getName(),
+                locker.getRoadAddress(),
+                null,
+                requestedLanguage
+            );
+        }
         LockerTranslationEntity content = lockerTranslationRepository
             .findByLockerIdAndLanguage(locker.getId(), requestedLanguage)
             .orElseThrow(() -> new BusinessException(ErrorCode.I18N_TRANSLATION_MISSING));

@@ -1,118 +1,52 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
-<head>
-    <title>제보 번역 확인</title>
-</head>
+<head><title>제보 번역 확인</title></head>
 <body>
 <main>
     <style>
-        .grid {
-            display: grid;
-            grid-template-columns: minmax(280px, 0.8fr) minmax(360px, 1.2fr);
-            gap: 1rem;
-            align-items: start;
-        }
-        .section-title {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            color: #1a1a1a;
-        }
-        .definition-list {
-            display: grid;
-            grid-template-columns: 120px 1fr;
-            gap: 0.55rem 0.75rem;
-            font-size: 0.88rem;
-        }
-        .definition-list dt { color: #888; font-weight: 600; }
-        .definition-list dd { color: #333; overflow-wrap: anywhere; }
-        .translation-block {
-            border: 1px solid #e5e5e5;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            background: #fff;
-        }
-        .translation-block h3 {
-            font-size: 0.9rem;
-            margin-bottom: 0.65rem;
-            color: #4f46e5;
-        }
-        .muted { color: #888; font-size: 0.82rem; }
-        .alert {
-            border: 1px solid #fca5a5;
-            background: #fef2f2;
-            color: #b91c1c;
-            border-radius: 6px;
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
-            font-size: 0.88rem;
-        }
-        .panel {
-            background: #fafafa;
-            border: 1px solid #e5e5e5;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        .panel-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 1rem;
-        }
-        .alias-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.35rem;
-        }
-        .alias-chip {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.18rem 0.5rem;
-            border-radius: 4px;
-            background: #eef2ff;
-            color: #4338ca;
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-        .loading-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.72);
-        }
-        .loading-overlay.active {
-            display: flex;
-        }
-        .loading-box {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 1.25rem;
-            border: 1px solid #e5e5e5;
-            border-radius: 8px;
-            background: #fff;
-            color: #333;
-            font-size: 0.9rem;
-            font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        }
-        .loading-spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #e5e7eb;
-            border-top-color: #4f46e5;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        @media (max-width: 980px) {
-            .grid { grid-template-columns: 1fr; }
+        .toolbar, .translation-actions, .panel-head { display:flex; align-items:center; gap:.75rem; }
+        .toolbar { justify-content:flex-end; }
+        .translation-actions, .panel-head { justify-content:space-between; }
+        .translation-actions { margin-bottom:1rem; }
+        .section-title { font-size:1rem; font-weight:700; color:#1a1a1a; margin-bottom:.5rem; }
+        .definition-list { display:grid; grid-template-columns:120px 1fr; gap:.55rem .75rem; font-size:.88rem; }
+        .definition-list dt { color:#888; font-weight:600; }
+        .definition-list dd { color:#333; overflow-wrap:anywhere; }
+        .report-image { width:100%; max-height:420px; object-fit:contain; border-radius:8px; margin-top:1rem; }
+        .translation-list { display:flex; flex-direction:column; gap:1rem; }
+        .translation-row { display:grid; grid-template-columns:minmax(320px,1fr) 52px minmax(380px,1fr); gap:.75rem; align-items:stretch; }
+        .translation-panel { border:1px solid #e5e5e5; border-radius:8px; padding:1rem; background:#fff; min-width:0; }
+        .panel-head { margin-bottom:.8rem; }
+        .panel-head h2 { font-size:.95rem; font-weight:700; color:#1a1a1a; }
+        .panel-head span, .muted { color:#888; font-size:.82rem; }
+        .panel-head-actions { display:flex; align-items:center; gap:.5rem; }
+        .regenerate-language-draft { padding:.4rem .65rem; font-size:.78rem; }
+        .entity-group { border-top:1px solid #eee; padding-top:.8rem; margin-top:.8rem; }
+        .entity-group:first-of-type { border-top:0; padding-top:0; margin-top:0; }
+        .entity-label { color:#4f46e5; font-size:.82rem; font-weight:700; margin-bottom:.65rem; }
+        .field { display:flex; flex-direction:column; gap:.3rem; margin-bottom:.7rem; }
+        .field label { font-size:.78rem; color:#666; font-weight:600; }
+        .field input, .field textarea { width:100%; border:1px solid #d4d4d4; border-radius:6px; padding:.55rem .65rem; font:inherit; font-size:.88rem; }
+        .field textarea { min-height:72px; resize:vertical; line-height:1.5; }
+        .field input[readonly], .field textarea[readonly] { background:#fafafa; color:#555; }
+        .copy-cell { display:flex; align-items:center; justify-content:center; }
+        .copy-button { width:38px; height:38px; border-radius:8px; border:1px solid #d4d4d4; background:#fff; color:#4f46e5; cursor:pointer; }
+        .copy-button:hover:not(:disabled) { background:#eef2ff; border-color:#a5b4fc; transform:translateX(2px); }
+        .copy-button:disabled { color:#bbb; background:#f5f5f5; cursor:not-allowed; }
+        .empty-draft { min-height:180px; display:flex; align-items:center; justify-content:center; border:1px dashed #d4d4d4; border-radius:6px; color:#888; font-size:.85rem; text-align:center; padding:1rem; }
+        .draft-error { border:1px solid #fca5a5; background:#fef2f2; color:#b91c1c; border-radius:6px; padding:.55rem .7rem; margin-bottom:.8rem; font-size:.8rem; }
+        .empty-draft[hidden], .draft-content[hidden], .draft-error[hidden] { display:none; }
+        .alert { border:1px solid #fca5a5; background:#fef2f2; color:#b91c1c; border-radius:6px; padding:.75rem 1rem; margin-bottom:1rem; font-size:.88rem; }
+        .alert-success { border-color:#86efac; background:#f0fdf4; color:#166534; }
+        .loading-overlay { position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,.72); }
+        .loading-overlay.active { display:flex; }
+        .loading-box { display:flex; align-items:center; gap:.75rem; padding:1rem 1.25rem; border:1px solid #e5e5e5; border-radius:8px; background:#fff; font-size:.9rem; font-weight:600; box-shadow:0 10px 30px rgba(0,0,0,.08); }
+        .loading-spinner { width:18px; height:18px; border:2px solid #e5e7eb; border-top-color:#4f46e5; border-radius:50%; animation:spin .8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        @media (max-width:1060px) {
+            .translation-row { grid-template-columns:1fr; }
+            .copy-cell { min-height:40px; }
+            .copy-button { transform:rotate(90deg); }
         }
     </style>
 
@@ -121,143 +55,247 @@
             <div class="page-header type-label">REPORT TRANSLATIONS</div>
             <h1 th:text="'제보 #' + ${page.report.id} + ' 번역 확인'">제보 번역 확인</h1>
         </div>
-        <a th:href="@{/admin/locker-reports}" class="btn btn-secondary">
-            <i class="fa-solid fa-arrow-left"></i> 목록으로
-        </a>
+        <div class="toolbar">
+            <a th:href="@{/admin/locker-reports/{id}(id=${page.report.id})}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> 상세로
+            </a>
+            <form th:action="@{/admin/locker-reports/{id}/translations/draft(id=${page.report.id})}"
+                  method="post" id="draftForm"
+                  th:if="${page.report.status.name() != 'APPROVED'}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-language"></i> 번역 초안 생성
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="grid">
-        <div class="card">
-            <div class="section-title">제보 원문</div>
-            <dl class="definition-list">
-                <dt>상태</dt><dd th:text="${page.report.status}">SUBMITTED</dd>
-                <dt>이름</dt><dd th:text="${page.report.name} ?: '-'">-</dd>
-                <dt>주소</dt><dd th:text="${page.report.roadAddress} ?: '-'">-</dd>
-                <dt>층</dt>
-                <dd th:text="${page.report.groundLevelType} + ' / ' + (${page.report.floor} ?: '-')">-</dd>
-                <dt>위치</dt>
-                <dd th:text="${page.report.latitude} + ', ' + ${page.report.longitude}">0, 0</dd>
-                <dt>타입</dt>
-                <dd th:text="${page.report.indoorOutdoorType} + ' / ' + ${page.report.lockerType}">-</dd>
-                <dt>크기</dt><dd th:text="${page.report.lockerSize}">-</dd>
-                <dt>요금</dt>
-                <dd th:text="${page.report.priceType} + ' / ' + (${page.report.minPrice} ?: '-') + '~' + (${page.report.maxPrice} ?: '-')">-</dd>
-                <dt>운영시간</dt>
-                <dd th:text="${page.report.operatingTimeType} + ' / ' + (${page.report.startTime} ?: '-') + '~' + (${page.report.endTime} ?: '-')">-</dd>
-                <dt>추가정보</dt><dd th:text="${page.report.additionalInfo} ?: '-'">-</dd>
-                <dt>적용 장소</dt><dd th:text="${page.report.appliedPlaceId} ?: '-'">-</dd>
-                <dt>적용 보관함</dt><dd th:text="${page.report.appliedLockerId} ?: '-'">-</dd>
-            </dl>
-            <div th:if="${page.report.imageUrl != null}" style="margin-top: 1rem;">
-                <img th:src="${page.report.imageUrl}" alt="제보 이미지" style="width: 100%; border-radius: 8px;">
+    <div class="alert" th:if="${draftError != null}" th:text="${draftError}">번역 초안 생성 실패</div>
+    <div class="alert" th:if="${saveError != null}" th:text="${saveError}">번역 저장 실패</div>
+    <div class="alert alert-success" th:if="${successMessage != null}" th:text="${successMessage}">저장 완료</div>
+
+    <section class="card" style="margin-bottom:1rem">
+        <div class="section-title">제보 원문</div>
+        <dl class="definition-list">
+            <dt>상태</dt>
+            <dd class="status-badge"
+                th:classappend="${'status-' + #strings.toLowerCase(#strings.replace(page.report.status.name(), '_', '-'))}"
+                th:text="${page.report.status.displayName()}">번역 필요</dd>
+            <dt>이름</dt><dd th:text="${page.report.name} ?: '-'">-</dd>
+            <dt>주소</dt><dd th:text="${page.report.roadAddress} ?: '-'">-</dd>
+            <dt>층</dt><dd th:text="${page.report.floorLabel()}">층 없음</dd>
+            <dt>위치</dt><dd th:text="${page.report.latitude} + ', ' + ${page.report.longitude}">0, 0</dd>
+            <dt>타입</dt><dd th:text="${page.report.indoorOutdoorType} + ' / ' + ${page.report.lockerType}">-</dd>
+            <dt>크기</dt><dd th:text="${page.report.lockerSize}">-</dd>
+            <dt>요금</dt><dd th:text="${page.report.priceLabel()}">가격 정보 없음</dd>
+            <dt>운영시간</dt><dd th:text="${page.report.operatingTimeLabel()}">운영 시간 정보 없음</dd>
+            <dt>추가정보</dt><dd th:text="${page.report.additionalInfo} ?: '-'">-</dd>
+            <dt>적용 장소</dt><dd th:text="${page.appliedPlaceName}">장소 이름</dd>
+            <dt>적용 보관함</dt><dd th:text="${page.appliedLockerName}">보관함 이름</dd>
+        </dl>
+        <img th:if="${page.report.imageUrl != null}" th:src="${page.report.imageUrl}" class="report-image" alt="제보 이미지">
+    </section>
+
+    <section class="card">
+        <div class="translation-actions">
+            <div>
+                <div class="section-title">번역 초안 / 저장된 번역</div>
+                <div class="muted">화살표는 장소와 보관함 초안을 오른쪽 저장 폼에 복사합니다.</div>
+            </div>
+            <div class="toolbar" th:if="${page.report.status.name() != 'APPROVED'}">
+                <button type="button" class="btn btn-secondary" id="applyAllDrafts" th:disabled="${draft == null}">
+                    <i class="fa-solid fa-angles-right"></i> 일괄 적용
+                </button>
+                <button type="submit" class="btn btn-primary" form="translationsForm" id="saveAllTranslations">
+                    <i class="fa-solid fa-floppy-disk"></i> 저장하기
+                </button>
             </div>
         </div>
 
-        <div>
-            <div class="card" style="margin-bottom: 1rem;">
-                <div class="panel-actions">
-                    <form th:action="@{/admin/locker-reports/{id}/translations/draft(id=${page.report.id})}"
-                          method="post"
-                          id="draftForm">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa-solid fa-language"></i> 번역 초안 생성
+        <form id="translationsForm"
+              th:action="@{/admin/locker-reports/{id}/translations/all(id=${page.report.id})}"
+              method="post">
+            <div class="translation-list">
+                <div class="translation-row" th:each="languageReview, langIter : ${page.languages()}"
+                     th:with="tag=${languageReview.language.languageTag()},
+                              draftPlace=${draft == null ? null : draft.placeTranslationFor(tag)},
+                              draftLocker=${draft == null ? null : draft.lockerTranslationFor(tag)}"
+                     th:data-language="${tag}">
+                    <section class="translation-panel draft-side">
+                        <div class="panel-head">
+                            <h2 th:text="${tag} + ' 번역 초안'">en 번역 초안</h2>
+                            <div class="panel-head-actions">
+                                <span th:if="${draftPlace != null or draftLocker != null}">초안</span>
+                                <button type="button"
+                                        class="btn btn-secondary regenerate-language-draft"
+                                        th:if="${draft != null and page.report.status.name() != 'APPROVED'}"
+                                        th:data-redraft-url="@{/admin/locker-reports/{id}/translations/draft/{language}(id=${page.report.id},language=${tag})}">
+                                    <i class="fa-solid fa-rotate"></i> 다시 번역
+                                </button>
+                            </div>
+                        </div>
+                        <div class="draft-error" hidden></div>
+                        <div class="empty-draft" th:hidden="${draftPlace != null or draftLocker != null}">번역 초안을 생성하면 여기에 표시됩니다.</div>
+                        <div class="draft-content" th:hidden="${draftPlace == null and draftLocker == null}">
+                            <div class="entity-group">
+                                <div class="entity-label" th:text="'장소 · ' + ${page.appliedPlaceName}">장소</div>
+                                <div class="field"><label>이름</label><input readonly data-draft-field="place-name" th:value="${draftPlace?.name}"></div>
+                                <div class="field"><label>도로명 주소</label><input readonly data-draft-field="place-road-address" th:value="${draftPlace?.roadAddress}"></div>
+                                <div class="field"><label>별칭 (한 줄에 하나)</label><textarea readonly data-draft-field="place-aliases" th:text="${draftPlace == null ? '' : #strings.listJoin(draftPlace.aliases, '&#10;')}"></textarea></div>
+                            </div>
+                            <div class="entity-group">
+                                <div class="entity-label" th:text="'보관함 · ' + ${page.appliedLockerName}">보관함</div>
+                                <div class="field"><label>이름</label><input readonly data-draft-field="locker-name" th:value="${draftLocker?.name}"></div>
+                                <div class="field"><label>도로명 주소</label><input readonly data-draft-field="locker-road-address" th:value="${draftLocker?.roadAddress}"></div>
+                                <div class="field"><label>상세 정보</label><textarea readonly data-draft-field="locker-detail-info" th:text="${draftLocker?.detailInfo}"></textarea></div>
+                                <div class="field"><label>별칭 (한 줄에 하나)</label><textarea readonly data-draft-field="locker-aliases" th:text="${draftLocker == null ? '' : #strings.listJoin(draftLocker.aliases, '&#10;')}"></textarea></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="copy-cell">
+                        <button type="button" class="copy-button apply-language-draft" title="이 언어 초안 적용"
+                                th:if="${page.report.status.name() != 'APPROVED'}"
+                                th:disabled="${draftPlace == null and draftLocker == null}">
+                            <i class="fa-solid fa-arrow-right"></i>
                         </button>
-                    </form>
-                </div>
-                <div class="alert" th:if="${draftError != null}" th:text="${draftError}">
-                    번역 초안 생성 실패
-                </div>
-                <div th:if="${draft != null}">
-                    <div class="section-title">번역 초안</div>
-                    <div class="translation-block" th:each="item : ${draft.translations}">
-                        <h3 th:text="${item.language.languageTag()}">ko</h3>
-                        <dl class="definition-list">
-                            <dt>이름</dt><dd th:text="${item.name}">name</dd>
-                            <dt>주소</dt><dd th:text="${item.roadAddress}">address</dd>
-                            <dt>상세</dt><dd th:text="${item.detailInfo}">detail</dd>
-                            <dt>별칭</dt>
-                            <dd>
-                                <div class="alias-list" th:if="${not #lists.isEmpty(item.aliases)}">
-                                    <span class="alias-chip" th:each="alias : ${item.aliases}" th:text="${alias}">
-                                        alias
-                                    </span>
-                                </div>
-                                <span class="muted" th:if="${#lists.isEmpty(item.aliases)}">-</span>
-                            </dd>
-                        </dl>
                     </div>
-                </div>
-                <div class="muted" th:if="${draft == null}">
-                    초안은 운영 데이터에 자동 반영되지 않습니다. 관리자 검수 후 기존 i18n API로 저장해야 합니다.
-                </div>
-            </div>
 
-            <div class="panel">
-                <div class="section-title">적용된 장소 번역</div>
-                <div class="muted" th:if="${page.placeI18n == null}">적용된 장소 ID가 없습니다.</div>
-                <div class="translation-block" th:each="item : ${page.placeI18n?.translations}">
-                    <h3 th:text="${item.language.languageTag()}">ko</h3>
-                    <dl class="definition-list">
-                        <dt>이름</dt><dd th:text="${item.name}">name</dd>
-                        <dt>주소</dt><dd th:text="${item.roadAddress}">address</dd>
-                    </dl>
-                </div>
-                <div th:if="${page.placeI18n != null and not #lists.isEmpty(page.placeI18n.aliases)}">
-                    <div class="section-title">적용된 장소 별칭</div>
-                    <div class="translation-block">
-                        <dl class="definition-list">
-                            <th:block th:each="alias : ${page.placeI18n.aliases}">
-                                <dt th:text="${alias.language.languageTag()}">ko</dt>
-                                <dd><span class="alias-chip" th:text="${alias.alias}">alias</span></dd>
-                            </th:block>
-                        </dl>
-                    </div>
+                    <section class="translation-panel saved-side">
+                        <div class="panel-head"><h2 th:text="${tag} + ' 저장된 번역'">en 저장된 번역</h2></div>
+                        <div class="entity-group">
+                            <div class="entity-label" th:text="'장소 · ' + ${page.appliedPlaceName}">장소</div>
+                            <input type="hidden" th:name="'placeTranslations[' + ${langIter.index} + '].language'" th:value="${languageReview.language.name()}">
+                            <div class="field"><label>이름</label><input required data-saved-field="place-name" th:readonly="${page.report.status.name() == 'APPROVED'}" th:name="'placeTranslations[' + ${langIter.index} + '].name'" th:value="${translationsForm.placeTranslations[langIter.index].name}"></div>
+                            <div class="field"><label>도로명 주소</label><input data-saved-field="place-road-address" th:readonly="${page.report.status.name() == 'APPROVED'}" th:name="'placeTranslations[' + ${langIter.index} + '].roadAddress'" th:value="${translationsForm.placeTranslations[langIter.index].roadAddress}"></div>
+                            <div class="field"><label>별칭 (한 줄에 하나)</label><textarea data-saved-field="place-aliases" th:readonly="${page.report.status.name() == 'APPROVED'}" th:name="'placeTranslations[' + ${langIter.index} + '].aliases'" th:text="${translationsForm.placeTranslations[langIter.index].aliases}"></textarea></div>
+                        </div>
+                        <div class="entity-group">
+                            <div class="entity-label" th:text="'보관함 · ' + ${page.appliedLockerName}">보관함</div>
+                            <input type="hidden" th:name="'lockerTranslations[' + ${langIter.index} + '].language'" th:value="${languageReview.language.name()}">
+                            <div class="field"><label>이름</label><input required data-saved-field="locker-name" th:readonly="${page.report.status.name() == 'APPROVED'}" th:name="'lockerTranslations[' + ${langIter.index} + '].name'" th:value="${translationsForm.lockerTranslations[langIter.index].name}"></div>
+                            <div class="field"><label>도로명 주소</label><input required data-saved-field="locker-road-address" th:readonly="${page.report.status.name() == 'APPROVED'}" th:name="'lockerTranslations[' + ${langIter.index} + '].roadAddress'" th:value="${translationsForm.lockerTranslations[langIter.index].roadAddress}"></div>
+                            <div class="field"><label>상세 정보</label><textarea data-saved-field="locker-detail-info" th:readonly="${page.report.status.name() == 'APPROVED'}" th:name="'lockerTranslations[' + ${langIter.index} + '].detailInfo'" th:text="${translationsForm.lockerTranslations[langIter.index].detailInfo}"></textarea></div>
+                            <div class="field"><label>별칭 (한 줄에 하나)</label><textarea data-saved-field="locker-aliases" th:readonly="${page.report.status.name() == 'APPROVED'}" th:name="'lockerTranslations[' + ${langIter.index} + '].aliases'" th:text="${translationsForm.lockerTranslations[langIter.index].aliases}"></textarea></div>
+                        </div>
+                    </section>
                 </div>
             </div>
-
-            <div class="panel">
-                <div class="section-title">적용된 보관함 번역</div>
-                <div class="muted" th:if="${page.lockerI18n == null}">적용된 보관함 ID가 없습니다.</div>
-                <div class="translation-block" th:each="item : ${page.lockerI18n?.translations}">
-                    <h3 th:text="${item.language.languageTag()}">ko</h3>
-                    <dl class="definition-list">
-                        <dt>이름</dt><dd th:text="${item.name}">name</dd>
-                        <dt>주소</dt><dd th:text="${item.roadAddress}">address</dd>
-                        <dt>상세</dt><dd th:text="${item.detailInfo}">detail</dd>
-                    </dl>
-                </div>
-                <div th:if="${page.lockerI18n != null and not #lists.isEmpty(page.lockerI18n.aliases)}">
-                    <div class="section-title">적용된 보관함 별칭</div>
-                    <div class="translation-block">
-                        <dl class="definition-list">
-                            <th:block th:each="alias : ${page.lockerI18n.aliases}">
-                                <dt th:text="${alias.language.languageTag()}">ko</dt>
-                                <dd><span class="alias-chip" th:text="${alias.alias}">alias</span></dd>
-                            </th:block>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        </form>
+    </section>
 
     <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-hidden="true">
-        <div class="loading-box">
-            <span class="loading-spinner" aria-hidden="true"></span>
-            <span>번역 초안을 생성하는 중입니다.</span>
-        </div>
+        <div class="loading-box"><span class="loading-spinner" aria-hidden="true"></span><span>번역 초안을 생성하는 중입니다.</span></div>
     </div>
 
     <script>
-        const draftForm = document.getElementById('draftForm');
+        const translationsForm = document.getElementById('translationsForm');
+        const applyAllButton = document.getElementById('applyAllDrafts');
         const loadingOverlay = document.getElementById('loadingOverlay');
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+        let dirty = false;
+        let safeSubmit = false;
 
-        if (draftForm && loadingOverlay) {
-            draftForm.addEventListener('submit', () => {
-                loadingOverlay.classList.add('active');
-                loadingOverlay.setAttribute('aria-hidden', 'false');
-            });
+        function showLoading() {
+            loadingOverlay?.classList.add('active');
+            loadingOverlay?.setAttribute('aria-hidden', 'false');
         }
+
+        function applyDraft(row) {
+            row.querySelectorAll('[data-draft-field]').forEach(source => {
+                const target = row.querySelector('[data-saved-field="' + source.dataset.draftField + '"]');
+                if (target) target.value = source.value;
+            });
+            dirty = true;
+        }
+
+        function updateDraftRow(row, response) {
+            const language = row.dataset.language;
+            const draft = response.data;
+            const place = draft?.placeTranslations?.find(item => item.language === language);
+            const locker = draft?.lockerTranslations?.find(item => item.language === language);
+            if (!place || !locker) throw new Error('요청한 언어의 번역 응답이 없습니다.');
+
+            const values = {
+                'place-name': place.name,
+                'place-road-address': place.roadAddress,
+                'place-aliases': (place.aliases || []).join('\n'),
+                'locker-name': locker.name,
+                'locker-road-address': locker.roadAddress,
+                'locker-detail-info': locker.detailInfo,
+                'locker-aliases': (locker.aliases || []).join('\n')
+            };
+            Object.entries(values).forEach(([field, value]) => {
+                const input = row.querySelector('[data-draft-field="' + field + '"]');
+                if (input) input.value = value || '';
+            });
+            row.querySelector('.empty-draft').hidden = true;
+            row.querySelector('.draft-content').hidden = false;
+            row.querySelector('.apply-language-draft').disabled = false;
+        }
+
+        document.querySelectorAll('.apply-language-draft').forEach(button => {
+            button.addEventListener('click', event => applyDraft(event.currentTarget.closest('.translation-row')));
+        });
+        document.querySelectorAll('.regenerate-language-draft').forEach(button => {
+            button.addEventListener('click', async event => {
+                const target = event.currentTarget;
+                const row = target.closest('.translation-row');
+                const errorElement = row.querySelector('.draft-error');
+                const originalContent = target.innerHTML;
+                target.disabled = true;
+                target.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중';
+                errorElement.hidden = true;
+
+                try {
+                    const headers = { 'Accept': 'application/json' };
+                    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+                    const httpResponse = await fetch(target.dataset.redraftUrl, {
+                        method: 'POST',
+                        headers
+                    });
+                    const response = await httpResponse.json();
+                    if (!httpResponse.ok) {
+                        throw new Error(response.message || '번역 초안 생성에 실패했습니다.');
+                    }
+                    updateDraftRow(row, response);
+                } catch (error) {
+                    errorElement.textContent = error.message || '번역 초안 생성에 실패했습니다.';
+                    errorElement.hidden = false;
+                } finally {
+                    target.disabled = false;
+                    target.innerHTML = originalContent;
+                }
+            });
+        });
+        applyAllButton?.addEventListener('click', () => document.querySelectorAll('.translation-row').forEach(applyDraft));
+        translationsForm?.addEventListener('input', () => dirty = true);
+        translationsForm?.addEventListener('submit', () => { safeSubmit = true; dirty = false; });
+
+        document.getElementById('draftForm')?.addEventListener('submit', event => {
+            if (!dirty) { showLoading(); return; }
+            if (!confirm('저장하지 않고 초안을 다시 생성하면 작성한 번역 내용이 사라집니다. 계속하시겠습니까?')) {
+                event.preventDefault();
+                return;
+            }
+            safeSubmit = true;
+            showLoading();
+        });
+
+        window.addEventListener('beforeunload', event => {
+            if (!dirty || safeSubmit) return;
+            event.preventDefault();
+            event.returnValue = '';
+        });
+        document.addEventListener('click', event => {
+            const link = event.target.closest('a[href]');
+            if (!link || !dirty) return;
+            if (!confirm('저장하지 않고 이동하면 작성한 번역 내용이 사라집니다. 이동하시겠습니까?')) {
+                event.preventDefault();
+                return;
+            }
+            safeSubmit = true;
+        });
     </script>
 </main>
 </body>

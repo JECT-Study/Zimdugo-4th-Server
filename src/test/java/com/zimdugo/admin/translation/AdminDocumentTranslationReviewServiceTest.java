@@ -1,6 +1,7 @@
 package com.zimdugo.admin.translation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -18,6 +19,7 @@ import com.zimdugo.admin.translation.dto.AdminDocumentTranslationDraftResult;
 import com.zimdugo.admin.translation.dto.AdminDocumentTranslationReviewPageResult;
 import com.zimdugo.admin.translation.dto.AdminDocumentTranslationSource;
 import com.zimdugo.common.i18n.SupportedLanguage;
+import com.zimdugo.core.exception.ExternalApiException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,6 +80,36 @@ class AdminDocumentTranslationReviewServiceTest {
     }
 
     @Test
+    void generatesDraftForRequestedLanguageOnly() {
+        AdminDocument document = document();
+        AdminDocumentTranslationDraftResult draft = japaneseDraft();
+        when(adminDocumentService.getById(1L)).thenReturn(document);
+        when(draftGenerator.generate(any(), eq(SupportedLanguage.JAPANESE))).thenReturn(draft);
+
+        AdminDocumentTranslationDraftResult result = service.generateDraft(
+            1L,
+            SupportedLanguage.JAPANESE
+        );
+
+        verify(draftGenerator).generate(any(), eq(SupportedLanguage.JAPANESE));
+        assertThat(result).isSameAs(draft);
+    }
+
+    @Test
+    void rejectsRequestedLanguageDraftWhenTranslationIsMissing() {
+        AdminDocument document = document();
+        AdminDocumentTranslationDraftResult emptyDraft =
+            new AdminDocumentTranslationDraftResult(List.of());
+        when(adminDocumentService.getById(1L)).thenReturn(document);
+        when(draftGenerator.generate(any(), eq(SupportedLanguage.JAPANESE)))
+            .thenReturn(emptyDraft);
+
+        assertThatThrownBy(() -> service.generateDraft(1L, SupportedLanguage.JAPANESE))
+            .isInstanceOf(ExternalApiException.class)
+            .hasMessage("요청한 언어의 번역 응답이 없습니다.");
+    }
+
+    @Test
     void savesTranslationThroughExistingDocumentService() {
         AdminDocumentTranslationForm form = new AdminDocumentTranslationForm();
         form.setLanguage("en");
@@ -128,6 +160,20 @@ class AdminDocumentTranslationReviewServiceTest {
             .title("서비스 점검 안내")
             .sections(List.of(section))
             .build();
+    }
+
+    private AdminDocumentTranslationDraftResult japaneseDraft() {
+        return new AdminDocumentTranslationDraftResult(List.of(
+            new AdminDocumentTranslationDraftResult.Translation(
+                "ja",
+                "サービス点検のお知らせ",
+                List.of(new AdminDocumentTranslationDraftResult.Section(
+                    10L,
+                    "点検",
+                    "サービスの利用が一時停止されます。"
+                ))
+            )
+        ));
     }
 
     private void addEnglishTranslation(AdminDocument document) {

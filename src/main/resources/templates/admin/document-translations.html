@@ -59,6 +59,11 @@
             font-size: 0.78rem;
             color: #888;
         }
+        .panel-head-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
         .copy-cell {
             display: flex;
             align-items: center;
@@ -141,6 +146,16 @@
             text-align: center;
             padding: 1rem;
         }
+        .draft-error {
+            border: 1px solid #fca5a5;
+            background: #fef2f2;
+            color: #b91c1c;
+            border-radius: 6px;
+            padding: 0.55rem 0.7rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.8rem;
+        }
+        .draft-error[hidden] { display: none; }
         .loading-overlay {
             position: fixed;
             inset: 0;
@@ -247,8 +262,18 @@
                     <section class="translation-panel draft-side">
                         <div class="panel-head">
                             <h2 th:text="${tag} + ' 번역 초안'">en 번역 초안</h2>
-                            <span th:if="${draftTranslation != null}">초안</span>
+                            <div class="panel-head-actions">
+                                <span th:if="${draftTranslation != null}">초안</span>
+                                <button type="button"
+                                        class="btn btn-secondary regenerate-language-draft"
+                                        th:if="${draft != null}"
+                                        th:data-redraft-url="@{/admin/documents/{id}/translations/draft/{language}(id=${page.document.id},language=${tag})}">
+                                    <i class="fa-solid fa-rotate"></i> 다시 번역
+                                </button>
+                            </div>
                         </div>
+
+                        <div class="draft-error" hidden></div>
 
                         <div th:if="${draftTranslation == null}" class="empty-draft">
                             번역 초안을 생성하면 여기에 표시됩니다.
@@ -347,6 +372,8 @@
         const translationsForm = document.getElementById('translationsForm');
         const applyAllButton = document.getElementById('applyAllDrafts');
         const loadingOverlay = document.getElementById('loadingOverlay');
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
         let dirty = false;
         let safeSubmit = false;
 
@@ -381,9 +408,73 @@
             dirty = true;
         }
 
+        function updateDraftRow(row, response) {
+            const language = row.dataset.language;
+            const translation = response.data?.translations?.find(
+                item => item.language === language
+            );
+            if (!translation) {
+                throw new Error('요청한 언어의 번역 응답이 없습니다.');
+            }
+
+            const title = row.querySelector('.draft-title');
+            const sectionUpdates = (translation.sections || []).map(section => ({
+                subtitle: row.querySelector(
+                    '.draft-subtitle[data-section-id="' + section.sectionId + '"]'
+                ),
+                content: row.querySelector(
+                    '.draft-content[data-section-id="' + section.sectionId + '"]'
+                ),
+                value: section
+            }));
+            if (!title || sectionUpdates.some(update => !update.subtitle || !update.content)) {
+                throw new Error('번역 초안 필드를 찾을 수 없습니다.');
+            }
+
+            title.value = translation.title || '';
+            sectionUpdates.forEach(update => {
+                update.subtitle.value = update.value.subtitle || '';
+                update.content.value = update.value.content || '';
+            });
+        }
+
         document.querySelectorAll('.apply-language-draft').forEach(button => {
             button.addEventListener('click', event => {
                 applyDraft(event.currentTarget.closest('.translation-row'));
+            });
+        });
+
+        document.querySelectorAll('.regenerate-language-draft').forEach(button => {
+            button.addEventListener('click', async event => {
+                const target = event.currentTarget;
+                const row = target.closest('.translation-row');
+                const errorElement = row.querySelector('.draft-error');
+                const originalContent = target.innerHTML;
+                target.disabled = true;
+                target.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중';
+                errorElement.hidden = true;
+
+                try {
+                    const headers = { 'Accept': 'application/json' };
+                    if (csrfHeader && csrfToken) {
+                        headers[csrfHeader] = csrfToken;
+                    }
+                    const httpResponse = await fetch(target.dataset.redraftUrl, {
+                        method: 'POST',
+                        headers
+                    });
+                    const response = await httpResponse.json();
+                    if (!httpResponse.ok) {
+                        throw new Error(response.message || '번역 초안 생성에 실패했습니다.');
+                    }
+                    updateDraftRow(row, response);
+                } catch (error) {
+                    errorElement.textContent = error.message || '번역 초안 생성에 실패했습니다.';
+                    errorElement.hidden = false;
+                } finally {
+                    target.disabled = false;
+                    target.innerHTML = originalContent;
+                }
             });
         });
 

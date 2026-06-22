@@ -29,17 +29,9 @@
             text-decoration: none;
             font-weight: 600;
         }
+        .title-link.is-unset { color: #888; font-weight: 500; }
         .title-link:hover { color: #4f46e5; text-decoration: underline; }
         .muted { color: #888; font-size: 0.82rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.2rem 0.55rem;
-            border-radius: 4px;
-            background: #f0f0f0;
-            color: #555;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
         .empty-state { text-align: center; padding: 3rem 1rem; color: #999; }
     </style>
 
@@ -57,7 +49,7 @@
                     <th style="width: 80px;">ID</th>
                     <th>제보 내용</th>
                     <th style="width: 130px;">상태</th>
-                    <th style="width: 180px;">운영 반영 대상</th>
+                    <th style="width: 160px;">적용일시</th>
                     <th style="width: 160px;">등록일시</th>
                 </tr>
             </thead>
@@ -66,16 +58,23 @@
                     <td class="muted" th:text="${report.id}">1</td>
                     <td>
                         <a class="title-link"
-                           th:href="@{/admin/locker-reports/{id}/translations(id=${report.id})}"
-                           th:text="${report.name != null and !report.name.isBlank()} ? ${report.name} : '이름 미입력'">
+                           th:classappend="${report.name == null or report.name.isBlank()} ? ' is-unset'"
+                           th:href="@{/admin/locker-reports/{id}(id=${report.id})}"
+                           th:text="${report.name != null and !report.name.isBlank()} ? ${report.name} : '보관함 이름 미설정'">
                             보관함 이름
                         </a>
                         <div class="muted" th:text="${report.roadAddress}">도로명 주소</div>
                     </td>
-                    <td><span class="badge" th:text="${report.status}">SUBMITTED</span></td>
-                    <td class="muted">
-                        <div th:text="'place: ' + (${report.appliedPlaceId} ?: '-')">place: -</div>
-                        <div th:text="'locker: ' + (${report.appliedLockerId} ?: '-')">locker: -</div>
+                    <td>
+                        <span class="status-badge"
+                              th:classappend="${'status-' + #strings.toLowerCase(#strings.replace(report.status.name(), '_', '-'))}"
+                              th:text="${report.status.displayName()}">
+                            제보 접수
+                        </span>
+                    </td>
+                    <td class="muted"
+                        th:text="${report.appliedAt != null} ? ${#temporals.format(report.appliedAt, 'yyyy-MM-dd HH:mm')} : '-'">
+                        2026-06-19 12:00
                     </td>
                     <td class="muted" th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}">
                         2026-06-19 12:00

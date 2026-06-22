@@ -41,6 +41,18 @@ class AdminDocumentTemplateTest {
     }
 
     @Test
+    void noticeImageHelpOnlyExplainsThumbnailReordering() throws IOException {
+        String template = Files.readString(
+            Path.of("src/main/resources/templates/admin/form.html"),
+            StandardCharsets.UTF_8
+        );
+
+        assertThat(template)
+            .contains("썸네일을 드래그해 순서를 바꿀 수 있습니다.")
+            .doesNotContain("이미지는 선택 즉시 검사되며, 공지를 저장할 때만 S3에 업로드됩니다.");
+    }
+
+    @Test
     void noticeDetailKeepsOriginalImageRatio() throws IOException {
         String template = Files.readString(
             Path.of("src/main/resources/templates/admin/detail.html"),

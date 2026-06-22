@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head><title>보관함 제보 검토</title></head>
+<body>
+<main>
+    <style>
+        .review-grid { display: grid; grid-template-columns: minmax(320px, .8fr) minmax(480px, 1.2fr); gap: 1.25rem; align-items: start; }
+        .stack { display: grid; gap: 1rem; }
+        .section-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .report-data { display: grid; grid-template-columns: 110px 1fr; gap: .65rem 1rem; font-size: .86rem; }
+        .report-data dt { color: #737373; font-weight: 600; }
+        .report-data dd { margin: 0; word-break: break-word; }
+        .report-image { width: 100%; max-height: 420px; object-fit: contain; background: #f5f5f5; border-radius: 8px; margin-top: 1rem; }
+        .candidate-list { display: grid; gap: .65rem; }
+        .candidate { display: block; border: 1px solid #e5e5e5; border-radius: 8px; padding: .9rem; cursor: pointer; transition: .15s; }
+        .candidate:hover { border-color: #a5b4fc; background: #fafaff; }
+        .candidate:has(input:checked) { border-color: #4f46e5; background: #eef2ff; box-shadow: 0 0 0 1px #4f46e5; }
+        .candidate-head { display: flex; gap: .65rem; align-items: flex-start; }
+        .candidate-title { font-weight: 700; font-size: .9rem; }
+        .candidate-meta { color: #737373; font-size: .78rem; margin-top: .25rem; }
+        .badge { display: inline-flex; padding: .2rem .5rem; border-radius: 99px; background: #f3f4f6; color: #525252; font-size: .72rem; font-weight: 700; }
+        .badge-match { background: #dcfce7; color: #166534; }
+        .alert { padding: .8rem 1rem; border-radius: 7px; margin-bottom: 1rem; font-size: .85rem; }
+        .alert-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .step { display: flex; gap: .65rem; align-items: center; margin-bottom: 1rem; }
+        .step-number { width: 26px; height: 26px; border-radius: 50%; background: #4f46e5; color: #fff; display: grid; place-items: center; font-size: .78rem; font-weight: 700; }
+        .form-group { margin-top: 1rem; }
+        .form-label { display: block; font-size: .8rem; font-weight: 700; margin-bottom: .4rem; }
+        .form-input { width: 100%; border: 1px solid #d4d4d4; border-radius: 6px; padding: .65rem .75rem; font: inherit; font-size: .85rem; }
+        .form-input[readonly] { background: #f5f5f5; color: #525252; cursor: not-allowed; }
+        .action-row { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1rem; }
+        .muted { color: #737373; font-size: .82rem; }
+        .empty { text-align: center; padding: 1.2rem; color: #737373; background: #fafafa; border-radius: 8px; }
+        @media (max-width: 1000px) { .review-grid { grid-template-columns: 1fr; } }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="type-label">LOCKER REPORT REVIEW</div>
+            <h1 th:text="'제보 #' + ${page.report.id} + ' 검토'">제보 검토</h1>
+        </div>
+        <div style="display:flex; gap:.5rem">
+            <a th:href="@{/admin/locker-reports}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> 목록</a>
+            <a th:if="${page.report.status.name() == 'TRANSLATION_REQUIRED'}"
+               th:href="@{/admin/locker-reports/{id}/translations(id=${page.report.id})}"
+               class="btn btn-primary"><i class="fa-solid fa-language"></i> 번역 검수</a>
+            <a th:if="${page.report.status.name() == 'READY_FOR_APPROVAL'}"
+               th:href="@{/admin/locker-reports/{id}/translations(id=${page.report.id})}"
+               class="btn btn-secondary"><i class="fa-solid fa-language"></i> 번역 수정</a>
+            <form th:if="${page.report.status.name() == 'READY_FOR_APPROVAL'}"
+                  th:action="@{/admin/locker-reports/{id}/approve-translations(id=${page.report.id})}"
+                  method="post" onsubmit="return confirm('이 제보를 최종 승인할까요?');">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> 승인</button>
+            </form>
+            <a th:if="${page.report.status.name() == 'APPROVED'}"
+               th:href="@{/admin/locker-reports/{id}/translations(id=${page.report.id})}"
+               class="btn btn-secondary"><i class="fa-solid fa-language"></i> 번역 조회</a>
+        </div>
+    </div>
+
+    <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+    <div class="review-grid">
+        <div class="stack">
+            <section class="card">
+                <div class="section-title">
+                    <span>제보 원문</span>
+                    <span class="status-badge"
+                          th:classappend="${'status-' + #strings.toLowerCase(#strings.replace(page.report.status.name(), '_', '-'))}"
+                          th:text="${page.report.status.displayName()}">
+                        제보 접수
+                    </span>
+                </div>
+                <dl class="report-data">
+                    <dt>도로명 주소</dt><dd th:text="${page.report.roadAddress}">주소</dd>
+                    <dt>좌표</dt><dd th:text="${page.report.latitude} + ', ' + ${page.report.longitude}">좌표</dd>
+                    <dt>층</dt><dd th:text="${page.report.floorLabel()}">층 없음</dd>
+                    <dt>환경 / 유형</dt><dd th:text="${page.report.indoorOutdoorType} + ' / ' + ${page.report.lockerType}">유형</dd>
+                    <dt>크기</dt><dd th:text="${page.report.lockerSize}">크기</dd>
+                    <dt>가격</dt><dd th:text="${page.report.priceLabel()}">가격 정보 없음</dd>
+                    <dt>운영시간</dt><dd th:text="${page.report.operatingTimeLabel()}">운영 시간 정보 없음</dd>
+                    <dt>추가 정보</dt><dd th:text="${page.report.additionalInfo} ?: '-'">정보</dd>
+                    <dt th:if="${page.report.reviewedBy != null}">검토자</dt><dd th:if="${page.report.reviewedBy != null}" th:text="${page.report.reviewedBy}"></dd>
+                    <dt th:if="${page.report.status.name() == 'REJECTED' and page.report.rejectionMemo != null}">거절 메모</dt><dd th:if="${page.report.status.name() == 'REJECTED' and page.report.rejectionMemo != null}" th:text="${page.report.rejectionMemo}"></dd>
+                </dl>
+                <img th:if="${page.report.imageUrl != null}" th:src="${page.report.imageUrl}" class="report-image" alt="제보 사진">
+            </section>
+        </div>
+
+        <div class="stack" th:if="${page.report.status.name() == 'SUBMITTED'}">
+            <form th:action="@{/admin/locker-reports/{id}/approve(id=${page.report.id})}" th:object="${approvalForm}" method="post" class="stack" id="approvalForm"
+                  th:attr="data-floor-label=${page.report.floorLabel()}">
+                <section class="card">
+                    <div class="step"><span class="step-number">1</span><div><strong>등록할 장소 선택</strong><div class="muted">주소 일치 또는 30m 이내 장소</div></div></div>
+                    <div class="form-group" id="placeNameGroup">
+                        <label class="form-label" for="placeName">새 장소 이름</label>
+                        <input id="placeName" th:field="*{placeName}" class="form-input" maxlength="120" required placeholder="장소 이름 입력">
+                    </div>
+                    <div class="candidate-list">
+                        <label class="candidate">
+                            <span class="candidate-head"><input type="radio" name="existingPlaceId" value="" checked><span><span class="candidate-title">새 장소로 등록</span><span class="candidate-meta" style="display:block">새 장소 이름을 직접 입력하거나 카카오 POI 후보로 채울 수 있습니다.</span></span></span>
+                        </label>
+                        <label class="candidate" th:each="place : ${page.existingPlaces}">
+                            <span class="candidate-head">
+                                <input type="radio" name="existingPlaceId" th:value="${place.id}" th:attr="data-name=${place.name}">
+                                <span><span class="candidate-title" th:text="${place.name}">장소</span>
+                                <span class="candidate-meta" style="display:block" th:text="${place.roadAddress}">주소</span>
+                                <span class="candidate-meta" th:text="${#numbers.formatDecimal(place.distanceMeters, 0, 0)} + 'm'">거리</span>
+                                <span class="badge badge-match" th:if="${place.exactAddress}">주소 일치</span></span>
+                            </span>
+                        </label>
+                    </div>
+                    <div id="poiCandidateGroup">
+                        <div class="section-title" style="margin-top: 1rem;">카카오 장소 후보</div>
+                        <div class="alert alert-error" th:if="${page.kakaoError}"><span th:text="${page.kakaoError}"></span> 페이지를 새로고침해 다시 시도할 수 있습니다.</div>
+                        <div class="empty" th:if="${#lists.isEmpty(page.kakaoPlaces)}">현재 선택 가능한 카카오 장소 후보가 없습니다. 새 장소 이름을 직접 입력할 수 있습니다.</div>
+                        <div class="candidate-list">
+                            <label class="candidate" th:each="poi : ${page.kakaoPlaces}">
+                                <span class="candidate-head">
+                                    <input type="radio" name="poiCandidate"
+                                           th:attr="data-id=${poi.id},data-name=${poi.name},data-address=${poi.roadAddress},data-latitude=${poi.latitude},data-longitude=${poi.longitude}">
+                                    <span><span class="candidate-title" th:text="${poi.name}">POI</span>
+                                    <span class="candidate-meta" style="display:block" th:text="${poi.category}">카테고리</span>
+                                    <span class="candidate-meta" style="display:block" th:text="${poi.roadAddress}">주소</span>
+                                    <span class="candidate-meta" th:text="${poi.distanceMeters} + 'm'">거리</span>
+                                    <a th:href="${poi.placeUrl}" target="_blank" rel="noopener" class="candidate-meta" onclick="event.stopPropagation()">카카오맵 확인</a></span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    <input type="hidden" th:field="*{kakaoPlaceId}">
+                    <input type="hidden" th:field="*{roadAddress}">
+                    <input type="hidden" th:field="*{latitude}">
+                    <input type="hidden" th:field="*{longitude}">
+                </section>
+
+                <section class="card">
+                    <div class="step"><span class="step-number">2</span><div><strong>보관함 이름 입력</strong><div class="muted">선택한 장소 이름과 층을 기본값으로 채우며 직접 수정할 수 있습니다.</div></div></div>
+                    <div class="form-group"><label class="form-label" for="lockerName">보관함 이름</label><input id="lockerName" th:field="*{lockerName}" class="form-input" maxlength="100" required placeholder="보관함 이름 입력"></div>
+                    <div class="action-row"><button type="submit" class="btn btn-primary" id="approveButton"><i class="fa-solid fa-check"></i> 장소 및 보관함 등록 승인</button></div>
+                </section>
+            </form>
+
+            <section class="card">
+                <div class="section-title">제보 거절</div>
+                <form th:action="@{/admin/locker-reports/{id}/reject(id=${page.report.id})}" method="post" onsubmit="return confirm('이 제보를 거절할까요?');">
+                    <label class="form-label" for="rejectionMemo">거절 메모</label>
+                    <textarea id="rejectionMemo" name="rejectionMemo" class="form-input" rows="4" maxlength="1000" required placeholder="중복, 정보 부족 등 관리자 확인 내용 입력"></textarea>
+                    <div class="action-row"><button type="submit" class="btn btn-danger"><i class="fa-solid fa-xmark"></i> 거절</button></div>
+                </form>
+            </section>
+        </div>
+
+        <section class="card" th:if="${page.report.status.name() == 'TRANSLATION_REQUIRED' or page.report.status.name() == 'READY_FOR_APPROVAL' or page.report.status.name() == 'APPROVED' or page.report.status.name() == 'REJECTED'}">
+            <div class="section-title">검토 완료</div>
+            <p class="muted" th:if="${page.report.status.name() == 'TRANSLATION_REQUIRED'}">장소와 보관함 등록 후 번역 검수가 필요한 상태입니다.</p>
+            <p class="muted" th:if="${page.report.status.name() == 'READY_FOR_APPROVAL'}">번역 저장을 완료해 최종 승인을 기다리는 상태입니다.</p>
+            <p class="muted" th:if="${page.report.status.name() == 'APPROVED'}">장소와 보관함 번역 검수가 완료된 제보입니다.</p>
+            <p class="muted" th:if="${page.report.status.name() == 'REJECTED'}">거절 처리된 제보입니다.</p>
+        </section>
+    </div>
+
+    <script th:if="${page.report.status.name() == 'SUBMITTED'}">
+        const poiInputs = document.querySelectorAll('input[name="poiCandidate"]');
+        const existingPlaceInputs = document.querySelectorAll('input[name="existingPlaceId"]');
+        const approvalForm = document.getElementById('approvalForm');
+        const approveButton = document.getElementById('approveButton');
+        const poiCandidateGroup = document.getElementById('poiCandidateGroup');
+        const placeNameGroup = document.getElementById('placeNameGroup');
+        const placeNameInput = document.querySelector('[name="placeName"]');
+        const lockerNameInput = document.querySelector('[name="lockerName"]');
+        let newPlaceName = placeNameInput.value;
+        let lockerNameEdited = lockerNameInput.value.trim() !== '';
+        const setSuggestedLockerName = (placeName, force = false) => {
+            if (lockerNameEdited && !force) {
+                return;
+            }
+            if (!placeName) {
+                if (force) {
+                    lockerNameInput.value = '';
+                }
+                return;
+            }
+            const floorLabel = approvalForm.dataset.floorLabel;
+            const floorSuffix = floorLabel === '층 없음' ? '' : ' ' + floorLabel;
+            lockerNameInput.value = placeName + floorSuffix;
+        };
+        const updatePlaceNameState = () => {
+            const selectedPlace = document.querySelector('input[name="existingPlaceId"]:checked');
+            const createsPlace = selectedPlace?.value === '';
+            if (!createsPlace && !placeNameInput.disabled) {
+                newPlaceName = placeNameInput.value;
+            }
+            placeNameGroup.hidden = !createsPlace;
+            poiCandidateGroup.hidden = !createsPlace;
+            placeNameInput.disabled = !createsPlace;
+            placeNameInput.required = createsPlace;
+            placeNameInput.value = createsPlace ? newPlaceName : selectedPlace?.dataset.name || '';
+            if (!createsPlace) {
+                poiInputs.forEach(input => input.checked = false);
+                document.querySelector('[name="kakaoPlaceId"]').value = '';
+            }
+        };
+        placeNameInput.addEventListener('input', () => {
+            if (!placeNameInput.disabled) {
+                newPlaceName = placeNameInput.value;
+                setSuggestedLockerName(newPlaceName);
+            }
+        });
+        lockerNameInput.addEventListener('input', () => lockerNameEdited = true);
+        existingPlaceInputs.forEach(input => input.addEventListener('change', () => {
+            lockerNameEdited = false;
+            updatePlaceNameState();
+            const selectedPlace = document.querySelector('input[name="existingPlaceId"]:checked');
+            const selectedPlaceName = selectedPlace?.value === '' ? newPlaceName : selectedPlace?.dataset.name;
+            setSuggestedLockerName(selectedPlaceName, true);
+        }));
+        updatePlaceNameState();
+        poiInputs.forEach(input => input.addEventListener('change', () => {
+            const newPlaceInput = document.querySelector('input[name="existingPlaceId"][value=""]');
+            newPlaceInput.checked = true;
+            newPlaceName = input.dataset.name;
+            updatePlaceNameState();
+            const fields = {
+                kakaoPlaceId: input.dataset.id,
+                roadAddress: input.dataset.address,
+                latitude: input.dataset.latitude,
+                longitude: input.dataset.longitude
+            };
+            Object.entries(fields).forEach(([name, value]) => {
+                document.querySelector('[name="' + name + '"]').value = value;
+            });
+            lockerNameEdited = false;
+            setSuggestedLockerName(newPlaceName, true);
+        }));
+        approvalForm?.addEventListener('submit', event => {
+            const lockerName = document.querySelector('[name="lockerName"]')?.value?.trim();
+            if (!lockerName) {
+                event.preventDefault();
+                alert('보관함 이름을 입력해 주세요.');
+                return;
+            }
+            approveButton.disabled = true;
+            approveButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 등록 중';
+        });
+    </script>
+</main>
+</body>
+</html>

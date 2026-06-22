@@ -80,10 +80,16 @@ public class AdminDocumentSection {
     }
 
     public String localizedSubtitle(SupportedLanguage language) {
+        if (language == SupportedLanguage.KOREAN) {
+            return subtitle;
+        }
         return requiredTranslation(language).getSubtitle();
     }
 
     public String localizedContent(SupportedLanguage language) {
+        if (language == SupportedLanguage.KOREAN) {
+            return content;
+        }
         return requiredTranslation(language).getContent();
     }
 

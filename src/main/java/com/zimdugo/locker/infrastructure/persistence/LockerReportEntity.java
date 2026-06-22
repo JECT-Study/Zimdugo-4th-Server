@@ -142,11 +142,14 @@ public class LockerReportEntity {
     @Column(length = 100)
     private String reviewedBy;
 
-    @Column(length = 1000)
-    private String reviewNote;
+    @Column(name = "review_note", length = 1000)
+    private String rejectionMemo;
 
     @Column
     private LocalDateTime reviewedAt;
+
+    @Column
+    private LocalDateTime appliedAt;
 
     @OneToOne(mappedBy = "report", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private LockerReportImageEntity image;
@@ -233,31 +236,55 @@ public class LockerReportEntity {
 
 
 
-    public void approve(Long placeId, Long lockerId, String reviewer, String reviewNote) {
-        ensureReviewable();
-        this.status = LockerReportStatus.APPROVED;
-        this.appliedPlaceId = placeId;
-        this.appliedLockerId = lockerId;
-        recordReview(reviewer, reviewNote);
+    public void approve(Long placeId, Long lockerId, String reviewer) {
+        approve(name, placeId, lockerId, reviewer);
     }
 
-    public void reject(String reviewer, String reviewNote) {
+    public void approve(String lockerName, Long placeId, Long lockerId, String reviewer) {
+        ensureReviewable();
+        this.name = lockerName;
+        this.status = LockerReportStatus.TRANSLATION_REQUIRED;
+        this.appliedPlaceId = placeId;
+        this.appliedLockerId = lockerId;
+        recordReview(reviewer);
+    }
+
+    public void reject(String reviewer, String rejectionMemo) {
         ensureReviewable();
         this.status = LockerReportStatus.REJECTED;
-        recordReview(reviewer, reviewNote);
+        this.rejectionMemo = rejectionMemo;
+        recordReview(reviewer);
+    }
+
+    public void markTranslationsReady() {
+        if (status != LockerReportStatus.TRANSLATION_REQUIRED
+            && status != LockerReportStatus.READY_FOR_APPROVAL) {
+            throw new BusinessException(ErrorCode.LOCKER_REPORT_ALREADY_REVIEWED);
+        }
+        this.status = LockerReportStatus.READY_FOR_APPROVAL;
+    }
+
+    public void completeApproval() {
+        if (status != LockerReportStatus.READY_FOR_APPROVAL) {
+            throw new BusinessException(ErrorCode.LOCKER_REPORT_ALREADY_REVIEWED);
+        }
+        this.status = LockerReportStatus.APPROVED;
+        this.appliedAt = LocalDateTime.now();
     }
 
 
 
     private void ensureReviewable() {
-        if (status == LockerReportStatus.APPROVED || status == LockerReportStatus.REJECTED) {
+        if (status == LockerReportStatus.TRANSLATION_REQUIRED
+            || status == LockerReportStatus.READY_FOR_APPROVAL
+            || status == LockerReportStatus.APPROVED
+            || status == LockerReportStatus.REJECTED) {
             throw new BusinessException(ErrorCode.LOCKER_REPORT_ALREADY_REVIEWED);
         }
     }
 
-    private void recordReview(String reviewer, String reviewNote) {
+    private void recordReview(String reviewer) {
         this.reviewedBy = reviewer;
-        this.reviewNote = reviewNote;
         this.reviewedAt = LocalDateTime.now();
     }
 

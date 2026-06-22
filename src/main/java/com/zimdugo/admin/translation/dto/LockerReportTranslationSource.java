@@ -1,12 +1,16 @@
 package com.zimdugo.admin.translation.dto;
 
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
+import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import java.util.stream.Collectors;
 
 public record LockerReportTranslationSource(
     Long reportId,
-    String name,
-    String roadAddress,
+    String placeName,
+    String placeRoadAddress,
+    String lockerName,
+    String lockerRoadAddress,
     String groundLevelType,
     Integer floor,
     String indoorOutdoorType,
@@ -20,11 +24,17 @@ public record LockerReportTranslationSource(
     String startTime,
     String endTime
 ) {
-    public static LockerReportTranslationSource from(LockerReportEntity report) {
+    public static LockerReportTranslationSource from(
+        LockerReportEntity report,
+        PlaceEntity place,
+        LockerEntity locker
+    ) {
         return new LockerReportTranslationSource(
             report.getId(),
-            report.getName(),
-            report.getRoadAddress(),
+            place.getName(),
+            place.getRoadAddress(),
+            locker.getName(),
+            locker.getRoadAddress(),
             report.getGroundLevelType() == null ? null : report.getGroundLevelType().name(),
             report.getFloor(),
             report.getIndoorOutdoorType().name(),

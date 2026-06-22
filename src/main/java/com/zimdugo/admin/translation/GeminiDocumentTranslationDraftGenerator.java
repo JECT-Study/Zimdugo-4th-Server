@@ -15,6 +15,7 @@ import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.ExternalApiException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,18 +36,36 @@ public class GeminiDocumentTranslationDraftGenerator implements DocumentTranslat
 
     @Override
     public AdminDocumentTranslationDraftResult generate(AdminDocumentTranslationSource source) {
+        return generate(source, SupportedLanguage.translationTargets());
+    }
+
+    @Override
+    public AdminDocumentTranslationDraftResult generate(
+        AdminDocumentTranslationSource source,
+        SupportedLanguage language
+    ) {
+        return generate(source, List.of(language));
+    }
+
+    private AdminDocumentTranslationDraftResult generate(
+        AdminDocumentTranslationSource source,
+        List<SupportedLanguage> languages
+    ) {
         if (!properties.hasApiKey()) {
             throw new ExternalApiException("번역 API 키가 설정되지 않았습니다.");
         }
 
-        GeminiGenerateContentRequest request = createRequest(source);
+        GeminiGenerateContentRequest request = createRequest(source, languages);
         GeminiGenerateContentResponse response = callGemini(request);
         return parseDraft(response);
     }
 
-    private GeminiGenerateContentRequest createRequest(AdminDocumentTranslationSource source) {
+    private GeminiGenerateContentRequest createRequest(
+        AdminDocumentTranslationSource source,
+        List<SupportedLanguage> languages
+    ) {
         try {
-            return request(source);
+            return request(source, languages);
         } catch (JsonProcessingException e) {
             throw new ExternalApiException("문서 번역 요청 생성에 실패했습니다.", e);
         }
@@ -79,7 +98,10 @@ public class GeminiDocumentTranslationDraftGenerator implements DocumentTranslat
         }
     }
 
-    private GeminiGenerateContentRequest request(AdminDocumentTranslationSource source)
+    GeminiGenerateContentRequest request(
+        AdminDocumentTranslationSource source,
+        List<SupportedLanguage> languages
+    )
         throws JsonProcessingException {
         String prompt = """
             You are translating admin documents for a production travel app.
@@ -95,7 +117,7 @@ public class GeminiDocumentTranslationDraftGenerator implements DocumentTranslat
             Requested language tags: %s
             Source document JSON:
             %s
-            """.formatted(languageTags(), objectMapper.writeValueAsString(source));
+            """.formatted(languageTags(languages), objectMapper.writeValueAsString(source));
 
         return new GeminiGenerateContentRequest(
             List.of(new Content(List.of(new Part(prompt)))),
@@ -103,11 +125,10 @@ public class GeminiDocumentTranslationDraftGenerator implements DocumentTranslat
         );
     }
 
-    private String languageTags() {
-        return SupportedLanguage.all().stream()
+    private String languageTags(List<SupportedLanguage> languages) {
+        return languages.stream()
             .map(SupportedLanguage::languageTag)
-            .reduce((left, right) -> left + ", " + right)
-            .orElse("");
+            .collect(Collectors.joining(", "));
     }
 
     private Map<String, Object> responseSchema() {

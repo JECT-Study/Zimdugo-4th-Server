@@ -40,6 +40,12 @@ public enum SupportedLanguage {
         return List.of(values());
     }
 
+    public static List<SupportedLanguage> translationTargets() {
+        return Arrays.stream(values())
+            .filter(language -> language != KOREAN)
+            .toList();
+    }
+
     @JsonCreator
     public static SupportedLanguage fromJson(String languageTag) {
         return AcceptLanguageResolver.parseLanguage(languageTag)

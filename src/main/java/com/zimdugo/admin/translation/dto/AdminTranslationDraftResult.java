@@ -4,9 +4,38 @@ import com.zimdugo.common.i18n.SupportedLanguage;
 import java.util.List;
 
 public record AdminTranslationDraftResult(
-    List<Translation> translations
+    List<PlaceTranslation> placeTranslations,
+    List<LockerTranslation> lockerTranslations
 ) {
-    public record Translation(
+    public PlaceTranslation placeTranslationFor(String languageTag) {
+        if (languageTag == null || placeTranslations == null) {
+            return null;
+        }
+        return placeTranslations.stream()
+            .filter(item -> languageTag.equals(item.language().languageTag()))
+            .findFirst()
+            .orElse(null);
+    }
+
+    public LockerTranslation lockerTranslationFor(String languageTag) {
+        if (languageTag == null || lockerTranslations == null) {
+            return null;
+        }
+        return lockerTranslations.stream()
+            .filter(item -> languageTag.equals(item.language().languageTag()))
+            .findFirst()
+            .orElse(null);
+    }
+
+    public record PlaceTranslation(
+        SupportedLanguage language,
+        String name,
+        String roadAddress,
+        List<String> aliases
+    ) {
+    }
+
+    public record LockerTranslation(
         SupportedLanguage language,
         String name,
         String roadAddress,
