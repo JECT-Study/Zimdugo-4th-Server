@@ -9,11 +9,13 @@ import com.zimdugo.locker.domain.report.LockerReportPriceType;
 import com.zimdugo.locker.domain.report.LockerReportStatus;
 import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportImageEntity;
 import com.zimdugo.locker.infrastructure.projection.AdminPlaceCandidateProjection;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
+import lombok.Builder;
 
 public record AdminLockerReportReviewPageResult(
     Report report,
@@ -21,6 +23,37 @@ public record AdminLockerReportReviewPageResult(
     List<KakaoPlaceCandidate> kakaoPlaces,
     String kakaoError
 ) {
+    public record MetadataEntry(
+        String directory,
+        String tagName,
+        Integer tagType,
+        String description,
+        Object value
+    ) {}
+
+    public record ImageMetadata(
+        String exifMetadataJson,
+        Double gpsLatitude,
+        Double gpsLongitude,
+        Double gpsAltitude,
+        LocalDateTime capturedAt,
+        List<MetadataEntry> entries
+    ) {
+        public static ImageMetadata from(LockerReportImageEntity imageEntity, List<MetadataEntry> entries) {
+            if (imageEntity == null) {
+                return null;
+            }
+            return new ImageMetadata(
+                imageEntity.getExifMetadataJson(),
+                imageEntity.getGpsLatitude(),
+                imageEntity.getGpsLongitude(),
+                imageEntity.getGpsAltitude(),
+                imageEntity.getCapturedAt(),
+                entries
+            );
+        }
+    }
+
     public record ExistingPlace(
         Long id,
         String name,
@@ -43,6 +76,7 @@ public record AdminLockerReportReviewPageResult(
         }
     }
 
+    @Builder
     public record Report(
         Long id,
         String name,
@@ -67,8 +101,16 @@ public record AdminLockerReportReviewPageResult(
         String reviewedBy,
         String rejectionMemo,
         LocalDateTime createdAt,
-        String imageUrl
+        String imageUrl,
+        String appliedPlaceName,
+        String appliedLockerName,
+        ImageMetadata imageMetadata,
+        Double imageDistanceMeters
     ) {
+        private static final double VERY_HIGH_TRUST_DISTANCE_METERS = 50;
+        private static final double HIGH_TRUST_DISTANCE_METERS = 100;
+        private static final double NORMAL_TRUST_DISTANCE_METERS = 200;
+
         public String floorLabel() {
             if (groundLevelType == null || floor == null) {
                 return "층 없음";
@@ -105,18 +147,78 @@ public record AdminLockerReportReviewPageResult(
             return startTime + " ~ " + endTime;
         }
 
-        public static Report from(LockerReportEntity entity) {
-            return new Report(
-                entity.getId(), entity.getName(), entity.getRoadAddress(),
-                entity.getGroundLevelType(), entity.getFloor(), entity.getIndoorOutdoorType(),
-                entity.getLockerType(), entity.getLockerSize(), entity.getPriceType(),
-                entity.getMinPrice(), entity.getMaxPrice(), entity.getOperatingTimeType(),
-                entity.getStartTime(), entity.getEndTime(), entity.getAdditionalInfo(),
-                entity.getLatitude(), entity.getLongitude(), entity.getStatus(),
-                entity.getAppliedPlaceId(), entity.getAppliedLockerId(), entity.getReviewedBy(),
-                entity.getRejectionMemo(), entity.getCreatedAt(),
-                entity.getImage() == null ? null : entity.getImage().getImageUrl()
-            );
+        public String checkLocationTrust() {
+            if (imageDistanceMeters == null) {
+                return "GPS 정보 없음 (신뢰도 판단 불가)";
+            }
+            String distanceStr = String.format("%.1f", imageDistanceMeters) + "m";
+            if (imageDistanceMeters <= VERY_HIGH_TRUST_DISTANCE_METERS) {
+                return "매우 높음 (거리 오차: " + distanceStr + ")";
+            } else if (imageDistanceMeters <= HIGH_TRUST_DISTANCE_METERS) {
+                return "높음 (거리 오차: " + distanceStr + ")";
+            } else if (imageDistanceMeters <= NORMAL_TRUST_DISTANCE_METERS) {
+                return "보통 (거리 오차: " + distanceStr + ")";
+            } else {
+                return "낮음 (거리 오차: " + distanceStr + ")";
+            }
+        }
+
+        public String locationTrustClass() {
+            if (imageDistanceMeters == null) {
+                return "trust-unknown";
+            }
+            if (imageDistanceMeters <= VERY_HIGH_TRUST_DISTANCE_METERS) {
+                return "trust-very-high";
+            } else if (imageDistanceMeters <= HIGH_TRUST_DISTANCE_METERS) {
+                return "trust-high";
+            } else if (imageDistanceMeters <= NORMAL_TRUST_DISTANCE_METERS) {
+                return "trust-normal";
+            } else {
+                return "trust-low";
+            }
+        }
+
+        public static Report from(
+            LockerReportEntity entity,
+            String appliedPlaceName,
+            String appliedLockerName,
+            ImageMetadata imageMetadata,
+            Double imageDistanceMeters
+        ) {
+            return builderFrom(entity)
+                .appliedPlaceName(appliedPlaceName)
+                .appliedLockerName(appliedLockerName)
+                .imageMetadata(imageMetadata)
+                .imageDistanceMeters(imageDistanceMeters)
+                .build();
+        }
+
+        private static ReportBuilder builderFrom(LockerReportEntity entity) {
+            return Report.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .roadAddress(entity.getRoadAddress())
+                .groundLevelType(entity.getGroundLevelType())
+                .floor(entity.getFloor())
+                .indoorOutdoorType(entity.getIndoorOutdoorType())
+                .lockerType(entity.getLockerType())
+                .lockerSize(entity.getLockerSize())
+                .priceType(entity.getPriceType())
+                .minPrice(entity.getMinPrice())
+                .maxPrice(entity.getMaxPrice())
+                .operatingTimeType(entity.getOperatingTimeType())
+                .startTime(entity.getStartTime())
+                .endTime(entity.getEndTime())
+                .additionalInfo(entity.getAdditionalInfo())
+                .latitude(entity.getLatitude())
+                .longitude(entity.getLongitude())
+                .status(entity.getStatus())
+                .appliedPlaceId(entity.getAppliedPlaceId())
+                .appliedLockerId(entity.getAppliedLockerId())
+                .reviewedBy(entity.getReviewedBy())
+                .rejectionMemo(entity.getRejectionMemo())
+                .createdAt(entity.getCreatedAt())
+                .imageUrl(entity.getImage() == null ? null : entity.getImage().getImageUrl());
         }
     }
 }

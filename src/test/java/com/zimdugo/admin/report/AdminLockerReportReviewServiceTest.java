@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimdugo.admin.report.dto.AdminLockerReportApprovalCommand;
 import com.zimdugo.admin.report.dto.AdminLockerReportReviewPageResult;
 import com.zimdugo.core.exception.BusinessException;
@@ -19,6 +20,7 @@ import com.zimdugo.locker.infrastructure.persistence.LockerDetailEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerReportImageEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
@@ -46,12 +48,14 @@ class AdminLockerReportReviewServiceTest {
     @Mock private PlaceRepository placeRepository;
     @Mock private LockerRepository lockerRepository;
     @Mock private LockerDetailRepository detailRepository;
+    private ObjectMapper objectMapper;
     @Mock private PlaceCandidateProvider candidateProvider;
 
     private AdminLockerReportReviewService service;
 
     @BeforeEach
     void setUp() {
+        objectMapper = new ObjectMapper();
         AdminLockerReportApprovalWriter approvalWriter = new AdminLockerReportApprovalWriter(
             reportRepository,
             placeRepository,
@@ -61,6 +65,8 @@ class AdminLockerReportReviewServiceTest {
         service = new AdminLockerReportReviewService(
             reportRepository,
             placeRepository,
+            lockerRepository,
+            objectMapper,
             candidateProvider,
             approvalWriter
         );
@@ -281,5 +287,35 @@ class AdminLockerReportReviewServiceTest {
             LocalDateTime.now(),
             LocalDateTime.now()
         );
+    }
+
+    @Test
+    void parsesExifMetadataWhenImageExists() {
+        LockerReportEntity report = report();
+        LockerReportImageEntity image = LockerReportImageEntity.builder()
+            .imageUrl("https://example.com/image.jpg")
+            .exifMetadataJson("""
+                [{"directory":"Exif IFD0","tagName":"Make","tagType":271,
+                  "description":"Apple","value":"Apple"}]
+                """)
+            .gpsLatitude(37.55)
+            .gpsLongitude(126.97)
+            .gpsAltitude(10.0)
+            .capturedAt(LocalDateTime.now())
+            .build();
+        report.addImage(image);
+
+        when(reportRepository.findActiveByIdWithImage(1L)).thenReturn(Optional.of(report));
+        when(reportRepository.findImageDistanceMeters(1L)).thenReturn(Optional.of(10.0));
+        when(placeRepository.findAdminCandidates("서울 중구 세종대로", 37.55, 126.97, 30))
+            .thenReturn(List.of());
+        when(candidateProvider.findNearby(37.55, 126.97)).thenReturn(List.of());
+
+        AdminLockerReportReviewPageResult page = service.getReviewPage(1L);
+
+        assertThat(page.report().imageMetadata()).isNotNull();
+        assertThat(page.report().imageMetadata().entries()).hasSize(1);
+        assertThat(page.report().imageMetadata().entries().get(0).tagName()).isEqualTo("Make");
+        assertThat(page.report().checkLocationTrust()).contains("매우 높음");
     }
 }

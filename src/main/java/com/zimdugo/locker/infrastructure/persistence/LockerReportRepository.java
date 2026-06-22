@@ -52,6 +52,19 @@ public interface LockerReportRepository extends JpaRepository<LockerReportEntity
         """)
     Optional<LockerReportEntity> findActiveByIdWithImage(@Param("reportId") Long reportId);
 
+    @Query(value = """
+        SELECT ST_Distance(
+            ST_SetSRID(ST_MakePoint(lr.longitude, lr.latitude), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(lri.gps_longitude, lri.gps_latitude), 4326)::geography
+        )
+        FROM locker_reports lr
+        JOIN locker_report_images lri ON lri.report_id = lr.id
+        WHERE lr.id = :reportId
+            AND lri.gps_latitude IS NOT NULL
+            AND lri.gps_longitude IS NOT NULL
+        """, nativeQuery = true)
+    Optional<Double> findImageDistanceMeters(@Param("reportId") Long reportId);
+
     @Query("SELECT COUNT(lr) FROM LockerReportEntity lr WHERE lr.user.id = :userId")
     long countLockerReportsByUserId(@Param("userId") Long userId);
 
