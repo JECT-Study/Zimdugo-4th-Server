@@ -221,8 +221,10 @@ class AdminLockerReportTranslationServiceTest {
             ArgumentCaptor.forClass(AdminLockerI18nRequest.class);
         verify(i18nAdminService).replacePlace(org.mockito.ArgumentMatchers.eq(10L), placeRequest.capture());
         verify(i18nAdminService).replaceLocker(org.mockito.ArgumentMatchers.eq(20L), lockerRequest.capture());
-        assertThat(placeRequest.getValue().translations()).hasSize(SupportedLanguage.all().size());
-        assertThat(lockerRequest.getValue().translations()).hasSize(SupportedLanguage.all().size());
+        assertThat(placeRequest.getValue().translations())
+            .hasSize(SupportedLanguage.translationTargets().size());
+        assertThat(lockerRequest.getValue().translations())
+            .hasSize(SupportedLanguage.translationTargets().size());
         assertThat(report.getStatus())
             .isEqualTo(com.zimdugo.locker.domain.report.LockerReportStatus.READY_FOR_APPROVAL);
     }
@@ -247,7 +249,7 @@ class AdminLockerReportTranslationServiceTest {
     }
 
     @Test
-    void completesReportWhenPlaceAndLockerTranslationsExistForEveryLanguage() {
+    void completesReportWhenPlaceAndLockerTranslationsExistForEveryTranslationTarget() {
         LockerReportEntity report = report();
         report.approve(10L, 20L, "admin");
         report.markTranslationsReady();
@@ -318,13 +320,13 @@ class AdminLockerReportTranslationServiceTest {
     }
 
     private List<AdminPlaceI18nResponse.Translation> placeTranslations() {
-        return SupportedLanguage.all().stream()
+        return SupportedLanguage.translationTargets().stream()
             .map(language -> new AdminPlaceI18nResponse.Translation(language, "장소", "주소"))
             .toList();
     }
 
     private List<AdminLockerI18nResponse.Translation> lockerTranslations() {
-        return SupportedLanguage.all().stream()
+        return SupportedLanguage.translationTargets().stream()
             .map(language -> new AdminLockerI18nResponse.Translation(language, "보관함", "주소", "상세"))
             .toList();
     }
@@ -349,10 +351,10 @@ class AdminLockerReportTranslationServiceTest {
 
     private AdminLockerReportTranslationsForm completeForm() {
         AdminLockerReportTranslationsForm form = new AdminLockerReportTranslationsForm();
-        form.setPlaceTranslations(SupportedLanguage.all().stream()
+        form.setPlaceTranslations(SupportedLanguage.translationTargets().stream()
             .map(this::placeForm)
             .toList());
-        form.setLockerTranslations(SupportedLanguage.all().stream()
+        form.setLockerTranslations(SupportedLanguage.translationTargets().stream()
             .map(this::lockerForm)
             .toList());
         return form;

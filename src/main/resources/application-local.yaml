@@ -29,9 +29,6 @@ spring:
       separator: ';;'
       data-locations:
         - file:scripts/db/01-postgis.sql
-        - file:scripts/db/02-locker-report-status.sql
-        - file:scripts/db/03-localized-alias-language-uniqueness.sql
-        - file:scripts/db/05-remove-korean-localized-translations.sql
 
 management:
   endpoints:

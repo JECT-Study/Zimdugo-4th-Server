@@ -62,23 +62,23 @@ class LockerContentI18nAdminServiceTest {
     }
 
     @Test
-    void replacesPlaceWhenEverySupportedLanguageIsProvided() {
+    void replacesPlaceWhenEveryTranslationTargetIsProvided() {
         PlaceEntity place = new PlaceEntity("서울역", 37.55, 126.97, "서울");
         when(placeRepository.findById(1L)).thenReturn(Optional.of(place));
         when(placeTranslationRepository.findByPlaceId(1L)).thenReturn(List.of());
         when(placeAliasRepository.findByPlaceId(1L)).thenReturn(List.of());
 
-        service.replacePlace(1L, request(SupportedLanguage.all()));
+        service.replacePlace(1L, request(SupportedLanguage.translationTargets()));
 
         verify(placeTranslationRepository).saveAll(anyList());
         verify(eventPublisher).publishEvent(LockerContentI18nChangedEvent.place(1L));
     }
 
     @Test
-    void rejectsPlaceWhenAnySupportedLanguageIsMissingBeforeDeletingExistingContent() {
+    void rejectsPlaceWhenAnyTranslationTargetIsMissingBeforeDeletingExistingContent() {
         PlaceEntity place = new PlaceEntity("서울역", 37.55, 126.97, "서울");
         when(placeRepository.findById(1L)).thenReturn(Optional.of(place));
-        List<SupportedLanguage> missingTraditionalChinese = SupportedLanguage.all().stream()
+        List<SupportedLanguage> missingTraditionalChinese = SupportedLanguage.translationTargets().stream()
             .filter(language -> language != SupportedLanguage.TRADITIONAL_CHINESE)
             .toList();
 

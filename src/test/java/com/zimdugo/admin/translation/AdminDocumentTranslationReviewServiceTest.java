@@ -44,7 +44,7 @@ class AdminDocumentTranslationReviewServiceTest {
     }
 
     @Test
-    void getsReviewPageForEverySupportedLanguage() {
+    void getsReviewPageForEveryTranslationTarget() {
         AdminDocument document = document();
         addEnglishTranslation(document);
         when(adminDocumentService.getById(1L)).thenReturn(document);
@@ -52,7 +52,7 @@ class AdminDocumentTranslationReviewServiceTest {
         AdminDocumentTranslationReviewPageResult result = service.getReviewPage(1L);
 
         assertThat(result.document().title()).isEqualTo("서비스 점검 안내");
-        assertThat(result.languages()).hasSize(SupportedLanguage.all().size());
+        assertThat(result.languages()).hasSize(SupportedLanguage.translationTargets().size());
         assertThat(result.languages())
             .filteredOn(language -> language.language() == SupportedLanguage.ENGLISH)
             .singleElement()

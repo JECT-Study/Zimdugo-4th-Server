@@ -52,7 +52,7 @@ class AdminLockerReportTranslationPageResultTest {
     }
 
     @Test
-    void buildsEditableRowsForEverySupportedLanguage() {
+    void buildsEditableRowsForEveryTranslationTarget() {
         AdminPlaceI18nResponse place = new AdminPlaceI18nResponse(
             10L,
             List.of(new AdminPlaceI18nResponse.Translation(
@@ -75,7 +75,7 @@ class AdminLockerReportTranslationPageResultTest {
         AdminLockerReportTranslationPageResult page =
             new AdminLockerReportTranslationPageResult(null, "서울역", "보관함", place, locker, false, false);
 
-        assertThat(page.languages()).hasSize(SupportedLanguage.all().size());
+        assertThat(page.languages()).hasSize(SupportedLanguage.translationTargets().size());
         AdminLockerReportTranslationPageResult.LanguageReview english = page.languages().stream()
             .filter(item -> item.language() == SupportedLanguage.ENGLISH)
             .findFirst()
