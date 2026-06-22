@@ -113,12 +113,16 @@ public class AdminLockerReportTranslationService {
         if (report.getStatus() != LockerReportStatus.READY_FOR_APPROVAL) {
             throw new BusinessException(ErrorCode.LOCKER_REPORT_ALREADY_REVIEWED);
         }
-        AdminPlaceI18nResponse placeI18n = i18nAdminService.getPlace(requireAppliedPlace(report).getId());
-        AdminLockerI18nResponse lockerI18n = i18nAdminService.getLocker(requireAppliedLocker(report).getId());
+        PlaceEntity place = requireAppliedPlace(report);
+        LockerEntity locker = requireAppliedLocker(report);
+        AdminPlaceI18nResponse placeI18n = i18nAdminService.getPlace(place.getId());
+        AdminLockerI18nResponse lockerI18n = i18nAdminService.getLocker(locker.getId());
         if (!hasAllTranslations(placeI18n.translations().size())
             || !hasAllTranslations(lockerI18n.translations().size())) {
             throw new BusinessException(ErrorCode.LOCKER_REPORT_TRANSLATION_INCOMPLETE);
         }
+        place.activate();
+        locker.activate();
         report.completeApproval();
         eventPublisher.publishEvent(new LockerReportApprovedEvent(report.getAppliedLockerId()));
     }
