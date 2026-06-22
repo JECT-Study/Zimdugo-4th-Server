@@ -80,7 +80,8 @@
             <dd class="status-badge"
                 th:classappend="${'status-' + #strings.toLowerCase(#strings.replace(page.report.status.name(), '_', '-'))}"
                 th:text="${page.report.status.displayName()}">번역 필요</dd>
-            <dt>이름</dt><dd th:text="${page.report.name} ?: '-'">-</dd>
+            <dt>적용 장소</dt><dd th:text="${page.appliedPlaceName}">장소 이름</dd>
+            <dt>적용 보관함</dt><dd th:text="${page.appliedLockerName}">보관함 이름</dd>
             <dt>주소</dt><dd th:text="${page.report.roadAddress} ?: '-'">-</dd>
             <dt>층</dt><dd th:text="${page.report.floorLabel()}">층 없음</dd>
             <dt>위치</dt><dd th:text="${page.report.latitude} + ', ' + ${page.report.longitude}">0, 0</dd>
@@ -89,8 +90,6 @@
             <dt>요금</dt><dd th:text="${page.report.priceLabel()}">가격 정보 없음</dd>
             <dt>운영시간</dt><dd th:text="${page.report.operatingTimeLabel()}">운영 시간 정보 없음</dd>
             <dt>추가정보</dt><dd th:text="${page.report.additionalInfo} ?: '-'">-</dd>
-            <dt>적용 장소</dt><dd th:text="${page.appliedPlaceName}">장소 이름</dd>
-            <dt>적용 보관함</dt><dd th:text="${page.appliedLockerName}">보관함 이름</dd>
         </dl>
         <img th:if="${page.report.imageUrl != null}" th:src="${page.report.imageUrl}" class="report-image" alt="제보 이미지">
     </section>
