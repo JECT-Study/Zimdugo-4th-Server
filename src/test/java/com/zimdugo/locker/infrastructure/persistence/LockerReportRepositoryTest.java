@@ -10,19 +10,24 @@ import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
+import com.zimdugo.locker.infrastructure.projection.AdminLockerReportListProjection;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.infrastructure.persistence.UserEntity;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.data.domain.PageRequest;
 
-@DataJpaTest
+@DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 class LockerReportRepositoryTest {
 
     @Autowired
@@ -119,6 +124,49 @@ class LockerReportRepositoryTest {
         assertThat(savedReport.getLatitude()).isEqualTo(37.556);
         assertThat(savedReport.getLongitude()).isEqualTo(126.923);
         assertThat(savedReport.getStatus()).isEqualTo(LockerReportStatus.SUBMITTED);
+    }
+
+    @Test
+    @DisplayName("관리자 제보 목록은 이미지 연관관계 조회 없이 필요한 필드만 한 번에 조회한다")
+    void findRecentForAdminReportListUsesSingleQuery() {
+        UserEntity user = saveUser();
+        saveReportWithImage(user, "첫 번째 제보");
+        saveReportWithImage(user, "두 번째 제보");
+        saveReportWithImage(user, "세 번째 제보");
+        entityManager.flush();
+        entityManager.clear();
+        Statistics statistics = entityManager.getEntityManagerFactory()
+            .unwrap(SessionFactory.class)
+            .getStatistics();
+        statistics.clear();
+
+        List<AdminLockerReportListProjection> reports = lockerReportRepository
+            .findRecentForAdminReportList(PageRequest.of(0, 2));
+
+        assertThat(reports).extracting(AdminLockerReportListProjection::getName)
+            .containsExactly("세 번째 제보", "두 번째 제보");
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
+    }
+
+    private void saveReportWithImage(UserEntity user, String name) {
+        LockerReportEntity report = LockerReportEntity.builder()
+            .user(user)
+            .name(name)
+            .roadAddress("서울 마포구 양화로 160")
+            .indoorOutdoorType(IndoorOutdoorType.INDOOR)
+            .lockerType(LockerType.ETC)
+            .lockerSize(Set.of())
+            .priceType(LockerReportPriceType.FREE)
+            .operatingTimeType(LockerReportOperatingTimeType.OPEN_24_HOURS)
+            .locationConsentAgreed(false)
+            .latitude(37.556)
+            .longitude(126.923)
+            .build();
+        report.addImage(LockerReportImageEntity.builder()
+            .report(report)
+            .imageUrl("https://example.com/" + name + ".jpg")
+            .build());
+        lockerReportRepository.save(report);
     }
 
     private UserEntity saveUser() {
