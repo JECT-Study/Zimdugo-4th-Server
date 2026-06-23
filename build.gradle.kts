@@ -25,17 +25,11 @@ repositories {
     mavenCentral()
 }
 
-extra["springBootAdminVersion"] = "4.0.0"
-
 dependencies {
     // Web / Actuator
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-
-    // Spring Boot Admin
-    implementation("de.codecentric:spring-boot-admin-starter-server")
-    implementation("de.codecentric:spring-boot-admin-starter-client")
 
     // Security / OAuth2 / JWT
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -102,7 +96,6 @@ dependencies {
 
 dependencyManagement {
     imports {
-        mavenBom("de.codecentric:spring-boot-admin-dependencies:${property("springBootAdminVersion")}")
         mavenBom("software.amazon.awssdk:bom:2.32.4")
     }
 }
