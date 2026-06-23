@@ -19,7 +19,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -48,19 +47,6 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/actuator/**")
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                .anyRequest().hasRole("ADMIN")
-            )
-            .httpBasic(Customizer.withDefaults());
-        return http.build();
-    }
-
-    @Bean
-    @Order(2)
     public SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher("/admin/**")
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
@@ -86,7 +72,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(3)
+    @Order(2)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher(request -> !request.getRequestURI().startsWith("/admin/"));
         configureBasicSecurity(http);
