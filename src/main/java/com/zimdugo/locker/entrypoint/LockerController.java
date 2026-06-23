@@ -8,11 +8,13 @@ import com.zimdugo.locker.application.keyword.LockerKeywordQueryService;
 import com.zimdugo.locker.application.pin.LockerPinQueryService;
 import com.zimdugo.locker.application.suggest.LockerSuggestQueryService;
 import com.zimdugo.locker.application.place.PlaceLockerQueryService;
+import com.zimdugo.locker.application.seo.LockerSeoQueryService;
 import com.zimdugo.locker.application.result.detail.LockerDetailResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
 import com.zimdugo.locker.application.result.place.PlaceLockerResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
+import com.zimdugo.locker.application.result.seo.LockerSeoResult;
 import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
 import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
 import com.zimdugo.locker.entrypoint.dto.response.detail.LockerDetailResponse;
@@ -20,6 +22,8 @@ import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
+import com.zimdugo.locker.entrypoint.dto.response.seo.LockerSeoListResponse;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -37,6 +41,7 @@ public class LockerController implements LockerApi {
     private final LockerSuggestQueryService lockerSuggestQueryService;
     private final LockerKeywordQueryService lockerKeywordQueryService;
     private final PlaceLockerQueryService placeLockerQueryService;
+    private final LockerSeoQueryService lockerSeoQueryService;
 
     @Override
     public ResponseEntity<RestResponse<LockerDetailResponse>> getLockerDetail(
@@ -88,5 +93,11 @@ public class LockerController implements LockerApi {
     ) {
         PlaceLockerResult result = placeLockerQueryService.getPlaceLockers(userId, request.toCommand(placeId));
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, PlaceLockerResponse.from(result)));
+    }
+
+    @Override
+    public ResponseEntity<RestResponse<LockerSeoListResponse>> getLockerSeoList() {
+        List<LockerSeoResult> result = lockerSeoQueryService.getSeoList();
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerSeoListResponse.from(result)));
     }
 }
