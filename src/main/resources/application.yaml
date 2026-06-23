@@ -10,12 +10,6 @@ spring:
   jpa:
     open-in-view: false
 
-  boot:
-    admin:
-      client:
-        url: http://localhost:8080
-        auto-deregistration: false
-
   security:
     oauth2:
       client:
