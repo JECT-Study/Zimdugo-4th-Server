@@ -140,7 +140,7 @@ public interface LockerApi {
 
     @Operation(
         summary = "SEO용 보관함 전체 목록 조회",
-        description = "SEO를 위해 활성화된 전체 보관함의 최소 정보(ID, 업데이트 일시, 다국어 명칭)를 반환한다."
+        description = "SEO를 위해 활성화된 전체 보관함의 최소 정보(ID, 다국어 명칭)를 반환한다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공")
