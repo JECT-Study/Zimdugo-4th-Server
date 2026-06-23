@@ -8,6 +8,7 @@ import com.zimdugo.locker.entrypoint.dto.response.detail.LockerDetailResponse;
 import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
+import com.zimdugo.locker.entrypoint.dto.response.seo.LockerSeoListResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -136,4 +137,15 @@ public interface LockerApi {
         @PathVariable Long placeId,
         @Valid @ParameterObject PlaceLockerRequest request
     );
+
+    @Operation(
+        summary = "SEO용 보관함 전체 목록 조회",
+        description = "SEO를 위해 활성화된 전체 보관함의 최소 정보(ID, 업데이트 일시, 다국어 명칭)를 반환한다."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    @SecurityRequirements
+    @GetMapping("/lockers/seo-list")
+    ResponseEntity<RestResponse<LockerSeoListResponse>> getLockerSeoList();
 }
