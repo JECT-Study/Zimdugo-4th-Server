@@ -3,6 +3,7 @@ package com.zimdugo.locker.infrastructure.persistence;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.projection.LockerDetailQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerPlaceLockerQueryProjection;
+import com.zimdugo.locker.infrastructure.projection.LockerSeoQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.NearbyLockerPlaceQueryProjection;
 import com.zimdugo.locker.domain.publication.PublicationStatus;
@@ -186,4 +187,18 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("placeIds") List<Long> placeIds,
         @Param("languageCode") String languageCode
     );
+
+    @Query(value = """
+        SELECT
+            l.id AS lockerId,
+            l.name AS lockerName,
+            lt.language_code AS languageCode,
+            lt.name AS translatedName
+        FROM lockers l
+        JOIN locker_details ld ON ld.locker_id = l.id
+        LEFT JOIN locker_translations lt ON lt.locker_id = l.id
+        WHERE l.publication_status = 'ACTIVE'
+        ORDER BY l.id DESC
+        """, nativeQuery = true)
+    List<LockerSeoQueryProjection> findAllForSeo();
 }
