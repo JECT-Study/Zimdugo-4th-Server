@@ -1,4 +1,4 @@
-package com.zimdugo.common.config;
+package com.zimdugo.common.security.config;
 
 import com.zimdugo.common.security.CurrentUserArgumentResolver;
 import com.zimdugo.common.security.NullableCurrentUserArgumentResolver;
