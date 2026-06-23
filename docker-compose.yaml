@@ -33,5 +33,30 @@ services:
     ports:
       - "9200:9200"
 
+  prometheus:
+    profiles:
+      - monitoring
+    image: prom/prometheus:v3.1.0
+    container_name: zimdugo-prometheus
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "127.0.0.1:9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    profiles:
+      - monitoring
+    image: grafana/grafana:11.5.1
+    container_name: zimdugo-grafana
+    ports:
+      - "127.0.0.1:3010:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
 volumes:
   elasticsearch-data:
+  grafana-storage:
