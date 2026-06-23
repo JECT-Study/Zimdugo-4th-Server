@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -305,6 +306,67 @@ class LockerSuggestIndexSyncServiceTest {
         verify(lockerSuggestSearchRepository).deleteAllById(List.of("10"));
         verify(lockerSuggestSearchRepository).deleteByPlaceIdIn(List.of(101L));
         verify(lockerRepository).findAllForSuggestIndexByPlaceIds(eq(List.of(101L)));
+    }
+
+    @Test
+    @DisplayName("색인 저장 시 첫 번째 시도에서 예외가 발생하더라도 재시도하여 성공하면 동기화가 정상 완료된다")
+    void retriesIndexSaveOnFailureAndSucceeds() {
+        LockerSuggestIndexQueryProjection projection = projection();
+        given(lockerRepository.findAllForSuggestIndex()).willReturn(List.of(projection));
+        given(entityIndexOperations.createSettings()).willReturn(settings);
+        given(entityIndexOperations.createMapping()).willReturn(mapping);
+        given(versionedIndexOperations.create(settings, mapping)).willReturn(true);
+        given(versionedIndexOperations.alias(any(AliasActions.class))).willReturn(true);
+        given(aliasIndexOperations.getAliasesForIndex("locker_suggest")).willReturn(Map.of(
+            "locker_suggest_v_previous", Set.of(writeAlias())
+        ));
+
+        given(elasticsearchOperations.save(any(Iterable.class), any(IndexCoordinates.class)))
+            .willThrow(new IllegalStateException("first attempt failed"))
+            .willReturn(List.of());
+
+        syncService.syncAtStartup();
+
+        verify(elasticsearchOperations, org.mockito.Mockito.times(2))
+            .save(any(Iterable.class), any(IndexCoordinates.class));
+        verify(versionedIndexOperations).alias(any(AliasActions.class));
+    }
+
+    @Test
+    @DisplayName("동기화 완료 후 신규 인덱스와 직전 인덱스를 제외한 구버전 인덱스들은 삭제된다")
+    void deletesOldIndicesExceptTargetAndPrevious() {
+        LockerSuggestIndexQueryProjection projection = projection();
+        given(lockerRepository.findAllForSuggestIndex()).willReturn(List.of(projection));
+        given(entityIndexOperations.createSettings()).willReturn(settings);
+        given(entityIndexOperations.createMapping()).willReturn(mapping);
+        given(versionedIndexOperations.create(settings, mapping)).willReturn(true);
+        given(versionedIndexOperations.alias(any(AliasActions.class))).willReturn(true);
+
+        given(aliasIndexOperations.getAliasesForIndex("locker_suggest")).willReturn(Map.of(
+            "locker_suggest_v_previous", Set.of(writeAlias())
+        ));
+
+        IndexOperations allIndicesOperations = mock(IndexOperations.class);
+        given(elasticsearchOperations.indexOps(eq(IndexCoordinates.of("locker_suggest_v_*"))))
+            .willReturn(allIndicesOperations);
+
+        IndexInformation oldGarbageInfo = mock(IndexInformation.class);
+        given(oldGarbageInfo.getName()).willReturn("locker_suggest_v_old_garbage");
+
+        IndexInformation previousInfo = mock(IndexInformation.class);
+        given(previousInfo.getName()).willReturn("locker_suggest_v_previous");
+
+        given(allIndicesOperations.getInformation()).willReturn(List.of(oldGarbageInfo, previousInfo));
+
+        IndexOperations garbageIndexOperations = mock(IndexOperations.class);
+        given(elasticsearchOperations.indexOps(eq(IndexCoordinates.of("locker_suggest_v_old_garbage"))))
+            .willReturn(garbageIndexOperations);
+        given(garbageIndexOperations.exists()).willReturn(true);
+
+        syncService.syncAtStartup();
+
+        verify(garbageIndexOperations).delete();
+        verify(elasticsearchOperations, never()).indexOps(eq(IndexCoordinates.of("locker_suggest_v_previous")));
     }
 
     private LockerSuggestIndexQueryProjection projection() {
