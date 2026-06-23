@@ -1,10 +1,7 @@
 package com.zimdugo.locker.infrastructure.search;
 
-import com.zimdugo.common.i18n.SearchTextNormalizer;
-import com.zimdugo.common.util.HangulUtils;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerAliasRepository;
 import com.zimdugo.locker.infrastructure.persistence.PlaceAliasRepository;
@@ -16,9 +13,7 @@ import com.zimdugo.locker.infrastructure.persistence.PlaceAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationEntity;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +27,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
@@ -50,6 +45,9 @@ public class LockerSuggestIndexSyncService {
 
     private static final String INDEX_ALIAS = "locker_suggest";
     private static final String VERSIONED_INDEX_PREFIX = INDEX_ALIAS + "_v_";
+    private static final int MAX_SAVE_ATTEMPTS = 3;
+    private static final int BACKOFF_MS = 2000;
+    private static final int MILLIS_IN_SECOND = 1000;
 
     private final LockerRepository lockerRepository;
     private final LockerSuggestSearchRepository lockerSuggestSearchRepository;
@@ -146,17 +144,64 @@ public class LockerSuggestIndexSyncService {
             throw new BusinessException(ErrorCode.INDEX_SYNC_FAILED);
         }
         if (!documents.isEmpty()) {
-            elasticsearchOperations.save(documents, IndexCoordinates.of(targetIndex));
+            saveWithRetry(documents, targetIndex);
         }
         targetIndexOperations.refresh();
-        switchAlias(targetIndex, targetIndexOperations);
+
+        IndexOperations aliasIndexOperations = elasticsearchOperations.indexOps(IndexCoordinates.of(INDEX_ALIAS));
+        Set<String> previousIndices = aliasIndexOperations.exists() ? aliasIndices(aliasIndexOperations) : Set.of();
+
+        switchAlias(targetIndex, targetIndexOperations, previousIndices);
         log.info("검색 인덱스 alias 전환 완료: {} -> {}", INDEX_ALIAS, targetIndex);
+
+        cleanUpOldIndices(targetIndex, previousIndices);
     }
 
-    private void switchAlias(String targetIndex, IndexOperations targetIndexOperations) {
+    private void saveWithRetry(List<LockerSuggestDocument> documents, String targetIndex) {
+        for (int attempt = 1; attempt <= MAX_SAVE_ATTEMPTS; attempt++) {
+            try {
+                elasticsearchOperations.save(documents, IndexCoordinates.of(targetIndex));
+                return;
+            } catch (Exception e) {
+                if (attempt == MAX_SAVE_ATTEMPTS) {
+                    throw e;
+                }
+                log.warn("검색 인덱스 색인 실패 (시도 {}/{}). {}초 후 재시도합니다. [사유: {}]",
+                    attempt, MAX_SAVE_ATTEMPTS, BACKOFF_MS / MILLIS_IN_SECOND, e.getMessage());
+                try {
+                    Thread.sleep(BACKOFF_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new BusinessException(ErrorCode.INDEX_SYNC_FAILED, ie);
+                }
+            }
+        }
+    }
+
+    private void cleanUpOldIndices(String targetIndex, Set<String> previousIndices) {
+        try {
+            IndexOperations allIndicesOps = elasticsearchOperations.indexOps(
+                IndexCoordinates.of(VERSIONED_INDEX_PREFIX + "*")
+            );
+            List<IndexInformation> indexInfos = allIndicesOps.getInformation();
+            if (indexInfos == null) {
+                return;
+            }
+            for (IndexInformation info : indexInfos) {
+                String indexName = info.getName();
+                if (indexName != null && !indexName.equals(targetIndex) && !previousIndices.contains(indexName)) {
+                    log.info("오래된 검색 인덱스 삭제 중: {}", indexName);
+                    deleteIndexQuietly(indexName);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("오래된 검색 인덱스 정리 중 오류 발생 [사유: {}]", e.getMessage());
+        }
+    }
+
+    private void switchAlias(String targetIndex, IndexOperations targetIndexOperations, Set<String> previousIndices) {
         IndexOperations aliasIndexOperations = elasticsearchOperations.indexOps(IndexCoordinates.of(INDEX_ALIAS));
         boolean logicalIndexExists = aliasIndexOperations.exists();
-        Set<String> previousIndices = logicalIndexExists ? aliasIndices(aliasIndexOperations) : Set.of();
         AliasActions actions = new AliasActions();
         if (logicalIndexExists && previousIndices.isEmpty()) {
             actions.add(new AliasAction.RemoveIndex(aliasParameters(INDEX_ALIAS, null)));
@@ -250,240 +295,8 @@ public class LockerSuggestIndexSyncService {
         if (projections.isEmpty()) {
             return List.of();
         }
-
         IndexSyncDataHolder holder = loadSyncData(projections);
-        Map<Long, List<LockerSuggestIndexQueryProjection>> projectionsByPlace = groupByPlace(projections);
-        Map<Long, GeoPoint> centerByPlace = calculateCentroids(projectionsByPlace);
-
-        List<LockerSuggestDocument> documents = new ArrayList<>(projections.size());
-        for (Map.Entry<Long, List<LockerSuggestIndexQueryProjection>> entry : projectionsByPlace.entrySet()) {
-            Long placeId = entry.getKey();
-            List<LockerSuggestIndexQueryProjection> placeProjections = entry.getValue();
-            GeoPoint center = centerByPlace.get(placeId);
-            int lockerCount = placeProjections.size();
-
-            for (LockerSuggestIndexQueryProjection projection : placeProjections) {
-                DocumentBuildContext ctx = new DocumentBuildContext(
-                    projection,
-                    center,
-                    lockerCount,
-                    holder
-                );
-                documents.add(buildDocument(ctx));
-            }
-        }
-        return documents;
-    }
-
-    private Map<Long, List<LockerSuggestIndexQueryProjection>> groupByPlace(
-        List<LockerSuggestIndexQueryProjection> projections
-    ) {
-        Map<Long, List<LockerSuggestIndexQueryProjection>> map = new HashMap<>();
-        for (LockerSuggestIndexQueryProjection p : projections) {
-            map.computeIfAbsent(p.getPlaceId(), k -> new ArrayList<>()).add(p);
-        }
-        return map;
-    }
-
-    private Map<Long, GeoPoint> calculateCentroids(Map<Long, List<LockerSuggestIndexQueryProjection>> groups) {
-        Map<Long, GeoPoint> centroids = new HashMap<>();
-        for (Map.Entry<Long, List<LockerSuggestIndexQueryProjection>> entry : groups.entrySet()) {
-            double sumLat = 0;
-            double sumLon = 0;
-            for (LockerSuggestIndexQueryProjection p : entry.getValue()) {
-                sumLat += p.getLockerLatitude();
-                sumLon += p.getLockerLongitude();
-            }
-            int count = entry.getValue().size();
-            centroids.put(entry.getKey(), new GeoPoint(sumLat / count, sumLon / count));
-        }
-        return centroids;
-    }
-
-    private List<String> buildPlaceSearchNames(
-        LockerSuggestIndexQueryProjection p,
-        List<PlaceTranslationEntity> pTrans,
-        List<PlaceAliasEntity> pAliases
-    ) {
-        Set<String> placeSearchNameSet = new LinkedHashSet<>();
-        if (p.getPlaceName() != null) {
-            placeSearchNameSet.add(p.getPlaceName());
-        }
-        for (PlaceTranslationEntity pt : pTrans) {
-            if (pt.getName() != null) {
-                placeSearchNameSet.add(pt.getName());
-            }
-        }
-        for (PlaceAliasEntity pa : pAliases) {
-            if (pa.getAlias() != null) {
-                placeSearchNameSet.add(pa.getAlias());
-            }
-            if (pa.getNormalizedAlias() != null) {
-                placeSearchNameSet.add(pa.getNormalizedAlias());
-            }
-        }
-        return normalizeAndFilter(placeSearchNameSet);
-    }
-
-    private List<String> buildLockerSearchNames(
-        LockerSuggestIndexQueryProjection p,
-        List<LockerTranslationEntity> lTrans,
-        List<LockerAliasEntity> lAliases
-    ) {
-        Set<String> lockerSearchNameSet = new LinkedHashSet<>();
-        if (p.getLockerName() != null) {
-            lockerSearchNameSet.add(p.getLockerName());
-        }
-        for (LockerTranslationEntity lt : lTrans) {
-            if (lt.getName() != null) {
-                lockerSearchNameSet.add(lt.getName());
-            }
-        }
-        for (LockerAliasEntity la : lAliases) {
-            if (la.getAlias() != null) {
-                lockerSearchNameSet.add(la.getAlias());
-            }
-            if (la.getNormalizedAlias() != null) {
-                lockerSearchNameSet.add(la.getNormalizedAlias());
-            }
-        }
-        return normalizeAndFilter(lockerSearchNameSet);
-    }
-
-    private List<String> buildSearchAddresses(
-        LockerSuggestIndexQueryProjection p,
-        List<PlaceTranslationEntity> pTrans,
-        List<LockerTranslationEntity> lTrans
-    ) {
-        Set<String> searchAddressSet = new LinkedHashSet<>();
-        if (p.getRoadAddress() != null) {
-            searchAddressSet.add(p.getRoadAddress());
-        }
-        if (p.getPlaceRoadAddress() != null) {
-            searchAddressSet.add(p.getPlaceRoadAddress());
-        }
-        for (PlaceTranslationEntity pt : pTrans) {
-            if (pt.getRoadAddress() != null) {
-                searchAddressSet.add(pt.getRoadAddress());
-            }
-        }
-        for (LockerTranslationEntity lt : lTrans) {
-            if (lt.getRoadAddress() != null) {
-                searchAddressSet.add(lt.getRoadAddress());
-            }
-        }
-        return normalizeAndFilter(searchAddressSet);
-    }
-
-    private Map<String, String> buildLocalizedLockerNames(List<LockerTranslationEntity> lTrans) {
-        return lTrans.stream()
-            .filter(lt -> lt.getName() != null && lt.getLanguage() != null)
-            .collect(Collectors.toMap(
-                lt -> lt.getLanguage().name().toLowerCase(),
-                LockerTranslationEntity::getName,
-                (v1, v2) -> v1
-            ));
-    }
-
-    private Map<String, String> buildLocalizedRoadAddresses(List<LockerTranslationEntity> lTrans) {
-        return lTrans.stream()
-            .filter(lt -> lt.getRoadAddress() != null && lt.getLanguage() != null)
-            .collect(Collectors.toMap(
-                lt -> lt.getLanguage().name().toLowerCase(),
-                LockerTranslationEntity::getRoadAddress,
-                (v1, v2) -> v1
-            ));
-    }
-
-    private Map<String, String> buildLocalizedPlaceNames(List<PlaceTranslationEntity> pTrans) {
-        return pTrans.stream()
-            .filter(pt -> pt.getName() != null && pt.getLanguage() != null)
-            .collect(Collectors.toMap(
-                pt -> pt.getLanguage().name().toLowerCase(),
-                PlaceTranslationEntity::getName,
-                (v1, v2) -> v1
-            ));
-    }
-
-    private LockerSuggestDocument buildDocument(DocumentBuildContext ctx) {
-        LockerSuggestIndexQueryProjection p = ctx.getProjection();
-        IndexSyncDataHolder dh = ctx.getDataHolder();
-        List<String> pNames = buildPlaceSearchNames(
-            p, dh.getPlaceTranslations().getOrDefault(p.getPlaceId(), List.of()),
-            dh.getPlaceAliases().getOrDefault(p.getPlaceId(), List.of())
-        );
-        List<String> lNames = buildLockerSearchNames(
-            p, dh.getLockerTranslations().getOrDefault(p.getLockerId(), List.of()),
-            dh.getLockerAliases().getOrDefault(p.getLockerId(), List.of())
-        );
-        List<String> addrs = buildSearchAddresses(
-            p, dh.getPlaceTranslations().getOrDefault(p.getPlaceId(), List.of()),
-            dh.getLockerTranslations().getOrDefault(p.getLockerId(), List.of())
-        );
-
-        LockerSuggestDocument.LockerSuggestDocumentBuilder builder = LockerSuggestDocument.builder()
-            .id(String.valueOf(p.getLockerId())).lockerId(p.getLockerId())
-            .lockerName(p.getLockerName()).lockerNameDecomposed(HangulUtils.decompose(p.getLockerName()))
-            .lockerSearchNames(lNames).lockerSearchNamesDecomposed(decompose(lNames))
-            .roadAddress(p.getRoadAddress()).roadAddressDecomposed(HangulUtils.decompose(p.getRoadAddress()))
-            .searchAddresses(addrs).searchAddressesDecomposed(decompose(addrs))
-            .lockerType(p.getLockerType()).indoorOutdoorType(p.getIndoorOutdoorType())
-            .lockerSize(parseLockerSizes(p.getLockerSize()))
-            .minPrice(p.getMinPrice()).updatedAt(p.getUpdatedAt());
-
-        return fillPlaceAndTranslations(builder, ctx, pNames);
-    }
-
-    private LockerSuggestDocument fillPlaceAndTranslations(
-        LockerSuggestDocument.LockerSuggestDocumentBuilder builder,
-        DocumentBuildContext ctx,
-        List<String> pNames
-    ) {
-        LockerSuggestIndexQueryProjection p = ctx.getProjection();
-        IndexSyncDataHolder dh = ctx.getDataHolder();
-        return builder
-            .placeId(p.getPlaceId())
-            .placeName(p.getPlaceName())
-            .placeNameDecomposed(HangulUtils.decompose(p.getPlaceName()))
-            .placeSearchNames(pNames)
-            .placeSearchNamesDecomposed(decompose(pNames))
-            .location(new GeoPoint(p.getLockerLatitude(), p.getLockerLongitude()))
-            .placeLocation(ctx.getPlaceCenter())
-            .lockerCount(ctx.getLockerCount())
-            .localizedLockerNames(buildLocalizedLockerNames(
-                dh.getLockerTranslations().getOrDefault(p.getLockerId(), List.of())
-            ))
-            .localizedPlaceNames(buildLocalizedPlaceNames(
-                dh.getPlaceTranslations().getOrDefault(p.getPlaceId(), List.of())
-            ))
-            .localizedRoadAddresses(buildLocalizedRoadAddresses(
-                dh.getLockerTranslations().getOrDefault(p.getLockerId(), List.of())
-            ))
-            .build();
-    }
-
-    private List<String> normalizeAndFilter(Collection<String> values) {
-        return values.stream()
-            .map(SearchTextNormalizer::normalize)
-            .filter(value -> value != null && !value.isBlank())
-            .distinct()
-            .toList();
-    }
-
-    private List<String> decompose(List<String> values) {
-        return values.stream().map(HangulUtils::decompose).toList();
-    }
-
-    private List<String> parseLockerSizes(String lockerSizes) {
-        if (lockerSizes == null || lockerSizes.isBlank()) {
-            return List.of();
-        }
-        return Arrays.stream(lockerSizes.split(","))
-            .map(LockerSizeType::from)
-            .filter(Objects::nonNull)
-            .map(Enum::name)
-            .distinct()
-            .toList();
+        return LockerSuggestDocumentMapper.toDocuments(projections, holder);
     }
 
     private List<Long> distinctIds(Collection<Long> ids) {
