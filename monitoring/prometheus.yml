@@ -9,8 +9,8 @@ scrape_configs:
     
     # 스프링 부트 시큐리티에 적용한 Basic Auth 인증 정보
     basic_auth:
-      username: 'zimdugo' # 배포용 어드민 계정 ID
-      password: 'dugozim11!!' # 배포용 어드민 계정 Password
+      username: 'YOUR_ADMIN_ID'
+      password: 'YOUR_ADMIN_PASSWORD'
 
     static_configs:
       # 운영 서버의 호스트(도메인 또는 IP)를 적어줍니다. 
