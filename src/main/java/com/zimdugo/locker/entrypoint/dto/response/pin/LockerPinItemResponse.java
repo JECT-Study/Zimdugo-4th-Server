@@ -7,7 +7,9 @@ public record LockerPinItemResponse(
     Long placeId,
     Long lockerId,
     double latitude,
-    double longitude
+    double longitude,
+    Boolean isFavorite,
+    Integer lockerCount
 ) {
     public static LockerPinItemResponse from(LockerPinItemResult item) {
         return new LockerPinItemResponse(
@@ -15,7 +17,9 @@ public record LockerPinItemResponse(
             item.placeId(),
             item.lockerId(),
             item.latitude(),
-            item.longitude()
+            item.longitude(),
+            item.isFavorite(),
+            item.lockerCount()
         );
     }
 }
