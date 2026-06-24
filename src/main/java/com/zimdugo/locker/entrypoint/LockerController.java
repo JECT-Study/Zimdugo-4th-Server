@@ -54,11 +54,12 @@ public class LockerController implements LockerApi {
 
     @Override
     public ResponseEntity<RestResponse<LockerPinResponse>> getPins(
+        Long userId,
         double latitude,
         double longitude,
         int radiusMeters
     ) {
-        LockerPinResult result = lockerPinQueryService.getPins(latitude, longitude, radiusMeters);
+        LockerPinResult result = lockerPinQueryService.getPins(userId, latitude, longitude, radiusMeters);
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerPinResponse.from(result)));
     }
 

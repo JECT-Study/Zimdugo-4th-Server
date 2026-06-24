@@ -61,6 +61,7 @@ public interface LockerApi {
     @SecurityRequirements
     @GetMapping("/lockers/pin")
     ResponseEntity<RestResponse<LockerPinResponse>> getPins(
+        @NullableCurrentUser Long userId,
         @RequestParam("lat")
         @Parameter(description = "사용자 위도", example = "37.498095")
         @Schema(minimum = "-90", maximum = "90")
