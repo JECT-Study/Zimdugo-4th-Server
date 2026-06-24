@@ -6,12 +6,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LockerPinAssembler {
 
-    public List<LockerPinItemResult> assemble(List<NearbyLocker> lockers) {
+    public List<LockerPinItemResult> assemble(List<NearbyLocker> lockers, Set<Long> favoriteLockerIds) {
         if (lockers.isEmpty()) {
             return List.of();
         }
@@ -19,7 +20,7 @@ public class LockerPinAssembler {
         Map<Long, PlaceGroup> groups = groupByPlace(lockers);
         List<LockerPinItemResult> pins = new ArrayList<>(groups.size());
         for (PlaceGroup group : groups.values()) {
-            pins.add(group.toPin());
+            pins.add(group.toPin(favoriteLockerIds));
         }
         return pins;
     }
@@ -45,10 +46,15 @@ public class LockerPinAssembler {
             lockers.add(locker);
         }
 
-        private LockerPinItemResult toPin() {
+        private LockerPinItemResult toPin(Set<Long> favoriteLockerIds) {
             if (lockers.size() == 1) {
                 NearbyLocker locker = lockers.getFirst();
-                return LockerPinItemResult.locker(locker.id(), locker.latitude(), locker.longitude());
+                return LockerPinItemResult.locker(
+                    locker.id(),
+                    locker.latitude(),
+                    locker.longitude(),
+                    favoriteLockerIds.contains(locker.id())
+                );
             }
 
             double latitudeSum = 0d;
@@ -60,7 +66,8 @@ public class LockerPinAssembler {
             return LockerPinItemResult.place(
                 placeId,
                 latitudeSum / lockers.size(),
-                longitudeSum / lockers.size()
+                longitudeSum / lockers.size(),
+                lockers.size()
             );
         }
     }
