@@ -4,9 +4,11 @@ import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.result.pin.LockerPinItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
+import com.zimdugo.locker.domain.favorite.FavoriteLockerReader;
 import com.zimdugo.locker.domain.locker.NearbyLocker;
 import com.zimdugo.locker.domain.locker.NearbyLockerPlaceReader;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +31,9 @@ class LockerPinQueryServiceTest {
     @Mock
     private LockerPinAssembler lockerPinAssembler;
 
+    @Mock
+    private FavoriteLockerReader favoriteLockerReader;
+
     @InjectMocks
     private LockerPinQueryService lockerPinQueryService;
 
@@ -37,7 +42,7 @@ class LockerPinQueryServiceTest {
     void returnsEmptyWhenNoNearbyLockers() {
         given(nearbyLockerPlaceReader.findNearby(37.55, 126.93, 500)).willReturn(List.of());
 
-        LockerPinResult result = lockerPinQueryService.getPins(37.55, 126.93, 500);
+        LockerPinResult result = lockerPinQueryService.getPins(1L, 37.55, 126.93, 500);
 
         assertThat(result.count()).isZero();
         assertThat(result.items()).isEmpty();
@@ -48,23 +53,24 @@ class LockerPinQueryServiceTest {
     void returnsAssemblerResultWhenNearbyLockersExist() {
         List<NearbyLocker> nearbyLockers = List.of(sampleLocker());
         List<LockerPinItemResult> pins = List.of(
-            LockerPinItemResult.locker(1L, 37.55, 126.93)
+            LockerPinItemResult.locker(1L, 37.55, 126.93, true)
         );
 
         given(nearbyLockerPlaceReader.findNearby(37.55, 126.93, 500)).willReturn(nearbyLockers);
-        given(lockerPinAssembler.assemble(nearbyLockers)).willReturn(pins);
+        given(favoriteLockerReader.findFavoriteLockerIds(1L, Set.of(1L))).willReturn(Set.of(1L));
+        given(lockerPinAssembler.assemble(nearbyLockers, Set.of(1L))).willReturn(pins);
 
-        LockerPinResult result = lockerPinQueryService.getPins(37.55, 126.93, 500);
+        LockerPinResult result = lockerPinQueryService.getPins(1L, 37.55, 126.93, 500);
 
         assertThat(result.count()).isEqualTo(1);
         assertThat(result.items()).hasSize(1);
-        verify(lockerPinAssembler).assemble(nearbyLockers);
+        verify(lockerPinAssembler).assemble(nearbyLockers, Set.of(1L));
     }
 
     @Test
     @DisplayName("좌표가 범위를 벗어나면 주변 보관함을 조회하지 않는다")
     void doesNotReadNearbyLockersWhenLocationIsOutOfRange() {
-        assertThatThrownBy(() -> lockerPinQueryService.getPins(90.1, 126.93, 500))
+        assertThatThrownBy(() -> lockerPinQueryService.getPins(1L, 90.1, 126.93, 500))
             .isInstanceOf(BusinessException.class)
             .extracting("errorCode")
             .isEqualTo(ErrorCode.INVALID_LOCATION_RANGE);
