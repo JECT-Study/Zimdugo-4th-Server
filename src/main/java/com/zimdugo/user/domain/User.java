@@ -53,6 +53,13 @@ public class User {
         this.status = status;
     }
 
+    public void anonymizeForWithdrawal() {
+        this.email = null;
+        this.nickname = id == null ? "deleted-user" : "deleted-user-" + id;
+        this.profileImageUrl = null;
+        this.status = UserStatus.DELETED;
+    }
+
     public void changeRole(UserRole role) {
         this.role = role != null ? role : UserRole.USER;
     }

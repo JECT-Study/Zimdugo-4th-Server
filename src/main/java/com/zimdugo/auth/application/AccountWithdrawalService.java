@@ -41,11 +41,11 @@ public class AccountWithdrawalService {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
-        user.changeStatus(UserStatus.DELETED);
+        user.anonymizeForWithdrawal();
         userStore.store(user);
 
         socialAccountStore.deleteAllByUserId(userId);
         refreshTokenRepository.deleteAllByUserId(userId);
-        log.info("회원 탈퇴 완료. userId={}", userId);
+        log.info("회원 탈퇴 처리가 완료되었습니다. userId={}", userId);
     }
 }
