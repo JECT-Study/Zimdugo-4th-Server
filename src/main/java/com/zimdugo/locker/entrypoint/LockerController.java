@@ -54,7 +54,7 @@ public class LockerController implements LockerApi {
 
     @Override
     public ResponseEntity<RestResponse<LockerPinResponse>> getPins(
-        Long userId,
+        @NullableCurrentUser Long userId,
         double latitude,
         double longitude,
         int radiusMeters
