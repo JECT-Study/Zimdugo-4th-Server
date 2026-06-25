@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>보관함 상세</title>
+</head>
+<body>
+<main>
+    <style>
+        .toolbar { display:flex; align-items:center; justify-content:flex-end; gap:.5rem; flex-wrap:wrap; }
+        .toolbar form { margin:0; }
+        .detail-layout { display:grid; grid-template-columns:minmax(260px,360px) minmax(0,1fr); gap:1rem; align-items:start; }
+        .preview-frame { width:100%; height:640px; border:1px solid #e5e5e5; border-radius:8px; background:#fff; }
+        .section-title { font-size:1rem; font-weight:700; color:#1a1a1a; margin-bottom:.7rem; }
+        .definition-list { display:grid; grid-template-columns:130px 1fr; gap:.55rem .75rem; font-size:.9rem; }
+        .definition-list dt { color:#888; font-weight:600; }
+        .definition-list dd { color:#333; overflow-wrap:anywhere; }
+        .locker-image { width:100%; max-height:420px; object-fit:contain; border-radius:8px; border:1px solid #e5e5e5; background:#fafafa; margin-top:1rem; }
+        .empty-image { min-height:180px; display:flex; align-items:center; justify-content:center; color:#aaa; border:1px dashed #d4d4d4; border-radius:8px; margin-top:1rem; }
+        .status-dot { width:10px; height:10px; display:inline-block; border-radius:50%; box-shadow:0 0 0 3px currentColor; }
+        .status-dot.active { color:#22c55e; background:#22c55e; }
+        .status-dot.draft { color:#ef4444; background:#ef4444; }
+        .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+        @media (max-width:1100px) { .detail-layout { grid-template-columns:1fr; } .preview-frame { height:520px; } }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="page-header type-label">LOCKER DETAIL</div>
+            <h1 th:text="${locker.name()}">보관함 상세</h1>
+        </div>
+        <div class="toolbar">
+            <a th:href="@{/admin/lockers}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> 목록
+            </a>
+            <a th:href="@{/admin/lockers/{id}/edit(id=${locker.id()})}" class="btn btn-secondary">
+                <i class="fa-solid fa-pen"></i> 수정
+            </a>
+            <a th:if="${locker.publicationStatus().name() != 'ACTIVE'}"
+               th:href="@{/admin/lockers/{id}/translations(id=${locker.id()})}"
+               class="btn btn-primary">
+                <i class="fa-solid fa-language"></i> 번역 확인
+            </a>
+            <form th:action="@{/admin/lockers/{id}/delete(id=${locker.id()})}"
+                  method="post"
+                  onsubmit="return confirm('정말 삭제하시겠습니까? 삭제한 보관함은 복구할 수 없습니다.');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa-solid fa-trash-can"></i> 삭제
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="detail-layout">
+        <section>
+            <div class="section-title">서비스 미리보기</div>
+            <iframe class="preview-frame"
+                    th:src="'https://zimdugo.com/?locker=' + ${locker.id()}"
+                    title="보관함 서비스 페이지 미리보기"></iframe>
+        </section>
+
+        <section class="card">
+            <div class="section-title">보관함 정보</div>
+            <dl class="definition-list">
+                <dt>ID</dt><dd th:text="${locker.id()}">1</dd>
+                <dt>상태</dt>
+                <dd>
+                    <span class="status-dot"
+                          th:classappend="${locker.active()} ? ' active' : ' draft'"
+                          th:title="${locker.active()} ? '공개' : '비공개'"
+                          role="img"
+                          th:aria-label="${locker.active()} ? '공개 상태' : '비공개 상태'">
+                        <span class="sr-only" th:text="${locker.active()} ? '공개' : '비공개'">공개</span>
+                    </span>
+                </dd>
+                <dt>주소</dt><dd th:text="${locker.roadAddress()}">주소</dd>
+                <dt>좌표</dt><dd th:text="${locker.latitude()} + ', ' + ${locker.longitude()}">0, 0</dd>
+                <dt>연결 장소</dt><dd th:text="${locker.placeName() ?: '-'}">-</dd>
+                <dt>유형</dt><dd th:text="${locker.indoorOutdoorLabel()} + ' / ' + ${locker.lockerTypeLabel()}">-</dd>
+                <dt>층</dt><dd th:text="${locker.floorLabel()}">-</dd>
+                <dt>크기</dt><dd th:text="${locker.lockerSizeLabel()}">-</dd>
+                <dt>요금</dt><dd th:text="${locker.priceLabel()}">-</dd>
+                <dt>운영시간</dt><dd th:text="${locker.startTime() == null || locker.endTime() == null ? '-' : locker.startTime() + ' ~ ' + locker.endTime()}">-</dd>
+                <dt>투표</dt><dd th:text="'정확 ' + ${locker.accurateVoteCount()} + ' / 부정확 ' + ${locker.inaccurateVoteCount()}">-</dd>
+                <dt>상세</dt><dd th:text="${locker.detailInfo() ?: '-'}">-</dd>
+            </dl>
+            <img th:if="${locker.imageUrl() != null}" th:src="${locker.imageUrl()}" class="locker-image" alt="보관함 이미지">
+            <div th:unless="${locker.imageUrl() != null}" class="empty-image">
+                <i class="fa-regular fa-image"></i>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

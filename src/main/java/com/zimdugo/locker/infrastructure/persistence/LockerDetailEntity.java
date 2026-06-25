@@ -98,37 +98,27 @@ public class LockerDetailEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @SuppressWarnings("checkstyle:ParameterNumber")
-    public LockerDetailEntity(
-        LockerEntity locker,
-        LockerType lockerType,
-        IndoorOutdoorType indoorOutdoorType,
-        GroundLevelType groundLevelType,
-        Integer floor,
-        Integer minPrice,
-        Integer maxPrice,
-        Set<LockerSizeType> lockerSize,
-        String detailInfo,
-        LocalTime startTime,
-        LocalTime endTime,
-        String imageUrl
-    ) {
+    public LockerDetailEntity(LockerEntity locker, LockerDetailUpdateValues values) {
         this.locker = locker;
-        this.lockerType = lockerType;
-        this.indoorOutdoorType = indoorOutdoorType;
-        this.groundLevelType = groundLevelType;
-        this.floor = floor;
-        this.minPrice = minPrice;
-        this.maxPrice = maxPrice;
-        this.lockerSize = lockerSize;
-        this.detailInfo = detailInfo;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.imageUrl = imageUrl;
+        update(values);
     }
 
     public void updateVoteCounts(int accurateVoteCount, int inaccurateVoteCount) {
         this.accurateVoteCount = accurateVoteCount;
         this.inaccurateVoteCount = inaccurateVoteCount;
+    }
+
+    public void update(LockerDetailUpdateValues values) {
+        this.lockerType = values.lockerType();
+        this.indoorOutdoorType = values.indoorOutdoorType();
+        this.groundLevelType = values.groundLevelType();
+        this.floor = values.floor();
+        this.minPrice = values.minPrice();
+        this.maxPrice = values.maxPrice();
+        this.lockerSize = values.lockerSize();
+        this.detailInfo = values.detailInfo();
+        this.startTime = values.startTime();
+        this.endTime = values.endTime();
+        this.imageUrl = values.imageUrl();
     }
 }

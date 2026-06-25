@@ -77,4 +77,17 @@ public class LockerEntity {
     public void activate() {
         this.publicationStatus = PublicationStatus.ACTIVE;
     }
+
+    public void deactivate() {
+        this.publicationStatus = PublicationStatus.DRAFT;
+    }
+
+    public void update(LockerUpdateValues values) {
+        this.name = values.name();
+        this.roadAddress = values.roadAddress();
+        this.latitude = values.latitude();
+        this.longitude = values.longitude();
+        this.place = values.place();
+        this.publicationStatus = values.publicationStatus();
+    }
 }

@@ -60,6 +60,7 @@ public enum ErrorCode implements BaseCode {
     LOCKER_REPORT_ALREADY_REVIEWED("LOCKER-409-1", "이미 검토된 보관함 제보입니다.", HttpStatus.CONFLICT),
     LOCKER_REPORT_TRANSLATION_INCOMPLETE("LOCKER-400-6", "장소와 보관함 번역이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),
     INVALID_LOCKER_REPORT_INPUT("LOCKER-400-5", "보관함 제보 입력값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_ADMIN_LOCKER_INPUT("LOCKER-400-7", "관리자 보관함 입력값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_LOCATION_RANGE("LOCKER-400-1", "좌표 범위가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_LOCKER_SIZE_TYPE("LOCKER-400-3", "보관함 크기 타입이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INDEX_SYNC_FAILED("LOCKER-500-1", "검색 인덱스 동기화에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),

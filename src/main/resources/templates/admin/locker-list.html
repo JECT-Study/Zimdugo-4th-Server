@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>보관함 데이터</title>
+</head>
+<body>
+<main>
+    <style>
+        html, body, main { max-width:100%; overflow-x:hidden; }
+        main { min-width:0; }
+        .toolbar, .list-actions, .pagination { display:flex; align-items:center; gap:.5rem; }
+        .toolbar { justify-content:space-between; margin-bottom:1rem; }
+        .search-form { display:flex; align-items:center; gap:.5rem; width:min(100%, 460px); }
+        .search-form input { min-width:0; flex:1; border:1px solid #d4d4d4; border-radius:6px; padding:.6rem .7rem; font:inherit; }
+        .place-list { display:grid; grid-template-columns:minmax(0,1fr); gap:.75rem; min-width:0; }
+        .place-group { width:100%; min-width:0; background:#fff; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden; }
+        .place-group[open] { border-color:#d4d4d4; }
+        .place-summary { display:flex; align-items:center; gap:.75rem; min-height:58px; padding:.85rem 1rem; cursor:pointer; list-style:none; background:#fafafa; }
+        .place-summary::-webkit-details-marker { display:none; }
+        .place-summary:focus-visible { outline:2px solid #4f46e5; outline-offset:-2px; }
+        .place-chevron { color:#777; transition:transform .15s ease; }
+        .place-group[open] .place-chevron { transform:rotate(90deg); }
+        .place-icon { width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; color:#4f46e5; background:#eef2ff; font-size:.82rem; font-weight:800; flex:0 0 auto; }
+        .place-copy { min-width:0; flex:1; }
+        .place-name { display:block; color:#1a1a1a; font-weight:700; word-break:keep-all; overflow-wrap:anywhere; }
+        .table-scroll { width:100%; max-width:100%; overflow-x:auto; }
+        .admin-table { width:100%; min-width:900px; border-collapse:collapse; table-layout:fixed; }
+        .admin-table td { padding:.8rem; border-bottom:1px solid #f0f0f0; vertical-align:middle; color:#222; word-break:keep-all; }
+        .admin-table tbody tr:last-child td { border-bottom:0; }
+        .admin-table tbody tr:hover td { background:#fafafa; }
+        .admin-table td:nth-child(1) { width:33%; }
+        .admin-table td:nth-child(2) { width:17%; }
+        .admin-table td:nth-child(3) { width:17%; }
+        .admin-table td:nth-child(4) { text-align:center; }
+        .admin-table td:nth-child(5) { width:25%; }
+        .locker-title { display:inline-block; max-width:100%; font-weight:700; color:#1a1a1a; text-decoration:none; overflow-wrap:anywhere; }
+        .locker-title:hover { color:#4f46e5; }
+        .muted { margin-top:.2rem; color:#888; font-size:.82rem; overflow-wrap:anywhere; }
+        .value-stack { display:grid; gap:.15rem; }
+        .value-primary, .price-label { white-space:nowrap; }
+        .status-dot { width:10px; height:10px; display:inline-block; border-radius:50%; box-shadow:0 0 0 3px currentColor; }
+        .status-dot.active { color:#22c55e; background:#22c55e; }
+        .status-dot.draft { color:#ef4444; background:#ef4444; }
+        .list-actions { justify-content:flex-end; flex-wrap:nowrap; white-space:nowrap; }
+        .empty { padding:3rem; text-align:center; color:#888; background:#fff; border:1px solid #e5e5e5; }
+        .pagination { justify-content:center; margin-top:1rem; flex-wrap:wrap; }
+        .page-link { min-width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #d4d4d4; border-radius:6px; color:#333; text-decoration:none; background:#fff; }
+        .page-link.active { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+        .page-link.disabled { opacity:.45; pointer-events:none; }
+        .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+        @media (prefers-reduced-motion: reduce) { .place-chevron { transition:none; } }
+        @media (max-width:900px) {
+            .toolbar { align-items:stretch; flex-direction:column; }
+            .search-form { width:100%; }
+            .place-summary { padding:.8rem; }
+        }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="page-header type-label">LOCKER DATA</div>
+            <h1>보관함 데이터</h1>
+        </div>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+    <div class="toolbar">
+        <form th:action="@{/admin/lockers}" method="get" class="search-form">
+            <input type="search" name="keyword" th:value="${keyword}" placeholder="보관함명, 주소, 장소 검색">
+            <button type="submit" class="btn btn-secondary">
+                <i class="fa-solid fa-magnifying-glass"></i> 검색
+            </button>
+        </form>
+        <div class="muted">
+            총 장소 <strong th:text="${lockerPage.totalElements}">0</strong>개
+        </div>
+    </div>
+
+    <section class="place-list" th:if="${lockerPage.hasContent()}" aria-label="장소별 보관함 목록">
+        <details class="place-group" th:each="group : ${lockerPage.groups}">
+            <summary class="place-summary">
+                <i class="fa-solid fa-chevron-right place-chevron" aria-hidden="true"></i>
+                <span class="place-icon" th:text="${group.lockers().size()}" th:title="'보관함 ' + ${group.lockers().size()} + '개'">2</span>
+                <span class="place-copy">
+                    <span class="place-name" th:text="${group.placeName()}">서울역</span>
+                </span>
+            </summary>
+            <div class="table-scroll">
+                <table class="admin-table">
+                    <tbody>
+                    <tr th:each="locker : ${group.lockers()}">
+                        <td>
+                            <a class="locker-title"
+                               th:href="@{/admin/lockers/{id}(id=${locker.id()})}"
+                               th:text="${locker.name()}">보관함명</a>
+                            <div class="muted" th:text="${locker.roadAddress()}">주소</div>
+                        </td>
+                        <td>
+                            <div class="value-stack">
+                                <span class="value-primary" th:text="${locker.lockerTypeLabel()}">지하철역</span>
+                                <span class="muted" th:text="${locker.indoorOutdoorLabel()}">실내</span>
+                            </div>
+                        </td>
+                        <td><span class="price-label" th:text="${locker.priceLabel()}">무료</span></td>
+                        <td>
+                            <span class="status-dot"
+                                  th:classappend="${locker.active()} ? ' active' : ' draft'"
+                                  th:title="${locker.active()} ? '공개' : '비공개'"
+                                  role="img"
+                                  th:aria-label="${locker.active()} ? '공개 상태' : '비공개 상태'">
+                                <span class="sr-only" th:text="${locker.active()} ? '공개' : '비공개'">공개</span>
+                            </span>
+                        </td>
+                        <td>
+                            <div class="list-actions">
+                                <a th:href="@{/admin/lockers/{id}/edit(id=${locker.id()})}" class="btn btn-secondary btn-sm">
+                                    <i class="fa-solid fa-pen"></i> 수정
+                                </a>
+                                <a th:if="${!locker.active()}"
+                                   th:href="@{/admin/lockers/{id}/translations(id=${locker.id()})}"
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-language"></i> 번역
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </section>
+
+    <div class="empty" th:if="${!lockerPage.hasContent()}">
+        검색 조건에 맞는 보관함이 없습니다.
+    </div>
+
+    <nav class="pagination" th:if="${lockerPage.totalPages > 1}" aria-label="페이지 이동">
+        <a class="page-link"
+           th:classappend="${lockerPage.first} ? ' disabled'"
+           th:href="@{/admin/lockers(page=${lockerPage.number - 1}, keyword=${keyword})}"
+           aria-label="이전 페이지">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        <a class="page-link"
+           th:each="pageNumber : ${#numbers.sequence(0, lockerPage.totalPages - 1)}"
+           th:classappend="${pageNumber == lockerPage.number} ? ' active'"
+           th:href="@{/admin/lockers(page=${pageNumber}, keyword=${keyword})}"
+           th:text="${pageNumber + 1}">1</a>
+        <a class="page-link"
+           th:classappend="${lockerPage.last} ? ' disabled'"
+           th:href="@{/admin/lockers(page=${lockerPage.number + 1}, keyword=${keyword})}"
+           aria-label="다음 페이지">
+            <i class="fa-solid fa-chevron-right"></i>
+        </a>
+    </nav>
+</main>
+</body>
+</html>
