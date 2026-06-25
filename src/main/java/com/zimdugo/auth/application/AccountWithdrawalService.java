@@ -1,6 +1,7 @@
 package com.zimdugo.auth.application;
 
 import com.zimdugo.auth.domain.RefreshTokenRepository;
+import com.zimdugo.auth.domain.SocialProviderTokenRepository;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.application.UserQueryService;
@@ -24,6 +25,8 @@ public class AccountWithdrawalService {
     private final UserQueryService userQueryService;
     private final UserStore userStore;
     private final SocialAccountStore socialAccountStore;
+    private final SocialAccountUnlinkService socialAccountUnlinkService;
+    private final SocialProviderTokenRepository socialProviderTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
     public void withdraw(String accessToken) {
@@ -41,10 +44,13 @@ public class AccountWithdrawalService {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
+        socialAccountUnlinkService.unlinkAll(userId);
+
         user.anonymizeForWithdrawal();
         userStore.store(user);
 
         socialAccountStore.deleteAllByUserId(userId);
+        socialProviderTokenRepository.deleteAllByUserId(userId);
         refreshTokenRepository.deleteAllByUserId(userId);
         log.info("회원 탈퇴 처리가 완료되었습니다. userId={}", userId);
     }
