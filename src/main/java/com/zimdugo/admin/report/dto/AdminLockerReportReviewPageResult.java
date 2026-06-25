@@ -1,5 +1,6 @@
 package com.zimdugo.admin.report.dto;
 
+import com.zimdugo.admin.locker.dto.AdminLockerDisplay;
 import com.zimdugo.admin.report.KakaoPlaceCandidate;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Builder;
 
 public record AdminLockerReportReviewPageResult(
@@ -119,6 +121,21 @@ public record AdminLockerReportReviewPageResult(
                 case ABOVE_GROUND -> "지상 " + floor + "층";
                 case UNDERGROUND -> "지하 " + floor + "층";
             };
+        }
+
+        public String environmentTypeLabel() {
+            return AdminLockerDisplay.indoorOutdoor(indoorOutdoorType) + " / "
+                + AdminLockerDisplay.lockerType(lockerType);
+        }
+
+        public String lockerSizeLabel() {
+            if (lockerSize == null || lockerSize.isEmpty()) {
+                return "-";
+            }
+            return lockerSize.stream()
+                .sorted()
+                .map(AdminLockerDisplay::lockerSize)
+                .collect(Collectors.joining(", "));
         }
 
         public String priceLabel() {

@@ -79,8 +79,8 @@
                     <dt>도로명 주소</dt><dd th:text="${page.report.roadAddress}">주소</dd>
                     <dt>좌표</dt><dd th:text="${page.report.latitude} + ', ' + ${page.report.longitude}">좌표</dd>
                     <dt>층</dt><dd th:text="${page.report.floorLabel()}">층 없음</dd>
-                    <dt>환경 / 유형</dt><dd th:text="${page.report.indoorOutdoorType} + ' / ' + ${page.report.lockerType}">유형</dd>
-                    <dt>크기</dt><dd th:text="${page.report.lockerSize}">크기</dd>
+                    <dt>환경 / 유형</dt><dd th:text="${page.report.environmentTypeLabel()}">유형</dd>
+                    <dt>크기</dt><dd th:text="${page.report.lockerSizeLabel()}">크기</dd>
                     <dt>가격</dt><dd th:text="${page.report.priceLabel()}">가격 정보 없음</dd>
                     <dt>운영시간</dt><dd th:text="${page.report.operatingTimeLabel()}">운영 시간 정보 없음</dd>
                     <dt>추가 정보</dt><dd th:text="${page.report.additionalInfo} ?: '-'">정보</dd>
