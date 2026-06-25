@@ -229,6 +229,14 @@
                 </a>
             </li>
         </ul>
+        <div class="sidebar-label">물품보관함 관리</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item" th:classappend="${activeMenu == 'lockers'} ? 'active'">
+                <a th:href="@{/admin/lockers}">
+                    <i class="fa-solid fa-box-archive"></i> 보관함 데이터
+                </a>
+            </li>
+        </ul>
         <div class="sidebar-label">제보 관리</div>
         <ul class="sidebar-menu">
             <li class="sidebar-menu-item" th:classappend="${activeMenu == 'locker-reports'} ? 'active'">

@@ -1,21 +1,279 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
-import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
+import com.zimdugo.locker.domain.publication.PublicationStatus;
+import com.zimdugo.locker.infrastructure.projection.AdminLockerPlaceGroupProjection;
+import com.zimdugo.locker.infrastructure.projection.AdminLockerSummaryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerDetailQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerPlaceLockerQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerSeoQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.NearbyLockerPlaceQueryProjection;
-import com.zimdugo.locker.domain.publication.PublicationStatus;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-
-
 public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
+
+    @Query(
+        value = """
+        SELECT
+            p.id AS placeId,
+            COALESCE(p.name, '장소 미지정') AS placeName
+        FROM lockers l
+        LEFT JOIN places p ON p.id = l.place_id
+        GROUP BY p.id, p.name
+        ORDER BY MAX(l.id) DESC
+        """,
+        countQuery = """
+        SELECT COUNT(*)
+        FROM (
+            SELECT COALESCE(l.place_id, 0)
+            FROM lockers l
+            GROUP BY COALESCE(l.place_id, 0)
+        ) place_groups
+        """,
+        nativeQuery = true
+    )
+    Page<AdminLockerPlaceGroupProjection> findAdminPlaceGroups(Pageable pageable);
+
+    @Query(
+        value = """
+        SELECT
+            p.id AS placeId,
+            COALESCE(p.name, '장소 미지정') AS placeName
+        FROM lockers l
+        LEFT JOIN places p ON p.id = l.place_id
+        WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(l.road_address) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        GROUP BY p.id, p.name
+        ORDER BY MAX(l.id) DESC
+        """,
+        countQuery = """
+        SELECT COUNT(*)
+        FROM (
+            SELECT COALESCE(l.place_id, 0)
+            FROM lockers l
+            LEFT JOIN places p ON p.id = l.place_id
+            WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(l.road_address) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            GROUP BY COALESCE(l.place_id, 0)
+        ) place_groups
+        """,
+        nativeQuery = true
+    )
+    Page<AdminLockerPlaceGroupProjection> searchAdminPlaceGroups(
+        @Param("keyword") String keyword,
+        Pageable pageable
+    );
+
+    @Query("""
+        SELECT
+            l.id AS id,
+            l.name AS name,
+            l.roadAddress AS roadAddress,
+            l.publicationStatus AS publicationStatus,
+            ld.lockerType AS lockerType,
+            ld.indoorOutdoorType AS indoorOutdoorType,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.minPrice AS minPrice,
+            ld.maxPrice AS maxPrice
+        FROM LockerEntity l
+        LEFT JOIN LockerDetailEntity ld ON ld.locker = l
+        LEFT JOIN l.place p
+        ORDER BY l.id DESC
+        """
+    )
+    Page<AdminLockerSummaryProjection> findAdminSummaries(Pageable pageable);
+
+    @Query(
+        value = """
+        SELECT
+            l.id AS id,
+            l.name AS name,
+            l.roadAddress AS roadAddress,
+            l.publicationStatus AS publicationStatus,
+            ld.lockerType AS lockerType,
+            ld.indoorOutdoorType AS indoorOutdoorType,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.minPrice AS minPrice,
+            ld.maxPrice AS maxPrice
+        FROM LockerEntity l
+        LEFT JOIN LockerDetailEntity ld ON ld.locker = l
+        LEFT JOIN l.place p
+        WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(l.roadAddress) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        ORDER BY l.id DESC
+        """,
+        countQuery = """
+        SELECT COUNT(l.id)
+        FROM LockerEntity l
+        LEFT JOIN l.place p
+        WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(l.roadAddress) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        """
+    )
+    Page<AdminLockerSummaryProjection> searchAdminSummaries(
+        @Param("keyword") String keyword,
+        Pageable pageable
+    );
+
+    @Query("""
+        SELECT
+            l.id AS id,
+            l.name AS name,
+            l.roadAddress AS roadAddress,
+            l.publicationStatus AS publicationStatus,
+            ld.lockerType AS lockerType,
+            ld.indoorOutdoorType AS indoorOutdoorType,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.minPrice AS minPrice,
+            ld.maxPrice AS maxPrice
+        FROM LockerEntity l
+        LEFT JOIN LockerDetailEntity ld ON ld.locker = l
+        LEFT JOIN l.place p
+        WHERE p.id IN :placeIds
+        ORDER BY l.id DESC
+        """
+    )
+    List<AdminLockerSummaryProjection> findAdminSummariesByPlaceIds(@Param("placeIds") List<Long> placeIds);
+
+    @Query("""
+        SELECT
+            l.id AS id,
+            l.name AS name,
+            l.roadAddress AS roadAddress,
+            l.publicationStatus AS publicationStatus,
+            ld.lockerType AS lockerType,
+            ld.indoorOutdoorType AS indoorOutdoorType,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.minPrice AS minPrice,
+            ld.maxPrice AS maxPrice
+        FROM LockerEntity l
+        LEFT JOIN LockerDetailEntity ld ON ld.locker = l
+        LEFT JOIN l.place p
+        WHERE p.id IN :placeIds OR p.id IS NULL
+        ORDER BY l.id DESC
+        """
+    )
+    List<AdminLockerSummaryProjection> findAdminSummariesByPlaceIdsOrWithoutPlace(
+        @Param("placeIds") List<Long> placeIds
+    );
+
+    @Query("""
+        SELECT
+            l.id AS id,
+            l.name AS name,
+            l.roadAddress AS roadAddress,
+            l.publicationStatus AS publicationStatus,
+            ld.lockerType AS lockerType,
+            ld.indoorOutdoorType AS indoorOutdoorType,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.minPrice AS minPrice,
+            ld.maxPrice AS maxPrice
+        FROM LockerEntity l
+        LEFT JOIN LockerDetailEntity ld ON ld.locker = l
+        LEFT JOIN l.place p
+        WHERE p.id IS NULL
+        ORDER BY l.id DESC
+        """
+    )
+    List<AdminLockerSummaryProjection> findAdminSummariesWithoutPlace();
+
+    @Query("""
+        SELECT
+            l.id AS id,
+            l.name AS name,
+            l.roadAddress AS roadAddress,
+            l.publicationStatus AS publicationStatus,
+            ld.lockerType AS lockerType,
+            ld.indoorOutdoorType AS indoorOutdoorType,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.minPrice AS minPrice,
+            ld.maxPrice AS maxPrice
+        FROM LockerEntity l
+        LEFT JOIN LockerDetailEntity ld ON ld.locker = l
+        LEFT JOIN l.place p
+        WHERE p.id IN :placeIds
+          AND (
+              LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              OR LOWER(l.roadAddress) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          )
+        ORDER BY l.id DESC
+        """
+    )
+    List<AdminLockerSummaryProjection> searchAdminSummariesByPlaceIds(
+        @Param("placeIds") List<Long> placeIds,
+        @Param("keyword") String keyword
+    );
+
+    @Query("""
+        SELECT
+            l.id AS id,
+            l.name AS name,
+            l.roadAddress AS roadAddress,
+            l.publicationStatus AS publicationStatus,
+            ld.lockerType AS lockerType,
+            ld.indoorOutdoorType AS indoorOutdoorType,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.minPrice AS minPrice,
+            ld.maxPrice AS maxPrice
+        FROM LockerEntity l
+        LEFT JOIN LockerDetailEntity ld ON ld.locker = l
+        LEFT JOIN l.place p
+        WHERE (p.id IN :placeIds OR p.id IS NULL)
+          AND (
+              LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              OR LOWER(l.roadAddress) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          )
+        ORDER BY l.id DESC
+        """
+    )
+    List<AdminLockerSummaryProjection> searchAdminSummariesByPlaceIdsOrWithoutPlace(
+        @Param("placeIds") List<Long> placeIds,
+        @Param("keyword") String keyword
+    );
+
+    @Query("""
+        SELECT
+            l.id AS id,
+            l.name AS name,
+            l.roadAddress AS roadAddress,
+            l.publicationStatus AS publicationStatus,
+            ld.lockerType AS lockerType,
+            ld.indoorOutdoorType AS indoorOutdoorType,
+            p.id AS placeId,
+            p.name AS placeName,
+            ld.minPrice AS minPrice,
+            ld.maxPrice AS maxPrice
+        FROM LockerEntity l
+        LEFT JOIN LockerDetailEntity ld ON ld.locker = l
+        LEFT JOIN l.place p
+        WHERE p.id IS NULL
+          AND (
+              LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              OR LOWER(l.roadAddress) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          )
+        ORDER BY l.id DESC
+        """
+    )
+    List<AdminLockerSummaryProjection> searchAdminSummariesWithoutPlace(@Param("keyword") String keyword);
 
     @Query(value = """
         SELECT

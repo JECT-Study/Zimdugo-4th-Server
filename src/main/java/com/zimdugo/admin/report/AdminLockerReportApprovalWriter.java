@@ -5,6 +5,7 @@ import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerDetailUpdateValues;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerReportRepository;
@@ -90,17 +91,19 @@ public class AdminLockerReportApprovalWriter {
     private LockerDetailEntity toLockerDetail(LockerReportEntity report, LockerEntity locker) {
         return new LockerDetailEntity(
             locker,
-            report.getLockerType(),
-            report.getIndoorOutdoorType(),
-            report.getGroundLevelType(),
-            report.getFloor(),
-            report.getMinPrice(),
-            report.getMaxPrice(),
-            report.getLockerSize(),
-            report.getAdditionalInfo(),
-            report.getStartTime(),
-            report.getEndTime(),
-            report.getImage() == null ? null : report.getImage().getImageUrl()
+            new LockerDetailUpdateValues(
+                report.getLockerType(),
+                report.getIndoorOutdoorType(),
+                report.getGroundLevelType(),
+                report.getFloor(),
+                report.getMinPrice(),
+                report.getMaxPrice(),
+                report.getLockerSize(),
+                report.getAdditionalInfo(),
+                report.getStartTime(),
+                report.getEndTime(),
+                report.getImage() == null ? null : report.getImage().getImageUrl()
+            )
         );
     }
 

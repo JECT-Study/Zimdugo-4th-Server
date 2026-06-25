@@ -84,17 +84,19 @@ class PublicationStatusRepositoryTest {
         LockerEntity savedLocker = lockerRepository.save(locker);
         lockerDetailRepository.save(new LockerDetailEntity(
             savedLocker,
-            LockerType.ETC,
-            IndoorOutdoorType.INDOOR,
-            null,
-            null,
-            null,
-            null,
-            Set.of(),
-            null,
-            null,
-            null,
-            null
+            new LockerDetailUpdateValues(
+                LockerType.ETC,
+                IndoorOutdoorType.INDOOR,
+                null,
+                null,
+                null,
+                null,
+                Set.of(),
+                null,
+                null,
+                null,
+                null
+            )
         ));
         return savedLocker;
     }

@@ -38,6 +38,10 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
 
     long deleteByUserIdAndLockerId(Long userId, Long lockerId);
 
+    @Modifying
+    @Query("DELETE FROM FavoriteLockerEntity favorite WHERE favorite.locker.id = :lockerId")
+    int deleteByLockerId(@Param("lockerId") Long lockerId);
+
     @Query("""
         SELECT fl.locker.id
         FROM FavoriteLockerEntity fl
