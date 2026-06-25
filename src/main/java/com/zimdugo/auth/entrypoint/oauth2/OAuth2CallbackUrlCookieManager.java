@@ -34,6 +34,9 @@ public class OAuth2CallbackUrlCookieManager {
     @Value("${auth.callback.allowed-origins:https://zimdugo.com,https://www.zimdugo.com,http://localhost:3000,http://localhost:5173}")
     private String allowedOriginsProperty;
 
+    @Value("${auth.callback.cookie-secure:false}")
+    private boolean callbackCookieSecure;
+
     private Set<String> allowedOrigins;
 
     @PostConstruct
@@ -78,7 +81,7 @@ public class OAuth2CallbackUrlCookieManager {
     private void addCookie(HttpServletResponse response, String value, int maxAgeSeconds) {
         ResponseCookie cookie = ResponseCookie.from(CALLBACK_URL_COOKIE_NAME, encode(value))
             .httpOnly(true)
-            .secure(false)
+            .secure(callbackCookieSecure)
             .path("/")
             .maxAge(maxAgeSeconds)
             .sameSite(SAME_SITE_POLICY)

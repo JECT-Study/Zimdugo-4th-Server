@@ -28,6 +28,7 @@ auth:
   callback:
     frontend-base-url: https://zimdugo.com
     allowed-origins: https://zimdugo.com,https://www.zimdugo.com,https://zimdugo-web.vercel.app
+    cookie-secure: true
   cookie:
     refresh:
       secure: true
