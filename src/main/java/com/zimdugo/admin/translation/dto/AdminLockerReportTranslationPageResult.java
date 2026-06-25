@@ -2,6 +2,7 @@ package com.zimdugo.admin.translation.dto;
 
 import com.zimdugo.admin.i18n.dto.AdminLockerI18nResponse;
 import com.zimdugo.admin.i18n.dto.AdminPlaceI18nResponse;
+import com.zimdugo.admin.locker.dto.AdminLockerDisplay;
 import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public record AdminLockerReportTranslationPageResult(
     Report report,
@@ -124,6 +126,21 @@ public record AdminLockerReportTranslationPageResult(
                 case ABOVE_GROUND -> "지상 " + floor + "층";
                 case UNDERGROUND -> "지하 " + floor + "층";
             };
+        }
+
+        public String environmentTypeLabel() {
+            return AdminLockerDisplay.indoorOutdoor(indoorOutdoorType) + " / "
+                + AdminLockerDisplay.lockerType(lockerType);
+        }
+
+        public String lockerSizeLabel() {
+            if (lockerSize == null || lockerSize.isEmpty()) {
+                return "-";
+            }
+            return lockerSize.stream()
+                .sorted()
+                .map(AdminLockerDisplay::lockerSize)
+                .collect(Collectors.joining(", "));
         }
 
         public String priceLabel() {
