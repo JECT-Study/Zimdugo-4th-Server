@@ -2,13 +2,10 @@ package com.zimdugo.auth.entrypoint.oauth2;
 
 import com.zimdugo.auth.application.OAuth2LoginSessionResult;
 import com.zimdugo.auth.application.OAuth2LoginSessionService;
-import com.zimdugo.auth.domain.SocialProviderToken;
-import com.zimdugo.auth.domain.SocialProviderTokenRepository;
-import com.zimdugo.user.domain.AuthProvider;
+import com.zimdugo.auth.application.OAuth2ProviderTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -35,8 +29,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final OAuth2LoginSessionService loginSessionService;
     private final OAuth2CallbackUrlCookieManager callbackUrlCookieManager;
-    private final OAuth2AuthorizedClientService authorizedClientService;
-    private final SocialProviderTokenRepository socialProviderTokenRepository;
+    private final OAuth2ProviderTokenService providerTokenService;
 
     @Value("${auth.cookie.refresh.same-site:Strict}")
     private String refreshTokenCookieSameSite;
@@ -67,7 +60,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         String email = extractNullableAttribute(attributes, "email");
         String role = Objects.requireNonNullElse(extractNullableAttribute(attributes, "role"), "USER");
-        saveProviderToken(authentication, userId);
+        providerTokenService.saveProviderToken(authentication, userId);
 
         OAuth2LoginSessionResult session = loginSessionService.createSession(userId, email, role);
 
@@ -117,37 +110,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         Object value = attributes.get(key);
         return value == null ? null : value.toString();
-    }
-
-    private void saveProviderToken(Authentication authentication, Long userId) {
-        if (!(authentication instanceof OAuth2AuthenticationToken oauth2AuthenticationToken)) {
-            return;
-        }
-
-        String registrationId = oauth2AuthenticationToken.getAuthorizedClientRegistrationId();
-        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
-            registrationId,
-            oauth2AuthenticationToken.getName()
-        );
-        if (authorizedClient == null || authorizedClient.getAccessToken() == null) {
-            log.warn("OAuth provider token 저장을 건너뜁니다. registrationId={}, userId={}", registrationId, userId);
-            return;
-        }
-
-        String refreshToken = authorizedClient.getRefreshToken() == null
-            ? null
-            : authorizedClient.getRefreshToken().getTokenValue();
-        Instant accessTokenExpiresAt = authorizedClient.getAccessToken().getExpiresAt();
-
-        socialProviderTokenRepository.save(
-            userId,
-            AuthProvider.valueOf(registrationId.toUpperCase()),
-            new SocialProviderToken(
-                authorizedClient.getAccessToken().getTokenValue(),
-                accessTokenExpiresAt,
-                refreshToken
-            )
-        );
     }
 
     private void handleInvalidUserInfo(

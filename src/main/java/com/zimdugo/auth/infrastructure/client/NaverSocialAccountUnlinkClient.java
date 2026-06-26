@@ -10,7 +10,10 @@ import com.zimdugo.user.domain.SocialAccount;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -42,15 +45,10 @@ public class NaverSocialAccountUnlinkClient implements SocialAccountUnlinkClient
     @Override
     public void unlink(SocialAccount socialAccount, SocialProviderToken token) {
         try {
-            restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                    .path("/oauth2.0/token")
-                    .queryParam("grant_type", "delete")
-                    .queryParam("client_id", clientId)
-                    .queryParam("client_secret", clientSecret)
-                    .queryParam("access_token", resolveAccessToken(token))
-                    .queryParam("service_provider", "NAVER")
-                    .build())
+            restClient.post()
+                .uri("/oauth2.0/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(deleteFormData(token))
                 .retrieve()
                 .body(NaverTokenResponse.class);
         } catch (RestClientException exception) {
@@ -67,14 +65,10 @@ public class NaverSocialAccountUnlinkClient implements SocialAccountUnlinkClient
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
         }
 
-        NaverTokenResponse response = restClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/oauth2.0/token")
-                .queryParam("grant_type", "refresh_token")
-                .queryParam("client_id", clientId)
-                .queryParam("client_secret", clientSecret)
-                .queryParam("refresh_token", token.refreshToken())
-                .build())
+        NaverTokenResponse response = restClient.post()
+            .uri("/oauth2.0/token")
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .body(refreshFormData(token))
             .retrieve()
             .body(NaverTokenResponse.class);
 
@@ -90,6 +84,25 @@ public class NaverSocialAccountUnlinkClient implements SocialAccountUnlinkClient
         }
         Instant expiresAt = token.accessTokenExpiresAt();
         return expiresAt == null || Instant.now().isBefore(expiresAt.minusSeconds(EXPIRY_BUFFER_SECONDS));
+    }
+
+    private MultiValueMap<String, String> deleteFormData(SocialProviderToken token) {
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "delete");
+        formData.add("client_id", clientId);
+        formData.add("client_secret", clientSecret);
+        formData.add("access_token", resolveAccessToken(token));
+        formData.add("service_provider", "NAVER");
+        return formData;
+    }
+
+    private MultiValueMap<String, String> refreshFormData(SocialProviderToken token) {
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "refresh_token");
+        formData.add("client_id", clientId);
+        formData.add("client_secret", clientSecret);
+        formData.add("refresh_token", token.refreshToken());
+        return formData;
     }
 
     private record NaverTokenResponse(

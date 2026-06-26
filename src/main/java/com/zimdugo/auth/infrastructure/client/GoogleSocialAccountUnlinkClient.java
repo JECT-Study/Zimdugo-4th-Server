@@ -7,7 +7,10 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.domain.AuthProvider;
 import com.zimdugo.user.domain.SocialAccount;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -29,11 +32,13 @@ public class GoogleSocialAccountUnlinkClient implements SocialAccountUnlinkClien
     @Override
     public void unlink(SocialAccount socialAccount, SocialProviderToken token) {
         try {
+            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+            formData.add("token", resolveRevocationToken(token));
+
             restClient.post()
-                .uri(uriBuilder -> uriBuilder
-                    .path("/revoke")
-                    .queryParam("token", resolveRevocationToken(token))
-                    .build())
+                .uri("/revoke")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(formData)
                 .retrieve()
                 .toBodilessEntity();
         } catch (RestClientException exception) {
