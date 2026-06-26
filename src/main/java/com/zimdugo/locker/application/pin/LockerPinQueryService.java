@@ -21,19 +21,25 @@ public class LockerPinQueryService {
 
     private final NearbyLockerPlaceReader nearbyLockerPlaceReader;
     private final LockerPinAssembler lockerPinAssembler;
+    private final LockerPinClusterer lockerPinClusterer;
     private final FavoriteLockerReader favoriteLockerReader;
 
-    public LockerPinResult getPins(Long userId, double latitude, double longitude, int radiusMeters) {
-        LocationValidator.validate(latitude, longitude);
+    public LockerPinResult getPins(Long userId, LockerPinQuery query) {
+        LocationValidator.validateBounds(query.swLat(), query.swLng(), query.neLat(), query.neLng());
 
-        List<NearbyLocker> nearbyLockers = nearbyLockerPlaceReader.findNearby(latitude, longitude, radiusMeters);
+        List<NearbyLocker> nearbyLockers = nearbyLockerPlaceReader.findWithinBounds(
+            query.swLat(),
+            query.swLng(),
+            query.neLat(),
+            query.neLng()
+        );
         if (nearbyLockers.isEmpty()) {
             return LockerPinResult.empty();
         }
 
         Set<Long> favoriteLockerIds = resolveFavoriteLockerIds(userId, nearbyLockers);
         List<LockerPinItemResult> pins = lockerPinAssembler.assemble(nearbyLockers, favoriteLockerIds);
-        return LockerPinResult.of(pins);
+        return LockerPinResult.of(lockerPinClusterer.cluster(pins, query.zoomLevel()));
     }
 
     private Set<Long> resolveFavoriteLockerIds(Long userId, List<NearbyLocker> lockers) {

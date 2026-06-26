@@ -21,4 +21,12 @@ public final class LocationValidator {
             throw new BusinessException(ErrorCode.INVALID_LOCATION_RANGE);
         }
     }
+
+    public static void validateBounds(double swLat, double swLng, double neLat, double neLng) {
+        validate(swLat, swLng);
+        validate(neLat, neLng);
+        if (swLat > neLat || swLng > neLng) {
+            throw new BusinessException(ErrorCode.INVALID_LOCATION_RANGE);
+        }
+    }
 }
