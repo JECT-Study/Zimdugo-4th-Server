@@ -327,9 +327,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
     );
 
     @Query(value = """
-        WITH target AS (
-            SELECT ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography AS point
-        )
         SELECT
             l.id AS lockerId,
             ST_Y(l.location::geometry) AS lockerLatitude,
@@ -337,17 +334,18 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             l.place_id AS placeId
         FROM lockers l
         JOIN places p ON p.id = l.place_id
-        CROSS JOIN target
-        WHERE ST_DWithin(l.location, target.point, :radiusMeters)
+        WHERE l.latitude BETWEEN :swLat AND :neLat
+          AND l.longitude BETWEEN :swLng AND :neLng
           AND l.place_id IS NOT NULL
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
-        ORDER BY ST_Distance(l.location, target.point) ASC
+        ORDER BY l.id ASC
         """, nativeQuery = true)
-    List<NearbyLockerPlaceQueryProjection> findNearbyLockers(
-        @Param("latitude") double latitude,
-        @Param("longitude") double longitude,
-        @Param("radiusMeters") int radiusMeters
+    List<NearbyLockerPlaceQueryProjection> findLockersWithinBounds(
+        @Param("swLat") double swLat,
+        @Param("swLng") double swLng,
+        @Param("neLat") double neLat,
+        @Param("neLng") double neLng
     );
 
     @Query(value = """

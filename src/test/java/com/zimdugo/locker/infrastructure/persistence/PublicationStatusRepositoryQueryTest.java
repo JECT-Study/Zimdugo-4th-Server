@@ -17,7 +17,7 @@ class PublicationStatusRepositoryQueryTest {
     @DisplayName("모든 공개 보관함 조회는 활성 보관함만 반환한다")
     void lockerQueriesRequireActivePublicationStatus() {
         assertQueryContains(LockerRepository.class, "findDetailById", ACTIVE_LOCKER, ACTIVE_PLACE);
-        assertQueryContains(LockerRepository.class, "findNearbyLockers", ACTIVE_LOCKER, ACTIVE_PLACE);
+        assertQueryContains(LockerRepository.class, "findLockersWithinBounds", ACTIVE_LOCKER, ACTIVE_PLACE);
         assertQueryContains(LockerRepository.class, "findAllForSuggestIndex", ACTIVE_LOCKER, ACTIVE_PLACE);
         assertQueryContains(
             LockerRepository.class,
