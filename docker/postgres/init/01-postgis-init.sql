@@ -69,6 +69,9 @@ BEGIN
     CREATE INDEX IF NOT EXISTS idx_lockers_location_geog
         ON public.lockers
         USING GIST (location);
+
+    CREATE INDEX IF NOT EXISTS idx_lockers_latitude_longitude
+        ON public.lockers (latitude, longitude);
 END;
 $$;
 
