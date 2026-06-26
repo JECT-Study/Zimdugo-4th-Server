@@ -61,7 +61,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         Long userId = extractUserId(attributes);
         if (userId == null) {
-            handleInvalidUserInfo(response, callbackUrl, "OAuth2 사용자 식별값(userId)을 가져오지 못했습니다.");
+            handleInvalidUserInfo(response, callbackUrl, "OAuth2 사용자 식별값 userId를 가져오지 못했습니다.");
             return;
         }
 
@@ -82,7 +82,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
         callbackUrlCookieManager.clearCallbackUrl(response);
 
-        log.info("OAuth 로그인 성공. userId={}, sid={}, callbackUrl={}", userId, session.sid(), callbackUrl);
+        log.info("OAuth 로그인이 성공했습니다. userId={}, sid={}, callbackUrl={}", userId, session.sid(), callbackUrl);
         response.sendRedirect(appendCode(callbackUrl, "LOGIN_SUCCESS"));
     }
 

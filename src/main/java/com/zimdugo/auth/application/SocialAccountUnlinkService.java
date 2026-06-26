@@ -3,8 +3,6 @@ package com.zimdugo.auth.application;
 import com.zimdugo.auth.domain.SocialAccountUnlinkClient;
 import com.zimdugo.auth.domain.SocialProviderToken;
 import com.zimdugo.auth.domain.SocialProviderTokenRepository;
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.domain.AuthProvider;
 import com.zimdugo.user.domain.SocialAccount;
 import com.zimdugo.user.domain.SocialAccountReader;
@@ -39,11 +37,24 @@ public class SocialAccountUnlinkService {
         for (SocialAccount socialAccount : socialAccountReader.findAllByUserId(userId)) {
             SocialAccountUnlinkClient unlinkClient = unlinkClients.get(socialAccount.getProvider());
             if (unlinkClient == null) {
-                throw new BusinessException(ErrorCode.UNSUPPORTED_SOCIAL_LOGIN);
+                log.warn(
+                    "연동 해제 클라이언트가 없어 소셜 연동 해제를 건너뜁니다. userId={}, provider={}",
+                    userId,
+                    socialAccount.getProvider()
+                );
+                continue;
             }
 
             SocialProviderToken token = socialProviderTokenRepository.find(userId, socialAccount.getProvider())
-                .orElseThrow(() -> new BusinessException(ErrorCode.EXTERNAL_API_ERROR));
+                .orElse(null);
+            if (token == null) {
+                log.warn(
+                    "저장된 provider token이 없어 소셜 연동 해제를 건너뜁니다. userId={}, provider={}",
+                    userId,
+                    socialAccount.getProvider()
+                );
+                continue;
+            }
 
             unlinkClient.unlink(socialAccount, token);
             log.info(
