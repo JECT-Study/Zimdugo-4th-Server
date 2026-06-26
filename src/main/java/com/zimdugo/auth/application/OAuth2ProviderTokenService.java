@@ -35,19 +35,37 @@ public class OAuth2ProviderTokenService {
             return;
         }
 
-        String refreshToken = authorizedClient.getRefreshToken() == null
-            ? null
-            : authorizedClient.getRefreshToken().getTokenValue();
         Instant accessTokenExpiresAt = authorizedClient.getAccessToken().getExpiresAt();
+        AuthProvider authProvider = resolveAuthProvider(registrationId, userId);
+        if (authProvider == null) {
+            return;
+        }
 
         socialProviderTokenRepository.save(
             userId,
-            AuthProvider.valueOf(registrationId.toUpperCase()),
+            authProvider,
             new SocialProviderToken(
                 authorizedClient.getAccessToken().getTokenValue(),
                 accessTokenExpiresAt,
-                refreshToken
+                extractRefreshToken(authorizedClient)
             )
         );
+    }
+
+    private AuthProvider resolveAuthProvider(String registrationId, Long userId) {
+        try {
+            return AuthProvider.valueOf(registrationId.toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            log.warn("지원하지 않는 registrationId라 provider token 저장을 건너뜁니다. registrationId={}, userId={}",
+                registrationId, userId);
+            return null;
+        }
+    }
+
+    private String extractRefreshToken(OAuth2AuthorizedClient authorizedClient) {
+        if (authorizedClient.getRefreshToken() == null) {
+            return null;
+        }
+        return authorizedClient.getRefreshToken().getTokenValue();
     }
 }
