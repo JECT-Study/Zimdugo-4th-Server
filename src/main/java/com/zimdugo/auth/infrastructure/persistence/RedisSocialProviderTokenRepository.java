@@ -8,7 +8,6 @@ import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.domain.AuthProvider;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +19,12 @@ import org.springframework.stereotype.Repository;
 public class RedisSocialProviderTokenRepository implements SocialProviderTokenRepository {
 
     private static final String KEY_PREFIX = "auth:social-token:";
-    private static final Duration TOKEN_TTL = Duration.ofDays(30);
-
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
 
     @Override
     public void save(Long userId, AuthProvider provider, SocialProviderToken token) {
-        stringRedisTemplate.opsForValue().set(key(userId, provider), serialize(token), TOKEN_TTL);
+        stringRedisTemplate.opsForValue().set(key(userId, provider), serialize(token));
     }
 
     @Override
