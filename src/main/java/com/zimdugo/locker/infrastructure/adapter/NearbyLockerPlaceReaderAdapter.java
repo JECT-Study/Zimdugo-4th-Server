@@ -17,11 +17,12 @@ public class NearbyLockerPlaceReaderAdapter implements NearbyLockerPlaceReader {
     private final LockerRepository lockerRepository;
 
     @Override
-    public List<NearbyLocker> findNearby(double latitude, double longitude, int radiusMeters) {
-        List<NearbyLockerPlaceQueryProjection> nearbyLockers = lockerRepository.findNearbyLockers(
-            latitude,
-            longitude,
-            radiusMeters
+    public List<NearbyLocker> findWithinBounds(double swLat, double swLng, double neLat, double neLng) {
+        List<NearbyLockerPlaceQueryProjection> nearbyLockers = lockerRepository.findLockersWithinBounds(
+            swLat,
+            swLng,
+            neLat,
+            neLng
         );
         return nearbyLockers
             .stream()

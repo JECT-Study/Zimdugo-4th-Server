@@ -17,6 +17,7 @@ import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
 import com.zimdugo.locker.application.result.seo.LockerSeoResult;
 import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
 import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
+import com.zimdugo.locker.entrypoint.dto.request.pin.LockerPinRequest;
 import com.zimdugo.locker.entrypoint.dto.response.detail.LockerDetailResponse;
 import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
@@ -55,11 +56,9 @@ public class LockerController implements LockerApi {
     @Override
     public ResponseEntity<RestResponse<LockerPinResponse>> getPins(
         @NullableCurrentUser Long userId,
-        double latitude,
-        double longitude,
-        int radiusMeters
+        LockerPinRequest request
     ) {
-        LockerPinResult result = lockerPinQueryService.getPins(userId, latitude, longitude, radiusMeters);
+        LockerPinResult result = lockerPinQueryService.getPins(userId, request.toQuery());
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerPinResponse.from(result)));
     }
 
