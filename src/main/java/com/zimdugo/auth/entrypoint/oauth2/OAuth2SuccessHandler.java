@@ -2,6 +2,7 @@ package com.zimdugo.auth.entrypoint.oauth2;
 
 import com.zimdugo.auth.application.OAuth2LoginSessionResult;
 import com.zimdugo.auth.application.OAuth2LoginSessionService;
+import com.zimdugo.auth.application.OAuth2ProviderTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -28,6 +29,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final OAuth2LoginSessionService loginSessionService;
     private final OAuth2CallbackUrlCookieManager callbackUrlCookieManager;
+    private final OAuth2ProviderTokenService providerTokenService;
 
     @Value("${auth.cookie.refresh.same-site:Strict}")
     private String refreshTokenCookieSameSite;
@@ -52,12 +54,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         Long userId = extractUserId(attributes);
         if (userId == null) {
-            handleInvalidUserInfo(response, callbackUrl, "OAuth2 사용자 식별값(userId)을 가져오지 못했습니다.");
+            handleInvalidUserInfo(response, callbackUrl, "OAuth2 사용자 식별값 userId를 가져오지 못했습니다.");
             return;
         }
 
         String email = extractNullableAttribute(attributes, "email");
         String role = Objects.requireNonNullElse(extractNullableAttribute(attributes, "role"), "USER");
+        providerTokenService.saveProviderToken(authentication, userId);
 
         OAuth2LoginSessionResult session = loginSessionService.createSession(userId, email, role);
 
@@ -72,7 +75,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
         callbackUrlCookieManager.clearCallbackUrl(response);
 
-        log.info("OAuth 로그인 성공. userId={}, sid={}, callbackUrl={}", userId, session.sid(), callbackUrl);
+        log.info("OAuth 로그인이 성공했습니다. userId={}, sid={}, callbackUrl={}", userId, session.sid(), callbackUrl);
         response.sendRedirect(appendCode(callbackUrl, "LOGIN_SUCCESS"));
     }
 

@@ -2,6 +2,7 @@ package com.zimdugo.auth.entrypoint.oauth2;
 
 import com.zimdugo.auth.application.OAuth2LoginSessionResult;
 import com.zimdugo.auth.application.OAuth2LoginSessionService;
+import com.zimdugo.auth.application.OAuth2ProviderTokenService;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +27,11 @@ class OAuth2SuccessHandlerTest {
         OAuth2CallbackUrlCookieManager callbackUrlCookieManager = mock(
             OAuth2CallbackUrlCookieManager.class
         );
+        OAuth2ProviderTokenService providerTokenService = mock(OAuth2ProviderTokenService.class);
         OAuth2SuccessHandler handler = new OAuth2SuccessHandler(
             sessionService,
-            callbackUrlCookieManager
+            callbackUrlCookieManager,
+            providerTokenService
         );
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
