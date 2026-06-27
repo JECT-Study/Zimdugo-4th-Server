@@ -30,6 +30,7 @@ spring:
       data-locations:
         - file:scripts/db/01-postgis.sql
         - file:scripts/db/02-visitor-logs.sql
+        - file:scripts/db/03-keyword-counts.sql
 
 management:
   endpoints:
