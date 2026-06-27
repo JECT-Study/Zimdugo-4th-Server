@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -156,7 +157,7 @@ public class LockerKeywordQueryService {
     private void increaseKeywordCount(String keyword) {
         try {
             keywordCountCommandService.increase(keyword);
-        } catch (DataAccessException exception) {
+        } catch (DataAccessException | TransactionException exception) {
             log.warn("키워드 집계 저장에 실패해도 검색은 계속 진행합니다. keyword={}", keyword, exception);
         }
     }
