@@ -38,6 +38,9 @@ class LockerKeywordQueryServiceTest {
     private LockerSearchQueryService lockerSearchQueryService;
 
     @Mock
+    private KeywordCountCommandService keywordCountCommandService;
+
+    @Mock
     private LockerPlaceLockerReader lockerPlaceLockerReader;
 
     @Mock

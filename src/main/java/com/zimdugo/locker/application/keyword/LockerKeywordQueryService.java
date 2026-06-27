@@ -1,13 +1,12 @@
 package com.zimdugo.locker.application.keyword;
 
-import com.zimdugo.locker.application.search.LockerSearchQueryService;
-
 import com.zimdugo.common.i18n.CurrentRequestLanguage;
+import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordItemResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
 import com.zimdugo.locker.application.result.keyword.LockerKeywordResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
-import com.zimdugo.locker.application.result.LockerItemType;
+import com.zimdugo.locker.application.search.LockerSearchQueryService;
 import com.zimdugo.locker.domain.favorite.FavoriteLockerReader;
 import com.zimdugo.locker.domain.place.LockerPlaceLocker;
 import com.zimdugo.locker.domain.place.LockerPlaceLockerReader;
@@ -16,17 +15,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class LockerKeywordQueryService {
 
     private final LockerSearchQueryService lockerSearchQueryService;
+    private final KeywordCountCommandService keywordCountCommandService;
     private final LockerPlaceLockerReader lockerPlaceLockerReader;
     private final FavoriteLockerReader favoriteLockerReader;
     private final CurrentRequestLanguage currentRequestLanguage;
@@ -64,6 +67,7 @@ public class LockerKeywordQueryService {
         if (filter == null) {
             filter = LockerSearchFilter.empty();
         }
+        increaseKeywordCount(keyword);
         List<LockerSuggestItemResult> suggestItems = lockerSearchQueryService.search(
             latitude,
             longitude,
@@ -148,5 +152,13 @@ public class LockerKeywordQueryService {
             return Set.of();
         }
         return favoriteLockerReader.findFavoriteLockerIds(userId, lockerIds);
+    }
+
+    private void increaseKeywordCount(String keyword) {
+        try {
+            keywordCountCommandService.increase(keyword);
+        } catch (DataAccessException | TransactionException exception) {
+            log.warn("키워드 집계 저장에 실패해도 검색은 계속 진행합니다. keyword={}", keyword, exception);
+        }
     }
 }
