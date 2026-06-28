@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class KeywordCountEntity {
+public class SearchKeywordCountEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

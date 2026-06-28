@@ -1,6 +1,6 @@
-package com.zimdugo.locker.entrypoint.dto.request.keyword;
+package com.zimdugo.locker.entrypoint.dto.request.search;
 
-import com.zimdugo.locker.application.keyword.LockerKeywordSearchCommand;
+import com.zimdugo.locker.application.search.LockerSearchCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.Set;
 
-public record LockerKeywordRequest(
+public record LockerSearchRequest(
     @Schema(description = "사용자 위도", example = "37.498095", minimum = "-90", maximum = "90")
     @NotNull
     @DecimalMin(value = "-90.0")
@@ -42,14 +42,15 @@ public record LockerKeywordRequest(
     Set<String> lockerTypes
 ) {
 
-    public LockerKeywordSearchCommand toCommand() {
-        return new LockerKeywordSearchCommand(
+    public LockerSearchCommand toCommand() {
+        return new LockerSearchCommand(
             lat,
             lng,
             keyword,
             sizeTypes,
             indoorOutdoorTypes,
-            lockerTypes
+            lockerTypes,
+            null
         );
     }
 }

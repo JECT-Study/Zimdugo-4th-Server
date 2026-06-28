@@ -2,11 +2,11 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.common.security.NullableCurrentUser;
 import com.zimdugo.core.response.RestResponse;
-import com.zimdugo.locker.entrypoint.dto.request.keyword.LockerKeywordRequest;
+import com.zimdugo.locker.entrypoint.dto.request.search.LockerSearchRequest;
 import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
 import com.zimdugo.locker.entrypoint.dto.request.pin.LockerPinRequest;
 import com.zimdugo.locker.entrypoint.dto.response.detail.LockerDetailResponse;
-import com.zimdugo.locker.entrypoint.dto.response.keyword.LockerKeywordResponse;
+import com.zimdugo.locker.entrypoint.dto.response.search.LockerSearchResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
 import com.zimdugo.locker.entrypoint.dto.response.seo.LockerSeoListResponse;
@@ -58,7 +58,7 @@ public interface LockerApi {
         @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터")
     })
     @SecurityRequirements
-    @GetMapping("/lockers/pin")
+    @GetMapping("/lockers/pins")
     ResponseEntity<RestResponse<LockerPinResponse>> getPins(
         @NullableCurrentUser Long userId,
         @ParameterObject @Valid LockerPinRequest request
@@ -92,7 +92,7 @@ public interface LockerApi {
     );
 
     @Operation(
-        summary = "보관함 키워드 검색 조회",
+        summary = "보관함 검색 조회",
         description = "검색 점수 우선, 동점 시 현재 좌표 기준 거리순으로 장소/보관함 검색 결과를 반환한다. "
             + "사이즈, 실내/실외, 보관함 유형 필터를 함께 적용할 수 있으며 PLACE 결과는 필터에 맞는 거리순 하위 보관함 목록을 반환한다."
     )
@@ -101,10 +101,10 @@ public interface LockerApi {
         @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터")
     })
     @SecurityRequirements
-    @GetMapping("/lockers/keyword")
-    ResponseEntity<RestResponse<LockerKeywordResponse>> getKeywordResults(
+    @GetMapping("/lockers/search")
+    ResponseEntity<RestResponse<LockerSearchResponse>> getSearchResults(
         @NullableCurrentUser Long userId,
-        @Valid @ParameterObject LockerKeywordRequest request
+        @Valid @ParameterObject LockerSearchRequest request
     );
 
     @Operation(

@@ -1,13 +1,13 @@
-package com.zimdugo.locker.entrypoint.dto.response.keyword;
+package com.zimdugo.locker.entrypoint.dto.response.search;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.zimdugo.locker.application.result.keyword.LockerKeywordItemResult;
+import com.zimdugo.locker.application.result.search.LockerSearchItemResult;
 import com.zimdugo.locker.entrypoint.dto.response.LockerItemTypeResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record LockerKeywordItemResponse(
+public record LockerSearchItemResponse(
     LockerItemTypeResponse type,
     Long placeId,
     String placeName,
@@ -21,10 +21,10 @@ public record LockerKeywordItemResponse(
     long distanceMeters,
     LocalDateTime updatedAt,
     Boolean isFavorite,
-    List<LockerKeywordLockerResponse> lockers
+    List<LockerSearchLockerResponse> lockers
 ) {
-    public static LockerKeywordItemResponse from(LockerKeywordItemResult item) {
-        return new LockerKeywordItemResponse(
+    public static LockerSearchItemResponse from(LockerSearchItemResult item) {
+        return new LockerSearchItemResponse(
             LockerItemTypeResponse.from(item.type()),
             item.placeId(),
             item.placeName(),
@@ -39,7 +39,7 @@ public record LockerKeywordItemResponse(
             item.updatedAt(),
             item.isFavorite(),
             item.lockers().stream()
-                .map(LockerKeywordLockerResponse::from)
+                .map(LockerSearchLockerResponse::from)
                 .toList()
         );
     }

@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface KeywordCountRepository extends JpaRepository<KeywordCountEntity, Long> {
+public interface SearchKeywordCountRepository extends JpaRepository<SearchKeywordCountEntity, Long> {
 
     @Modifying
     @Query(value = """

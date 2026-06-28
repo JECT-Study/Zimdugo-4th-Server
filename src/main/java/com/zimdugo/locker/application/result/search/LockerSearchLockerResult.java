@@ -1,9 +1,9 @@
-package com.zimdugo.locker.application.result.keyword;
+package com.zimdugo.locker.application.result.search;
 
 import com.zimdugo.locker.domain.place.LockerPlaceLocker;
 import java.time.LocalDateTime;
 
-public record LockerKeywordLockerResult(
+public record LockerSearchLockerResult(
     Long lockerId,
     String lockerName,
     String roadAddress,
@@ -15,8 +15,8 @@ public record LockerKeywordLockerResult(
     LocalDateTime updatedAt,
     boolean isFavorite
 ) {
-    public static LockerKeywordLockerResult from(LockerPlaceLocker locker, boolean isFavorite) {
-        return new LockerKeywordLockerResult(
+    public static LockerSearchLockerResult from(LockerPlaceLocker locker, boolean isFavorite) {
+        return new LockerSearchLockerResult(
             locker.lockerId(),
             locker.lockerName(),
             locker.roadAddress(),

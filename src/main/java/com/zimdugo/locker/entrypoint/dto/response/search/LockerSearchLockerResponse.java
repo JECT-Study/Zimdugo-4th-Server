@@ -1,11 +1,11 @@
-package com.zimdugo.locker.entrypoint.dto.response.keyword;
+package com.zimdugo.locker.entrypoint.dto.response.search;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
+import com.zimdugo.locker.application.result.search.LockerSearchLockerResult;
 import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record LockerKeywordLockerResponse(
+public record LockerSearchLockerResponse(
     Long lockerId,
     String lockerName,
     String roadAddress,
@@ -17,8 +17,8 @@ public record LockerKeywordLockerResponse(
     LocalDateTime updatedAt,
     boolean isFavorite
 ) {
-    public static LockerKeywordLockerResponse from(LockerKeywordLockerResult item) {
-        return new LockerKeywordLockerResponse(
+    public static LockerSearchLockerResponse from(LockerSearchLockerResult item) {
+        return new LockerSearchLockerResponse(
             item.lockerId(),
             item.lockerName(),
             item.roadAddress(),

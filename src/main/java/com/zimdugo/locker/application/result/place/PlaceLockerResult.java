@@ -2,7 +2,7 @@ package com.zimdugo.locker.application.result.place;
 
 import com.zimdugo.locker.application.result.GeoBoundsUtils;
 import com.zimdugo.locker.application.result.LockerBoundsResult;
-import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
+import com.zimdugo.locker.application.result.search.LockerSearchLockerResult;
 import com.zimdugo.locker.domain.place.LockerPlace;
 import java.util.List;
 
@@ -13,13 +13,13 @@ public record PlaceLockerResult(
     double latitude,
     double longitude,
     LockerBoundsResult bounds,
-    List<LockerKeywordLockerResult> lockers
+    List<LockerSearchLockerResult> lockers
 ) {
-    public static PlaceLockerResult of(LockerPlace place, List<LockerKeywordLockerResult> lockers) {
+    public static PlaceLockerResult of(LockerPlace place, List<LockerSearchLockerResult> lockers) {
         LockerBoundsResult bounds = GeoBoundsUtils.from(
             lockers,
-            LockerKeywordLockerResult::latitude,
-            LockerKeywordLockerResult::longitude
+            LockerSearchLockerResult::latitude,
+            LockerSearchLockerResult::longitude
         ).orElse(null);
         return new PlaceLockerResult(
             place.placeId(),
