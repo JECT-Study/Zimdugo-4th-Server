@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import java.util.Set;
 
 public record LockerPinRequest(
     @Parameter(description = "지도 남서쪽 위도", example = "37.490000")
@@ -35,9 +36,45 @@ public record LockerPinRequest(
     @Schema(minimum = "0", maximum = "21")
     @DecimalMin(value = "0.0")
     @DecimalMax(value = "21.0")
-    double zoom
+    double zoom,
+
+    @Parameter(description = "검색 기준 사용자 위도", example = "37.498095")
+    @Schema(minimum = "-90", maximum = "90")
+    @DecimalMin(value = "-90.0")
+    @DecimalMax(value = "90.0")
+    Double lat,
+
+    @Parameter(description = "검색 기준 사용자 경도", example = "127.027610")
+    @Schema(minimum = "-180", maximum = "180")
+    @DecimalMin(value = "-180.0")
+    @DecimalMax(value = "180.0")
+    Double lng,
+
+    @Parameter(description = "검색 키워드", example = "신촌역")
+    String keyword,
+
+    @Parameter(description = "보관함 크기 필터")
+    Set<String> sizeTypes,
+
+    @Parameter(description = "실내/실외 필터")
+    Set<String> indoorOutdoorTypes,
+
+    @Parameter(description = "보관함 유형 필터")
+    Set<String> lockerTypes
 ) {
     public LockerPinQuery toQuery() {
-        return new LockerPinQuery(swLat, swLng, neLat, neLng, zoom);
+        return new LockerPinQuery(
+            swLat,
+            swLng,
+            neLat,
+            neLng,
+            zoom,
+            lat,
+            lng,
+            keyword,
+            sizeTypes,
+            indoorOutdoorTypes,
+            lockerTypes
+        );
     }
 }

@@ -331,9 +331,13 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             l.id AS lockerId,
             ST_Y(l.location::geometry) AS lockerLatitude,
             ST_X(l.location::geometry) AS lockerLongitude,
-            l.place_id AS placeId
+            l.place_id AS placeId,
+            ld.locker_type AS lockerType,
+            ld.indoor_outdoor_type AS indoorOutdoorType,
+            ld.locker_size AS lockerSize
         FROM lockers l
         JOIN places p ON p.id = l.place_id
+        JOIN locker_details ld ON ld.locker_id = l.id
         WHERE l.latitude BETWEEN :swLat AND :neLat
           AND l.longitude BETWEEN :swLng AND :neLng
           AND l.place_id IS NOT NULL
