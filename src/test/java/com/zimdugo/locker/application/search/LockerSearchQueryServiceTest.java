@@ -12,12 +12,11 @@ import com.zimdugo.locker.domain.locker.LockerType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,11 +33,15 @@ class LockerSearchQueryServiceTest {
     @Mock
     private LockerSearchCandidateReader lockerSearchCandidateReader;
 
-    @Spy
-    private LockerSearchAssembler lockerSearchAssembler;
-
-    @InjectMocks
     private LockerSearchQueryService lockerSearchQueryService;
+
+    @BeforeEach
+    void setUp() {
+        lockerSearchQueryService = new LockerSearchQueryService(
+            lockerSearchCandidateReader,
+            new LockerSearchAssembler()
+        );
+    }
 
     @Test
     @DisplayName("주변 보관함이 없으면 빈 결과를 반환한다")
