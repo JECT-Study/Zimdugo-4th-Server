@@ -7,6 +7,9 @@ public interface NearbyLockerPlaceQueryProjection {
     double getLockerLatitude();
     double getLockerLongitude();
     Long getPlaceId();
+    String getLockerType();
+    String getIndoorOutdoorType();
+    String getLockerSize();
 
     default NearbyLocker toDomain() {
         return new NearbyLocker(
