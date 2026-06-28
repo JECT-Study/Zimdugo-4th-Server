@@ -1,11 +1,11 @@
-package com.zimdugo.locker.application.result.keyword;
+package com.zimdugo.locker.application.result.search;
 
 import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record LockerKeywordItemResult(
+public record LockerSearchItemResult(
     LockerItemType type,
     Long placeId,
     String placeName,
@@ -19,10 +19,10 @@ public record LockerKeywordItemResult(
     long distanceMeters,
     LocalDateTime updatedAt,
     Boolean isFavorite,
-    List<LockerKeywordLockerResult> lockers
+    List<LockerSearchLockerResult> lockers
 ) {
-    public static LockerKeywordItemResult locker(LockerSuggestItemResult item, boolean isFavorite) {
-        return new LockerKeywordItemResult(
+    public static LockerSearchItemResult locker(LockerSuggestItemResult item, boolean isFavorite) {
+        return new LockerSearchItemResult(
             item.type(),
             item.placeId(),
             item.placeName(),
@@ -40,11 +40,11 @@ public record LockerKeywordItemResult(
         );
     }
 
-    public static LockerKeywordItemResult place(
+    public static LockerSearchItemResult place(
         LockerSuggestItemResult item,
-        List<LockerKeywordLockerResult> lockers
+        List<LockerSearchLockerResult> lockers
     ) {
-        return new LockerKeywordItemResult(
+        return new LockerSearchItemResult(
             item.type(),
             item.placeId(),
             item.placeName(),

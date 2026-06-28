@@ -3,7 +3,7 @@ package com.zimdugo.locker.application.place;
 import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import com.zimdugo.locker.application.result.keyword.LockerKeywordLockerResult;
+import com.zimdugo.locker.application.result.search.LockerSearchLockerResult;
 import com.zimdugo.locker.application.result.place.PlaceLockerResult;
 import com.zimdugo.locker.domain.favorite.FavoriteLockerReader;
 import com.zimdugo.locker.domain.place.LockerPlace;
@@ -50,8 +50,8 @@ public class PlaceLockerQueryService {
             languageCode
         ).getOrDefault(command.placeId(), List.of());
         Set<Long> favoriteLockerIds = resolveFavoriteLockerIds(userId, lockers);
-        List<LockerKeywordLockerResult> lockerResults = lockers.stream()
-            .map(locker -> LockerKeywordLockerResult.from(
+        List<LockerSearchLockerResult> lockerResults = lockers.stream()
+            .map(locker -> LockerSearchLockerResult.from(
                 locker,
                 favoriteLockerIds.contains(locker.lockerId())
             ))
