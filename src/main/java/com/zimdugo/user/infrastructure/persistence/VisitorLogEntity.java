@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
@@ -16,6 +17,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
     name = "visitor_logs",
+    indexes = @Index(
+        name = "idx_visitor_logs_accessed_date",
+        columnList = "accessed_date"
+    ),
     uniqueConstraints = @UniqueConstraint(
         name = "uk_visitor_logs_identifier_date",
         columnNames = {"visitor_identifier", "accessed_date"}
