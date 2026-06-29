@@ -1,9 +1,6 @@
 package com.zimdugo.locker.entrypoint.dto.request.pin;
 
 import com.zimdugo.locker.application.pin.LockerPinQuery;
-import com.zimdugo.locker.application.filter.IndoorOutdoorFilterType;
-import com.zimdugo.locker.application.filter.LockerFacilityFilterType;
-import com.zimdugo.locker.application.filter.LockerSizeFilterType;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
@@ -57,13 +54,13 @@ public record LockerPinRequest(
     String keyword,
 
     @Parameter(description = "보관함 크기 필터")
-    Set<LockerSizeFilterType> sizeTypes,
+    Set<String> sizeTypes,
 
     @Parameter(description = "실내/실외 필터")
-    Set<IndoorOutdoorFilterType> indoorOutdoorTypes,
+    Set<String> indoorOutdoorTypes,
 
     @Parameter(description = "보관함 유형 필터")
-    Set<LockerFacilityFilterType> lockerTypes
+    Set<String> lockerTypes
 ) {
     public LockerPinQuery toQuery() {
         return new LockerPinQuery(
