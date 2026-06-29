@@ -245,6 +245,14 @@
                 </a>
             </li>
         </ul>
+        <div class="sidebar-label">집계</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item" th:classappend="${activeMenu == 'search-keywords'} ? 'active'">
+                <a th:href="@{/admin/statistics/search-keywords}">
+                    <i class="fa-solid fa-chart-column"></i> 검색 키워드
+                </a>
+            </li>
+        </ul>
         <div class="sidebar-footer" style="margin-top: auto; padding: 1rem 0.75rem 0; border-top: 1px solid #e5e5e5;">
             <form th:action="@{/admin/logout}" method="post">
                 <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;">
