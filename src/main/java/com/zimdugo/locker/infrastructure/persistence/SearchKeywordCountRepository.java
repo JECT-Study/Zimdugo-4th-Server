@@ -20,9 +20,9 @@ public interface SearchKeywordCountRepository extends JpaRepository<SearchKeywor
 
     @Query(value = """
         SELECT
-            kc.keyword AS keyword,
-            kc.search_count AS totalCount,
-            COALESCE(kdc.search_count, 0) AS todayCount
+            kc.keyword AS "keyword",
+            kc.search_count AS "totalCount",
+            COALESCE(kdc.search_count, 0) AS "todayCount"
         FROM keyword_counts kc
         LEFT JOIN keyword_daily_counts kdc
             ON kdc.keyword = kc.keyword
