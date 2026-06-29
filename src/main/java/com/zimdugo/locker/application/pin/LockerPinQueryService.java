@@ -1,6 +1,5 @@
 package com.zimdugo.locker.application.pin;
 
-import com.zimdugo.locker.application.filter.LockerSearchFilterFactory;
 import com.zimdugo.locker.application.common.LocationValidator;
 import com.zimdugo.locker.application.search.LockerSearchResultQueryService;
 import com.zimdugo.locker.application.result.search.LockerSearchItemResult;
@@ -30,9 +29,9 @@ public class LockerPinQueryService {
     private final LockerSearchResultQueryService lockerSearchResultQueryService;
 
     public LockerPinResult getPins(Long userId, LockerPinQuery query) {
-        LocationValidator.validateBounds(query.swLat(), query.swLng(), query.neLat(), query.neLng()); //좌표 검증
+        LocationValidator.validateBounds(query.swLat(), query.swLng(), query.neLat(), query.neLng());
 
-        LockerSearchFilter filter = LockerSearchFilterFactory.create(
+        LockerSearchFilter filter = LockerSearchFilter.from(
             query.sizeTypes(),
             query.indoorOutdoorTypes(),
             query.lockerTypes()
@@ -59,14 +58,14 @@ public class LockerPinQueryService {
     }
 
     private LockerPinResult getSearchPins(Long userId, LockerPinQuery query, LockerSearchFilter filter) {
-        if (query.userLat() == null || query.userLng() == null) {
+        if (query.latitude() == null || query.longitude() == null) {
             return LockerPinResult.empty();
         }
 
         List<LockerSearchItemResult> items = lockerSearchResultQueryService.getDisplayableSearchItemsForPins(
             userId,
-            query.userLat(),
-            query.userLng(),
+            query.latitude(),
+            query.longitude(),
             query.keyword(),
             filter
         );
