@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>검색 키워드 집계</title>
+</head>
+<body>
+<main>
+    <style>
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table th {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e5e5;
+            text-align: left;
+        }
+        .admin-table td {
+            padding: 0.85rem 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+        .admin-table tbody tr:hover td { background: #fafafa; }
+        .muted { color: #888; font-size: 0.82rem; }
+        .keyword-text { font-weight: 600; color: #1a1a1a; }
+        .number-text { font-variant-numeric: tabular-nums; }
+        .empty-state { text-align: center; padding: 3rem 1rem; color: #999; }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="page-header type-label">STATISTICS</div>
+            <h1>검색 키워드 집계</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <table class="admin-table" th:if="${not #lists.isEmpty(statistics.items())}">
+            <thead>
+                <tr>
+                    <th style="width: 90px;">순위</th>
+                    <th>키워드</th>
+                    <th style="width: 160px;">전체 집계 수</th>
+                    <th style="width: 140px;">오늘 날짜</th>
+                    <th style="width: 160px;">오늘 집계 수</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${statistics.items()}">
+                    <td class="muted number-text" th:text="${item.rank()}">1</td>
+                    <td><span class="keyword-text" th:text="${item.keyword()}">강남역 보관함</span></td>
+                    <td class="number-text" th:text="${#numbers.formatInteger(item.totalCount(), 1, 'COMMA')}">12</td>
+                    <td class="muted" th:text="${#temporals.format(statistics.today(), 'yyyy-MM-dd')}">2026-06-28</td>
+                    <td class="number-text" th:text="${#numbers.formatInteger(item.todayCount(), 1, 'COMMA')}">3</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(statistics.items())}">
+            <p>집계된 검색 키워드가 없습니다.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>
