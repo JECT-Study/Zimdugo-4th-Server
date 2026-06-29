@@ -1,6 +1,5 @@
 package com.zimdugo.locker.application.search;
 
-import com.zimdugo.locker.application.filter.LockerSearchFilterFactory;
 import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.locker.application.pin.LockerSearchPinAssembler;
 import com.zimdugo.locker.application.pin.LockerPinClusterer;
@@ -103,7 +102,7 @@ public class LockerSearchResultQueryService {
     }
 
     private LockerSearchFilter toSearchFilter(LockerSearchCommand command) {
-        return LockerSearchFilterFactory.create(
+        return LockerSearchFilter.from(
             command.sizeTypes(),
             command.indoorOutdoorTypes(),
             command.lockerTypes()
