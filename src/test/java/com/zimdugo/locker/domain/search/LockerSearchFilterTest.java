@@ -3,13 +3,12 @@ package com.zimdugo.locker.domain.search;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class LockerSearchFilterTest {
 
@@ -54,46 +53,27 @@ class LockerSearchFilterTest {
     }
 
     @Test
-    @DisplayName("API 문자열 필터를 도메인 enum으로 변환한다")
-    void parsesApiFilterValues() {
-        LockerSearchFilter filter = LockerSearchFilter.from(
-            Set.of("SMALL,LARGE"),
-            Set.of("indoor"),
-            Set.of("subway_station")
-        );
+    @DisplayName("생성자는 null 필터를 빈 집합으로 정규화한다")
+    void normalizesNullFiltersToEmptySets() {
+        LockerSearchFilter filter = new LockerSearchFilter(null, null, null);
 
-        assertThat(filter.sizeTypes()).containsExactlyInAnyOrder(LockerSizeType.SMALL, LockerSizeType.LARGE);
-        assertThat(filter.indoorOutdoorTypes()).containsExactly(IndoorOutdoorType.INDOOR);
-        assertThat(filter.lockerTypes()).containsExactly(LockerType.SUBWAY_STATION);
+        assertThat(filter.sizeTypes()).isEmpty();
+        assertThat(filter.indoorOutdoorTypes()).isEmpty();
+        assertThat(filter.lockerTypes()).isEmpty();
+        assertThat(filter.isEmpty()).isTrue();
     }
 
     @Test
-    @DisplayName("대괄호와 큰따옴표가 포함된 JSON 배열 형식의 문자열 필터도 안전하게 도메인 enum으로 변환한다")
-    void parsesJsonArrayStyleFilterValues() {
-        LockerSearchFilter filter = LockerSearchFilter.from(
-            Set.of("[\"SMALL\", \"LARGE\"]"),
-            Set.of("[\"INDOOR\"]"),
-            Set.of("[\"SUBWAY_STATION\"]")
+    @DisplayName("생성된 필터 집합은 외부에서 수정할 수 없다")
+    void exposesUnmodifiableSets() {
+        LockerSearchFilter filter = new LockerSearchFilter(
+            Set.of(LockerSizeType.SMALL),
+            Set.of(IndoorOutdoorType.INDOOR),
+            Set.of(LockerType.ETC)
         );
 
-        assertThat(filter.sizeTypes()).containsExactlyInAnyOrder(LockerSizeType.SMALL, LockerSizeType.LARGE);
-        assertThat(filter.indoorOutdoorTypes()).containsExactly(IndoorOutdoorType.INDOOR);
-        assertThat(filter.lockerTypes()).containsExactly(LockerType.SUBWAY_STATION);
-    }
-
-    @Test
-    @DisplayName("필터 파싱은 표준 출력에 디버그 로그를 쓰지 않는다")
-    void parsingDoesNotWriteToStandardOutput() {
-        PrintStream originalOut = System.out;
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(output));
-        try {
-            LockerSearchFilter.from(Set.of("SMALL"), Set.of("INDOOR"), Set.of("ETC"));
-        } finally {
-            System.setOut(originalOut);
-        }
-
-        assertThat(output.toString()).isBlank();
+        assertThatThrownBy(() -> filter.sizeTypes().add(LockerSizeType.LARGE))
+            .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test

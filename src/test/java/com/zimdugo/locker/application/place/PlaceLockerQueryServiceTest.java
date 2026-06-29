@@ -4,6 +4,9 @@ import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.locker.application.filter.IndoorOutdoorFilterType;
+import com.zimdugo.locker.application.filter.LockerFacilityFilterType;
+import com.zimdugo.locker.application.filter.LockerSizeFilterType;
 import com.zimdugo.locker.application.result.place.PlaceLockerResult;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.place.LockerPlace;
@@ -117,9 +120,9 @@ class PlaceLockerQueryServiceTest {
             101L,
             37.55,
             126.93,
-            Set.of("LARGE"),
-            Set.of("INDOOR"),
-            Set.of("SUBWAY_STATION")
+            Set.of(LockerSizeFilterType.LARGE),
+            Set.of(IndoorOutdoorFilterType.INDOOR),
+            Set.of(LockerFacilityFilterType.SUBWAY_STATION)
         );
     }
 
