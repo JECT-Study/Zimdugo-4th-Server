@@ -2,6 +2,9 @@ package com.zimdugo.locker.application.search;
 
 import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.common.i18n.SupportedLanguage;
+import com.zimdugo.locker.application.filter.IndoorOutdoorFilterType;
+import com.zimdugo.locker.application.filter.LockerFacilityFilterType;
+import com.zimdugo.locker.application.filter.LockerSizeFilterType;
 import com.zimdugo.locker.application.pin.LockerSearchPinAssembler;
 import com.zimdugo.locker.application.pin.LockerPinClusterer;
 import com.zimdugo.locker.application.result.search.LockerSearchItemResult;
@@ -101,9 +104,9 @@ class LockerSearchResultQueryServiceTest {
             37.55,
             126.93,
             "신촌",
-            Set.of("SMALL", "LARGE"),
-            Set.of("INDOOR"),
-            Set.of("SUBWAY_STATION"),
+            Set.of(LockerSizeFilterType.SMALL, LockerSizeFilterType.LARGE),
+            Set.of(IndoorOutdoorFilterType.INDOOR),
+            Set.of(LockerFacilityFilterType.SUBWAY_STATION),
             null
         );
 
@@ -212,9 +215,9 @@ class LockerSearchResultQueryServiceTest {
                 37.55,
                 126.93,
                 "신촌",
-                Set.of("LARGE"),
-                Set.of("OUTDOOR"),
-                Set.of("SUBWAY_STATION"),
+                Set.of(LockerSizeFilterType.LARGE),
+                Set.of(IndoorOutdoorFilterType.OUTDOOR),
+                Set.of(LockerFacilityFilterType.SUBWAY_STATION),
                 null
             )
         );
