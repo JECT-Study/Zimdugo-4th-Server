@@ -6,7 +6,6 @@ import com.zimdugo.locker.application.filter.LockerFacilityFilterType;
 import com.zimdugo.locker.application.filter.LockerSizeFilterType;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import java.util.Set;
@@ -66,11 +65,6 @@ public record LockerPinRequest(
     @Parameter(description = "보관함 유형 필터")
     Set<LockerFacilityFilterType> lockerTypes
 ) {
-    @AssertTrue(message = "validation.user_location_required")
-    public boolean hasUserLocation() {
-        return lat != null && lng != null;
-    }
-
     public LockerPinQuery toQuery() {
         return new LockerPinQuery(
             swLat,
