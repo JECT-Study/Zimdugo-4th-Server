@@ -1,6 +1,5 @@
 package com.zimdugo.locker.application.place;
 
-import com.zimdugo.locker.application.filter.LockerSearchFilterFactory;
 import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
@@ -38,7 +37,7 @@ public class PlaceLockerQueryService {
 
         LockerPlace place = lockerPlaceReader.readById(command.placeId(), languageCode)
             .orElseThrow(() -> new BusinessException(ErrorCode.PLACE_NOT_FOUND));
-        LockerSearchFilter filter = LockerSearchFilterFactory.create(
+        LockerSearchFilter filter = LockerSearchFilter.from(
             command.sizeTypes(),
             command.indoorOutdoorTypes(),
             command.lockerTypes()

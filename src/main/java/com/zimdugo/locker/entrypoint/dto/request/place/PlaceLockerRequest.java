@@ -1,9 +1,6 @@
 package com.zimdugo.locker.entrypoint.dto.request.place;
 
 import com.zimdugo.locker.application.place.PlaceLockerQueryCommand;
-import com.zimdugo.locker.application.filter.IndoorOutdoorFilterType;
-import com.zimdugo.locker.application.filter.LockerFacilityFilterType;
-import com.zimdugo.locker.application.filter.LockerSizeFilterType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -24,10 +21,10 @@ public record PlaceLockerRequest(
     Double lng,
 
     @Schema(description = "보관함 크기 필터, 복수 선택 가능", example = "[\"SMALL\", \"MEDIUM\", \"LARGE\"]")
-    Set<LockerSizeFilterType> sizeTypes,
+    Set<String> sizeTypes,
 
     @Schema(description = "실내/실외 필터, 복수 선택 가능", example = "[\"INDOOR\", \"OUTDOOR\"]")
-    Set<IndoorOutdoorFilterType> indoorOutdoorTypes,
+    Set<String> indoorOutdoorTypes,
 
     @Schema(
         description = "보관함 유형 필터 (MUSEUM, SUBWAY_STATION, DEPARTMENT_STORE, CONVENIENCE_STORE, "
@@ -35,7 +32,7 @@ public record PlaceLockerRequest(
         example = "[\"MUSEUM\", \"SUBWAY_STATION\", \"DEPARTMENT_STORE\", \"CONVENIENCE_STORE\", "
             + "\"PUBLIC_OFFICE\", \"PRIVATE_LOCKER\", \"TRAIN_STATION\", \"ETC\"]"
     )
-    Set<LockerFacilityFilterType> lockerTypes
+    Set<String> lockerTypes
 ) {
 
     public PlaceLockerQueryCommand toCommand(Long placeId) {
