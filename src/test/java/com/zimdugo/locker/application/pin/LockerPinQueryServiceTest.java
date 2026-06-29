@@ -2,12 +2,18 @@ package com.zimdugo.locker.application.pin;
 
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.locker.application.filter.IndoorOutdoorFilterType;
+import com.zimdugo.locker.application.filter.LockerFacilityFilterType;
+import com.zimdugo.locker.application.filter.LockerSizeFilterType;
 import com.zimdugo.locker.application.search.LockerSearchResultQueryService;
 import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.application.result.search.LockerSearchItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
 import com.zimdugo.locker.domain.favorite.FavoriteLockerReader;
+import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
+import com.zimdugo.locker.domain.locker.LockerSizeType;
+import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.locker.domain.locker.NearbyLocker;
 import com.zimdugo.locker.domain.locker.NearbyLockerPlaceReader;
 import com.zimdugo.locker.domain.search.LockerSearchFilter;
@@ -29,6 +35,18 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class LockerPinQueryServiceTest {
+
+    private static final LockerSearchFilter SUBWAY_INDOOR_SMALL_FILTER = new LockerSearchFilter(
+        Set.of(LockerSizeType.SMALL),
+        Set.of(IndoorOutdoorType.INDOOR),
+        Set.of(LockerType.SUBWAY_STATION)
+    );
+
+    private static final LockerSearchFilter SUBWAY_INDOOR_LARGE_FILTER = new LockerSearchFilter(
+        Set.of(LockerSizeType.LARGE),
+        Set.of(IndoorOutdoorType.INDOOR),
+        Set.of(LockerType.SUBWAY_STATION)
+    );
 
     private static final LockerPinQuery DETAIL_QUERY = new LockerPinQuery(
         37.54,
@@ -153,9 +171,9 @@ class LockerPinQueryServiceTest {
             37.55,
             126.93,
             "station",
-            Set.of("SMALL"),
-            Set.of("INDOOR"),
-            Set.of("SUBWAY_STATION")
+            Set.of(LockerSizeFilterType.SMALL),
+            Set.of(IndoorOutdoorFilterType.INDOOR),
+            Set.of(LockerFacilityFilterType.SUBWAY_STATION)
         );
         List<LockerSearchItemResult> items = List.of(sampleKeywordLockerItem());
         List<LockerPinItemResult> assembledPins = List.of(
@@ -171,7 +189,7 @@ class LockerPinQueryServiceTest {
             37.55,
             126.93,
             "station",
-            LockerSearchFilter.from(Set.of("SMALL"), Set.of("INDOOR"), Set.of("SUBWAY_STATION"))
+            SUBWAY_INDOOR_SMALL_FILTER
         )).willReturn(items);
         given(lockerSearchPinAssembler.assemble(items)).willReturn(assembledPins);
         given(lockerPinClusterer.cluster(List.of(assembledPins.get(0)), 13.0)).willReturn(clusteredPins);
@@ -185,7 +203,7 @@ class LockerPinQueryServiceTest {
             126.92,
             37.56,
             126.94,
-            LockerSearchFilter.from(Set.of("SMALL"), Set.of("INDOOR"), Set.of("SUBWAY_STATION"))
+            SUBWAY_INDOOR_SMALL_FILTER
         );
         verify(lockerSearchPinAssembler).assemble(items);
         verify(lockerPinClusterer).cluster(List.of(assembledPins.get(0)), 13.0);
@@ -203,19 +221,15 @@ class LockerPinQueryServiceTest {
             null,
             null,
             null,
-            Set.of("LARGE"),
-            Set.of("INDOOR"),
-            Set.of("SUBWAY_STATION")
+            Set.of(LockerSizeFilterType.LARGE),
+            Set.of(IndoorOutdoorFilterType.INDOOR),
+            Set.of(LockerFacilityFilterType.SUBWAY_STATION)
         );
         List<NearbyLocker> nearbyLockers = List.of(sampleLocker());
         List<LockerPinItemResult> pins = List.of(
             LockerPinItemResult.locker(1L, 37.55, 126.93, false)
         );
-        LockerSearchFilter filter = LockerSearchFilter.from(
-            Set.of("LARGE"),
-            Set.of("INDOOR"),
-            Set.of("SUBWAY_STATION")
-        );
+        LockerSearchFilter filter = SUBWAY_INDOOR_LARGE_FILTER;
 
         given(nearbyLockerPlaceReader.findWithinBounds(37.54, 126.92, 37.56, 126.94, filter))
             .willReturn(nearbyLockers);
