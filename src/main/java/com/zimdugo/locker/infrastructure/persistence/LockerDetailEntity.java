@@ -72,7 +72,7 @@ public class LockerDetailEntity {
     @Column(length = 100)
     private Set<LockerSizeType> lockerSize;
 
-    @Column(length = 1000)
+    @Column(length = 2000)
     private String detailInfo;
 
     @Column
