@@ -30,7 +30,6 @@ spring:
             scope:
               - name
               - email
-              - nickname
               - profile_image
 
           kakao:
@@ -41,7 +40,6 @@ spring:
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope:
-              - profile_nickname
               - profile_image
               - account_email
 
