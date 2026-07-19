@@ -34,16 +34,6 @@ public class KakaoOAuth2UserInfo implements OAuth2UserInfo {
     }
 
     @Override
-    public String getNickname() {
-        Map<String, Object> profile = getProfile();
-        if (profile == null) {
-            return null;
-        }
-        Object nickname = profile.get("nickname");
-        return nickname != null ? nickname.toString() : null;
-    }
-
-    @Override
     public String getProfileImageUrl() {
         Map<String, Object> profile = getProfile();
         if (profile == null) {
