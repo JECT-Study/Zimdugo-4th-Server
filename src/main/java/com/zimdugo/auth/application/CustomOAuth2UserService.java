@@ -77,6 +77,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                     ErrorCode.OAUTH2_INVALID_USER_INFO.getMessage()
             );
         }
+        if (userInfo.getEmail() == null || userInfo.getEmail().isBlank()) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("invalid_user_info"),
+                    ErrorCode.OAUTH2_INVALID_USER_INFO.getMessage()
+            );
+        }
     }
 
     private User findOrCreateUser(OAuth2UserInfo userInfo) {

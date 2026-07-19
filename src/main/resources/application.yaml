@@ -43,7 +43,7 @@ spring:
             scope:
               - profile_nickname
               - profile_image
-              # - account_email
+              - account_email
 
         provider:
           naver:
