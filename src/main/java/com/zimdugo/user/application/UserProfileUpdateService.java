@@ -17,29 +17,21 @@ public class UserProfileUpdateService {
     private final UserQueryService userQueryService;
     private final UserStore userStore;
 
-    public UserProfileDto updateProfile(Long userId, String nickname, String profileImageUrl) {
+    public UserProfileDto updateProfile(Long userId, String profileImageUrl) {
         User user = userQueryService.findById(userId);
         if (user.getStatus() == UserStatus.DELETED) {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
-        String resolvedNickname = hasText(nickname) ? nickname : user.getNickname();
-        String resolvedProfileImageUrl = hasText(profileImageUrl) ? profileImageUrl : user.getProfileImageUrl();
-
-        user.updateProfile(resolvedNickname, resolvedProfileImageUrl);
+        user.updateProfile(user.getNickname(), profileImageUrl);
         User updatedUser = userStore.store(user);
 
         return new UserProfileDto(
             updatedUser.getId(),
             updatedUser.getEmail(),
-            updatedUser.getNickname(),
             updatedUser.getProfileImageUrl(),
             updatedUser.getStatus().name(),
             userQueryService.getProfile(userId).providers()
         );
-    }
-
-    private boolean hasText(String value) {
-        return value != null && !value.isBlank();
     }
 }

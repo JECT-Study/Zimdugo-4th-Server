@@ -6,7 +6,6 @@ import java.util.List;
 public record UserProfileResponse(
     Long id,
     String email,
-    String nickname,
     String profileImageUrl,
     String status,
     List<String> providers
@@ -15,7 +14,6 @@ public record UserProfileResponse(
         return new UserProfileResponse(
             dto.id(),
             dto.email(),
-            dto.nickname(),
             dto.profileImageUrl(),
             dto.status(),
             dto.providers()
