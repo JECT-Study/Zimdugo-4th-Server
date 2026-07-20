@@ -32,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
+    private static final String UNUSED_NICKNAME = "unused";
+
     private final UserStore userStore;
     private final SocialAccountReader socialAccountReader;
     private final SocialAccountStore socialAccountStore;
@@ -48,7 +50,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         User user = findOrCreateUser(userInfo);
         log.info(
-            "OAuth user sync completed. provider={}, userId={}, role={}",
+            "OAuth 사용자 동기화가 완료되었습니다. provider={}, userId={}, role={}",
             registrationId,
             user.getId(),
             user.getRoleOrDefault()
@@ -95,7 +97,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         );
         SocialAccount saved = socialAccountStore.store(socialAccount);
         log.debug(
-            "OAuth social account sync completed. provider={}, userId={}",
+            "OAuth 소셜 계정 동기화가 완료되었습니다. provider={}, userId={}",
             userInfo.getProvider(),
             saved.getUser().getId()
         );
@@ -108,7 +110,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         User user = new User(
             email,
-            email,
+            UNUSED_NICKNAME,
             profileImageUrl,
             UserStatus.ACTIVE
         );
@@ -125,7 +127,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         socialAccountStore.store(socialAccount);
         log.info(
-            "OAuth new user created. provider={}, userId={}",
+            "OAuth 신규 사용자가 생성되었습니다. provider={}, userId={}",
             userInfo.getProvider(),
             savedUser.getId()
         );
