@@ -23,9 +23,7 @@ public class UserProfileUpdateService {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
-        String resolvedProfileImageUrl = hasText(profileImageUrl) ? profileImageUrl : user.getProfileImageUrl();
-
-        user.updateProfile(user.getNickname(), resolvedProfileImageUrl);
+        user.updateProfile(user.getNickname(), profileImageUrl);
         User updatedUser = userStore.store(user);
 
         return new UserProfileDto(
@@ -35,9 +33,5 @@ public class UserProfileUpdateService {
             updatedUser.getStatus().name(),
             userQueryService.getProfile(userId).providers()
         );
-    }
-
-    private boolean hasText(String value) {
-        return value != null && !value.isBlank();
     }
 }
