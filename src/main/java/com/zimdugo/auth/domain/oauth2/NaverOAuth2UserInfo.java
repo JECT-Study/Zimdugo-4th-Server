@@ -38,16 +38,6 @@ public class NaverOAuth2UserInfo implements OAuth2UserInfo {
     }
 
     @Override
-    public String getNickname() {
-        Map<String, Object> response = getResponse();
-        if (response == null) {
-            return null;
-        }
-        Object nickname = response.get("nickname");
-        return nickname != null ? nickname.toString() : null;
-    }
-
-    @Override
     public String getProfileImageUrl() {
         Map<String, Object> response = getResponse();
         if (response == null) {

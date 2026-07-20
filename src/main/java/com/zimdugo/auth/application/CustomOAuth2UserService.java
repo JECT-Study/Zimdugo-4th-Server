@@ -10,6 +10,9 @@ import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserRole;
 import com.zimdugo.user.domain.UserStatus;
 import com.zimdugo.user.domain.UserStore;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,15 +26,13 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+
+    private static final String UNUSED_NICKNAME = "unused";
 
     private final UserStore userStore;
     private final SocialAccountReader socialAccountReader;
@@ -45,11 +46,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(registrationId, oAuth2User);
 
-        validateRequiredFields(userInfo, registrationId);
+        validateRequiredFields(userInfo);
 
         User user = findOrCreateUser(userInfo);
         log.info(
-            "OAuth 사용자 인증 완료. provider={}, userId={}, role={}",
+            "OAuth 사용자 동기화가 완료되었습니다. provider={}, userId={}, role={}",
             registrationId,
             user.getId(),
             user.getRoleOrDefault()
@@ -57,24 +58,27 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
         attributes.put("userId", user.getId());
-        attributes.put("email", user.getEmail());      // null 가능
-        attributes.put("nickname", user.getNickname());
+        attributes.put("email", user.getEmail());
         attributes.put("role", user.getRoleOrDefault().name());
 
-        String nameAttributeKey = resolveNameAttributeKey(user, userInfo);
-
         return new DefaultOAuth2User(
-                List.of(new SimpleGrantedAuthority(toAuthority(user.getRoleOrDefault()))),
-                attributes,
-                nameAttributeKey
+            List.of(new SimpleGrantedAuthority(toAuthority(user.getRoleOrDefault()))),
+            attributes,
+            "email"
         );
     }
 
-    private void validateRequiredFields(OAuth2UserInfo userInfo, String registrationId) {
+    private void validateRequiredFields(OAuth2UserInfo userInfo) {
         if (userInfo.getProviderUserId() == null || userInfo.getProviderUserId().isBlank()) {
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error("invalid_user_info"),
-                    ErrorCode.OAUTH2_INVALID_USER_INFO.getMessage()
+                new OAuth2Error("invalid_user_info"),
+                ErrorCode.OAUTH2_INVALID_USER_INFO.getMessage()
+            );
+        }
+        if (userInfo.getEmail() == null || userInfo.getEmail().isBlank()) {
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("invalid_user_info"),
+                ErrorCode.OAUTH2_INVALID_USER_INFO.getMessage()
             );
         }
     }
@@ -93,7 +97,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         );
         SocialAccount saved = socialAccountStore.store(socialAccount);
         log.debug(
-            "OAuth 소셜 계정 동기화 완료. provider={}, userId={}",
+            "OAuth 소셜 계정 동기화가 완료되었습니다. provider={}, userId={}",
             userInfo.getProvider(),
             saved.getUser().getId()
         );
@@ -102,44 +106,33 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private User createNewUser(OAuth2UserInfo userInfo) {
         String email = normalize(userInfo.getEmail());
-        String nickname = resolveNickname(userInfo);
         String profileImageUrl = normalize(userInfo.getProfileImageUrl());
 
         User user = new User(
-                email,               // 카카오는 null일 수 있음
-                nickname,
-                profileImageUrl,
-                UserStatus.ACTIVE
+            email,
+            UNUSED_NICKNAME,
+            profileImageUrl,
+            UserStatus.ACTIVE
         );
 
         User savedUser = userStore.store(user);
 
         SocialAccount socialAccount = new SocialAccount(
-                savedUser,
-                userInfo.getProvider(),
-                userInfo.getProviderUserId(),
-                email,               // null 가능
-                profileImageUrl
+            savedUser,
+            userInfo.getProvider(),
+            userInfo.getProviderUserId(),
+            email,
+            profileImageUrl
         );
 
         socialAccountStore.store(socialAccount);
-        log.info("OAuth 신규 사용자 생성 완료. provider={}, userId={}", userInfo.getProvider(), savedUser.getId());
+        log.info(
+            "OAuth 신규 사용자가 생성되었습니다. provider={}, userId={}",
+            userInfo.getProvider(),
+            savedUser.getId()
+        );
 
         return savedUser;
-    }
-
-    private String resolveNickname(OAuth2UserInfo userInfo) {
-        String nickname = normalize(userInfo.getNickname());
-        if (nickname != null) {
-            return nickname;
-        }
-
-        String email = normalize(userInfo.getEmail());
-        if (email != null && email.contains("@")) {
-            return email.split("@")[0];
-        }
-
-        return userInfo.getProvider().name().toLowerCase() + "_" + userInfo.getProviderUserId();
     }
 
     private String normalize(String value) {
@@ -148,13 +141,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         }
         String trimmed = value.trim();
         return trimmed.isBlank() ? null : trimmed;
-    }
-
-    private String resolveNameAttributeKey(User user, OAuth2UserInfo userInfo) {
-        if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            return "email";
-        }
-        return "userId";
     }
 
     private String toAuthority(UserRole role) {

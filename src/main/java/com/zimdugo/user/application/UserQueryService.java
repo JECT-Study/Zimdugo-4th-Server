@@ -31,7 +31,6 @@ public class UserQueryService {
         return new UserProfileDto(
             user.getId(),
             user.getEmail(),
-            user.getNickname(),
             user.getProfileImageUrl(),
             user.getStatus().name(),
             providers

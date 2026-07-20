@@ -30,12 +30,6 @@ public class FacebookOAuth2UserInfo implements OAuth2UserInfo {
     }
 
     @Override
-    public String getNickname() {
-        Object name = attributes.get("name");
-        return name != null ? name.toString() : null;
-    }
-
-    @Override
     public String getProfileImageUrl() {
         Object picture = attributes.get("picture");
 

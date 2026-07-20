@@ -42,7 +42,6 @@ public class UserController {
     ) {
         UserProfileDto profile = userProfileUpdateService.updateProfile(
             userId,
-            request.nickname(),
             request.profileImageUrl()
         );
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, UserProfileResponse.from(profile)));
