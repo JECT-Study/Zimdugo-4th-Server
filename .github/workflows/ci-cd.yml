@@ -5,7 +5,6 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
 
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('ci-{0}', github.ref) || 'deploy-main' }}
@@ -21,6 +20,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Set up JDK 25
         uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
@@ -82,6 +83,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Download Build Artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
@@ -106,14 +109,19 @@ jobs:
       - name: Set image coordinates
         id: image
         shell: bash
+        env:
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+          ELASTICSEARCH_TAG: ${{ hashFiles('docker/elasticsearch/Dockerfile') }}
+          POSTGIS_TAG: ${{ hashFiles('docker/postgres/postgis/**') }}
         run: |
-          owner="$(tr '[:upper:]' '[:lower:]' <<< '${{ github.repository_owner }}')"
-          repository="$(tr '[:upper:]' '[:lower:]' <<< '${{ github.event.repository.name }}')"
+          owner="$(tr '[:upper:]' '[:lower:]' <<< "$REPOSITORY_OWNER")"
+          repository="$(tr '[:upper:]' '[:lower:]' <<< "$REPOSITORY_NAME")"
           {
             echo "owner=${owner}"
             echo "repository=${repository}"
-            echo "elasticsearch_tag=${{ hashFiles('docker/elasticsearch/Dockerfile') }}"
-            echo "postgis_tag=${{ hashFiles('docker/postgres/postgis/**') }}"
+            echo "elasticsearch_tag=${ELASTICSEARCH_TAG}"
+            echo "postgis_tag=${POSTGIS_TAG}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Build and push application image
@@ -166,6 +174,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Validate provisioned environment
         run: |
