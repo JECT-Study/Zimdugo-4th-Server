@@ -5,14 +5,14 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 concurrency:
-  group: deploy-main
-  cancel-in-progress: true
+  group: ${{ github.event_name == 'pull_request' && format('ci-{0}', github.ref) || 'deploy-main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   build-and-test:
@@ -20,22 +20,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
         with:
           java-version: 25
-          distribution: 'temurin'
+          distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
       - name: Check Docker
         run: |
           docker version
           docker info
           docker ps -a
+
+      - name: Validate deployment Compose
+        run: APP_ENV_FILE=.env.example docker compose --env-file .env.example -f docker-compose.deploy.yml config --quiet
 
       - name: Build
         run: |
@@ -44,148 +47,262 @@ jobs:
 
       - name: Upload Checkstyle reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: checkstyle-reports
           path: build/reports/checkstyle/
 
       - name: Upload test reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: test-reports
           path: build/reports/tests/
 
       - name: Upload Build Artifact
-        if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/upload-artifact@v4
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: app-jar
           path: build/libs/
           retention-days: 1
 
-  # EC2 미사용 기간 동안 배포 워크플로우를 임시 비활성화합니다.
-  # deploy:
-  #   name: Deploy to EC2
-  #   needs: build-and-test
-  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  #   runs-on: ubuntu-latest
-  #
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Download Build Artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: app-jar
-  #         path: build/libs/
-  #
-  #     - name: Login to GHCR
-  #       uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
-  #
-  #     - name: Set image name
-  #       id: image
-  #       run: |
-  #         owner_lower="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
-  #         repo_lower="$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')"
-  #         echo "name=ghcr.io/${owner_lower}/${repo_lower}" >> "$GITHUB_OUTPUT"
-  #         echo "owner_lower=${owner_lower}" >> "$GITHUB_OUTPUT"
-  #         echo "repo_lower=${repo_lower}" >> "$GITHUB_OUTPUT"
-  #
-  #     - name: Build and push image
-  #       uses: docker/build-push-action@v6
-  #       with:
-  #         context: .
-  #         push: true
-  #         tags: |
-  #           ${{ steps.image.outputs.name }}:latest
-  #           ${{ steps.image.outputs.name }}:${{ github.sha }}
-  #         cache-from: type=gha
-  #         cache-to: type=gha,mode=max
-  #
-  #     - name: Build and push Elasticsearch image
-  #       uses: docker/build-push-action@v6
-  #       with:
-  #         context: .
-  #         file: ./docker/elasticsearch/Dockerfile
-  #         push: true
-  #         tags: |
-  #           ghcr.io/${{ steps.image.outputs.owner_lower }}/zimdugo-elasticsearch:9.2.6-nori
-  #         cache-from: type=gha
-  #         cache-to: type=gha,mode=max
-  #
-  #     - name: Copy compose file to EC2
-  #       uses: appleboy/scp-action@v0.1.7
-  #       with:
-  #         host: ${{ secrets.EC2_HOST }}
-  #         username: ${{ secrets.EC2_USERNAME }}
-  #         key: ${{ secrets.EC2_SSH_KEY }}
-  #         source: docker-compose.deploy.yml,docker/nginx/zimdugo-upload-size.conf
-  #         target: /opt/zimdugo
-  #
-  #     - name: Deploy on EC2 via SSH
-  #       uses: appleboy/ssh-action@v1.2.0
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         GITHUB_ACTOR: ${{ github.actor }}
-  #         GITHUB_SHA: ${{ github.sha }}
-  #         OWNER_LOWER: ${{ steps.image.outputs.owner_lower }}
-  #         REPO_LOWER: ${{ steps.image.outputs.repo_lower }}
-  #       with:
-  #         host: ${{ secrets.EC2_HOST }}
-  #         username: ${{ secrets.EC2_USERNAME }}
-  #         key: ${{ secrets.EC2_SSH_KEY }}
-  #         envs: GITHUB_TOKEN,GITHUB_ACTOR,GITHUB_SHA,OWNER_LOWER,REPO_LOWER
-  #         script: |
-  #           set -e
-  #           cd /opt/zimdugo
-  #           sudo install -m 644 docker/nginx/zimdugo-upload-size.conf /etc/nginx/conf.d/zimdugo-upload-size.conf
-  #           sudo nginx -t
-  #           sudo systemctl reload nginx
-  #           grep -q '^GHCR_OWNER=' .env || echo "GHCR_OWNER=${OWNER_LOWER}" >> .env
-  #           grep -q '^GHCR_REPO=' .env || echo "GHCR_REPO=${REPO_LOWER}" >> .env
-  #           grep -q '^ELASTICSEARCH_URIS=' .env || echo "ELASTICSEARCH_URIS=http://elasticsearch:9200" >> .env
-  #           if grep -q '^IMAGE_TAG=' .env; then
-  #             sudo sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${GITHUB_SHA}|" .env
-  #           else
-  #             echo "IMAGE_TAG=${GITHUB_SHA}" | sudo tee -a .env >/dev/null
-  #           fi
-  #
-  #           echo "${GITHUB_TOKEN}" | sudo docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
-  #           sudo docker compose -f docker-compose.deploy.yml pull
-  #           sudo docker compose -f docker-compose.deploy.yml up -d redis elasticsearch
-  #           for i in {1..60}; do
-  #             if curl -s http://127.0.0.1:9200 >/dev/null; then
-  #               echo "Elasticsearch is ready"
-  #               break
-  #             fi
-  #             if [ "$i" -eq 60 ]; then
-  #               echo "Elasticsearch startup failed. Dumping elasticsearch logs..."
-  #               sudo docker compose -f docker-compose.deploy.yml logs elasticsearch --tail=200
-  #               exit 1
-  #             fi
-  #             sleep 2
-  #           done
-  #           sudo docker compose -f docker-compose.deploy.yml up -d app
-  #           for i in {1..90}; do
-  #             status_code="$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/actuator/health/readiness || true)"
-  #             if [ "$status_code" = "200" ] || [ "$status_code" = "401" ]; then
-  #               echo "Health check passed with HTTP ${status_code}"
-  #               break
-  #             fi
-  #             if [ "$i" -eq 90 ]; then
-  #               echo "Health check failed. Dumping app logs..."
-  #               sudo docker compose -f docker-compose.deploy.yml logs app --tail=200
-  #               exit 1
-  #             fi
-  #             sleep 2
-  #           done
-  #           sudo docker image prune -f
+  build-images:
+    name: Build ARM64 images
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      owner: ${{ steps.image.outputs.owner }}
+      repository: ${{ steps.image.outputs.repository }}
+      elasticsearch_tag: ${{ steps.image.outputs.elasticsearch_tag }}
+      postgis_tag: ${{ steps.image.outputs.postgis_tag }}
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: app-jar
+          path: build/libs/
+
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Set image coordinates
+        id: image
+        shell: bash
+        run: |
+          owner="$(tr '[:upper:]' '[:lower:]' <<< '${{ github.repository_owner }}')"
+          repository="$(tr '[:upper:]' '[:lower:]' <<< '${{ github.event.repository.name }}')"
+          {
+            echo "owner=${owner}"
+            echo "repository=${repository}"
+            echo "elasticsearch_tag=${{ hashFiles('docker/elasticsearch/Dockerfile') }}"
+            echo "postgis_tag=${{ hashFiles('docker/postgres/postgis/**') }}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push application image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ steps.image.outputs.owner }}/${{ steps.image.outputs.repository }}:latest
+            ghcr.io/${{ steps.image.outputs.owner }}/${{ steps.image.outputs.repository }}:${{ github.sha }}
+          cache-from: type=gha,scope=application-arm64
+          cache-to: type=gha,mode=max,scope=application-arm64
+
+      - name: Build and push Elasticsearch image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/elasticsearch/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ steps.image.outputs.owner }}/zimdugo-elasticsearch:9.2.6-nori
+            ghcr.io/${{ steps.image.outputs.owner }}/zimdugo-elasticsearch:${{ steps.image.outputs.elasticsearch_tag }}
+          cache-from: type=gha,scope=elasticsearch-arm64
+          cache-to: type=gha,mode=max,scope=elasticsearch-arm64
+
+      - name: Build and push PostGIS image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: docker/postgres/postgis
+          file: docker/postgres/postgis/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ steps.image.outputs.owner }}/zimdugo-postgis:16-3.5-arm64
+            ghcr.io/${{ steps.image.outputs.owner }}/zimdugo-postgis:${{ steps.image.outputs.postgis_tag }}
+          cache-from: type=gha,scope=postgis-arm64
+          cache-to: type=gha,mode=max,scope=postgis-arm64
+
+  deploy:
+    name: Deploy to OCI Ampere A1
+    needs: build-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, ARM64, zimdugo]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Validate provisioned environment
+        run: |
+          cd /opt/zimdugo
+          test -f .env
+          test ! -L .env
+          test "$(stat -c '%a' .env)" = "600"
+          test "$(stat -c '%u' .env)" = "$(id -u)"
+          for key in DB_USERNAME DB_PASSWORD JWT_SECRET AWS_S3_BUCKET AWS_CLOUDFRONT_PUBLIC_BASE_URL; do
+            value="$(sed -n "s/^${key}=//p" .env | tail -n 1)"
+            if [ -z "$value" ]; then
+              echo "Required deployment value is missing: ${key}" >&2
+              exit 1
+            fi
+          done
+          previous_image_tag="$(sed -n 's/^IMAGE_TAG=//p' .env | tail -n 1)"
+          if [ -n "$previous_image_tag" ] && ! [[ "$previous_image_tag" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "Existing IMAGE_TAG contains unsupported characters" >&2
+            exit 1
+          fi
+          echo "PREVIOUS_IMAGE_TAG=${previous_image_tag}" >> "$GITHUB_ENV"
+
+      - name: Install deployment files
+        run: |
+          sudo install -d -m 755 /opt/zimdugo/docker/postgres/init
+          sudo install -m 644 docker-compose.deploy.yml /opt/zimdugo/docker-compose.deploy.yml
+          sudo install -m 644 docker/postgres/init/01-postgis-init.sql /opt/zimdugo/docker/postgres/init/01-postgis-init.sql
+          sudo install -m 644 docker/nginx/zimdugo-upload-size.conf /etc/nginx/conf.d/zimdugo-upload-size.conf
+          sudo install -m 644 docker/nginx/zimdugo-api.conf /etc/nginx/sites-available/zimdugo-api
+          sudo ln -sfn /etc/nginx/sites-available/zimdugo-api /etc/nginx/sites-enabled/zimdugo-api
+          sudo unlink /etc/nginx/sites-enabled/default 2>/dev/null || true
+          sudo nginx -t
+          sudo systemctl reload nginx
+
+      - name: Update deployment image tag
+        env:
+          GHCR_OWNER: ${{ needs.build-images.outputs.owner }}
+          GHCR_REPO: ${{ needs.build-images.outputs.repository }}
+          IMAGE_TAG: ${{ github.sha }}
+          ELASTICSEARCH_IMAGE_TAG: ${{ needs.build-images.outputs.elasticsearch_tag }}
+          POSTGIS_IMAGE_TAG: ${{ needs.build-images.outputs.postgis_tag }}
+        run: |
+          cd /opt/zimdugo
+          upsert_env() {
+            key="$1"
+            value="$2"
+            if grep -q "^${key}=" .env; then
+              sed -i "s|^${key}=.*|${key}=${value}|" .env
+            else
+              printf '%s=%s\n' "$key" "$value" >> .env
+            fi
+          }
+          upsert_env GHCR_OWNER "$GHCR_OWNER"
+          upsert_env GHCR_REPO "$GHCR_REPO"
+          upsert_env IMAGE_TAG "$IMAGE_TAG"
+          upsert_env ELASTICSEARCH_IMAGE_TAG "$ELASTICSEARCH_IMAGE_TAG"
+          upsert_env POSTGIS_IMAGE_TAG "$POSTGIS_IMAGE_TAG"
+
+      - name: Login to GHCR on OCI
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Start state services
+        run: |
+          cd /opt/zimdugo
+          docker compose -f docker-compose.deploy.yml pull
+          docker compose -f docker-compose.deploy.yml up -d --wait --wait-timeout 180 postgres redis elasticsearch
+
+      - name: Initialize a new database schema once
+        run: |
+          cd /opt/zimdugo
+          bootstrap_complete="$(docker compose -f docker-compose.deploy.yml exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "$1"' _ "SELECT to_regclass('public.zimdugo_schema_bootstrap_v1') IS NOT NULL" | tr -d '[:space:]')"
+          if [ "$bootstrap_complete" != "t" ]; then
+            docker rm -f zimdugo-schema-bootstrap 2>/dev/null || true
+            cleanup_bootstrap() {
+              docker rm -f zimdugo-schema-bootstrap >/dev/null 2>&1 || true
+            }
+            trap cleanup_bootstrap EXIT INT TERM
+            docker compose -f docker-compose.deploy.yml run -d --name zimdugo-schema-bootstrap \
+              -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
+              -e SERVER_PORT=0 \
+              app
+            for attempt in $(seq 1 90); do
+              if docker logs zimdugo-schema-bootstrap 2>&1 | grep -q "Started ZimdugoApplication"; then
+                docker compose -f docker-compose.deploy.yml exec -T postgres sh -c \
+                  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "$1"' \
+                  _ "CREATE TABLE IF NOT EXISTS public.zimdugo_schema_bootstrap_v1 (completed_at timestamptz NOT NULL DEFAULT now())"
+                break
+              fi
+              if ! docker inspect -f '{{.State.Running}}' zimdugo-schema-bootstrap 2>/dev/null | grep -q true; then
+                docker logs zimdugo-schema-bootstrap --tail=200
+                exit 1
+              fi
+              if [ "$attempt" -eq 90 ]; then
+                docker logs zimdugo-schema-bootstrap --tail=200
+                exit 1
+              fi
+              sleep 2
+            done
+            cleanup_bootstrap
+            trap - EXIT INT TERM
+          fi
+
+      - name: Start application and verify readiness
+        run: |
+          cd /opt/zimdugo
+          docker compose -f docker-compose.deploy.yml up -d app
+          for _ in $(seq 1 120); do
+            health="$(curl -fsS http://127.0.0.1:8080/actuator/health/readiness || true)"
+            if grep -q '"status":"UP"' <<< "$health"; then
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' zimdugo-be 2>/dev/null || true)" != "true" ]; then
+              break
+            fi
+            sleep 2
+          done
+          docker compose -f docker-compose.deploy.yml logs app --tail=200
+          if [ -n "${PREVIOUS_IMAGE_TAG:-}" ]; then
+            echo "Rollback to previous application image: ${PREVIOUS_IMAGE_TAG}"
+            sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${PREVIOUS_IMAGE_TAG}|" .env
+            docker compose -f docker-compose.deploy.yml up -d app
+            for _ in $(seq 1 60); do
+              health="$(curl -fsS http://127.0.0.1:8080/actuator/health/readiness || true)"
+              if grep -q '"status":"UP"' <<< "$health"; then
+                echo "Rollback readiness verified" >&2
+                exit 1
+              fi
+              sleep 2
+            done
+            echo "Rollback failed readiness verification" >&2
+          fi
+          exit 1
+
+      - name: Clean old images
+        if: always()
+        run: docker image prune -af --filter until=168h

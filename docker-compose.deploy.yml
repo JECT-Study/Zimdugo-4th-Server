@@ -1,16 +1,42 @@
 services:
+  postgres:
+    image: ghcr.io/${GHCR_OWNER}/zimdugo-postgis:${POSTGIS_IMAGE_TAG:-16-3.5-arm64}
+    container_name: zimdugo-postgres
+    restart: always
+    shm_size: 256mb
+    mem_limit: 1g
+    environment:
+      POSTGRES_DB: ${DB_NAME:-zimdugo}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init/01-postgis-init.sql:/docker-entrypoint-initdb.d/20-zimdugo-postgis.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME:-zimdugo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:efc27681bf81e6ed55cb581718b7818c6c04c39b1f9aa40854edd3ea2241b6ed
     container_name: zimdugo-redis
     restart: always
     command: ["redis-server", "--appendonly", "yes"]
+    mem_limit: 256m
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   elasticsearch:
-    image: ghcr.io/${GHCR_OWNER}/zimdugo-elasticsearch:9.2.6-nori
+    image: ghcr.io/${GHCR_OWNER}/zimdugo-elasticsearch:${ELASTICSEARCH_IMAGE_TAG:-9.2.6-nori}
     container_name: zimdugo-elasticsearch
     restart: always
+    mem_limit: 1g
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
@@ -20,26 +46,44 @@ services:
       - elasticsearch-data:/usr/share/elasticsearch/data
     ports:
       - "127.0.0.1:9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
 
   app:
     image: ghcr.io/${GHCR_OWNER}/${GHCR_REPO}:${IMAGE_TAG:-latest}
     container_name: zimdugo-be
     restart: always
+    mem_limit: 1280m
     depends_on:
-      - redis
-      - elasticsearch
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     ports:
       - "127.0.0.1:8080:8080"
     env_file:
-      - .env
+      - ${APP_ENV_FILE:-.env}
     environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-zimdugo}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       ELASTICSEARCH_URIS: ${ELASTICSEARCH_URIS:-http://elasticsearch:9200}
+      AWS_EC2_METADATA_DISABLED: "true"
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_TRANSLATION_MODEL: ${GEMINI_TRANSLATION_MODEL:-gemini-2.5-flash-lite}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xms256m -Xmx768m}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
 volumes:
+  postgres-data:
   redis-data:
   elasticsearch-data:
