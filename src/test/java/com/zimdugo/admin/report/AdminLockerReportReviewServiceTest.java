@@ -290,7 +290,6 @@ class AdminLockerReportReviewServiceTest {
         return new UserEntity(
             1L,
             "user@example.com",
-            "user",
             null,
             UserStatus.ACTIVE,
             UserRole.USER,

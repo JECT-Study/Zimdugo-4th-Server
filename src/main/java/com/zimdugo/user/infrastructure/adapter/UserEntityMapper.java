@@ -12,7 +12,6 @@ final class UserEntityMapper {
         return new User(
             entity.getId(),
             entity.getEmail(),
-            entity.getNickname(),
             entity.getProfileImageUrl(),
             entity.getStatus(),
             entity.getRole(),
@@ -25,7 +24,6 @@ final class UserEntityMapper {
         return new UserEntity(
             user.getId(),
             user.getEmail(),
-            user.getNickname(),
             user.getProfileImageUrl(),
             user.getStatus(),
             user.getRoleOrDefault(),

@@ -30,9 +30,6 @@ public class UserEntity {
     @Column(length = 100)
     private String email;
 
-    @Column(nullable = false, length = 50)
-    private String nickname;
-
     @Column(length = 255)
     private String profileImageUrl;
 
@@ -54,7 +51,6 @@ public class UserEntity {
     public UserEntity(
         Long id,
         String email,
-        String nickname,
         String profileImageUrl,
         UserStatus status,
         UserRole role,
@@ -63,7 +59,6 @@ public class UserEntity {
     ) {
         this.id = id;
         this.email = email;
-        this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.status = status;
         this.role = role;

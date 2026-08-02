@@ -119,10 +119,10 @@ class FavoriteLockerCommandServiceTest {
     }
 
     private User activeUser(Long id) {
-        return new User(id, "user@zimdugo.com", "zimdugo", null, UserStatus.ACTIVE, null, null, null);
+        return new User(id, "user@zimdugo.com", null, UserStatus.ACTIVE, null, null, null);
     }
 
     private User deletedUser(Long id) {
-        return new User(id, "user@zimdugo.com", "zimdugo", null, UserStatus.DELETED, null, null, null);
+        return new User(id, "user@zimdugo.com", null, UserStatus.DELETED, null, null, null);
     }
 }
