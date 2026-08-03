@@ -85,6 +85,7 @@ Production deployment requires these release guards:
 - Give image-building jobs package write permission and deployment jobs package read permission.
 - Capture the previous immutable application tag before updating `.env`. If new readiness fails, restore the previous tag, verify rollback readiness, and still fail the workflow.
 - Use immutable content-derived tags for state-service images so ordinary application commits do not restart PostgreSQL or Elasticsearch.
+- Make repository regression scans fail closed: require the scanner binary, treat status 0 as a violation and status 1 as clean, and propagate every other status as a scanner failure. Execute the real workflow block with controlled 0, 1, and 2 statuses so shell error handling cannot collapse clean and failed scans together.
 - Bound container memory and heap sizes rather than resizing the A1 instance.
 
 ## Why This Matters
@@ -132,7 +133,7 @@ app:
     JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
 ```
 
-An IP-based HTTP readiness check proves initial reachability, not full production readiness. DNS and TLS remain prerequisites for secure cookies and OAuth redirects, and real AWS/S3/CloudFront and OAuth credentials must replace placeholders before those features work.
+An IP-based HTTP readiness check proves initial reachability, not full production readiness. DNS and TLS remain prerequisites for secure cookies and OAuth redirects. OCI Object Storage requires the production region, namespace, and bucket coordinates with `OCI_AUTH_MODE=instance-principal`; do not store cloud credentials on the instance. Real OAuth credentials must replace placeholders before OAuth login works.
 
 ## Related
 

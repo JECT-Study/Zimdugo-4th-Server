@@ -43,13 +43,27 @@ jobs:
 
       - name: Reject AWS storage references
         run: |
+          if ! command -v rg >/dev/null 2>&1; then
+            echo "ripgrep is required for the AWS storage scan" >&2
+            exit 127
+          fi
           aws_prefix='AWS_'
           pattern="software\\.amazon\\.awssdk|${aws_prefix}S3_|${aws_prefix}CLOUDFRONT|storage\\.s3|S3(Client|Storage|Image|Presigned|Locker)"
-          if rg -n "$pattern" \
-            build.gradle.kts src/main src/test .env.example docker-compose.deploy.yml .github/workflows/ci-cd.yml; then
-            echo "AWS storage reference remains" >&2
-            exit 1
-          fi
+          scan_status=0
+          rg -n "$pattern" \
+            build.gradle.kts src/main src/test .env.example docker-compose.deploy.yml .github/workflows/ci-cd.yml \
+            || scan_status=$?
+          case "$scan_status" in
+            0)
+              echo "AWS storage reference remains" >&2
+              exit 1
+              ;;
+            1) ;;
+            *)
+              echo "AWS storage scan failed with status ${scan_status}" >&2
+              exit "$scan_status"
+              ;;
+          esac
 
       - name: Build
         run: |
