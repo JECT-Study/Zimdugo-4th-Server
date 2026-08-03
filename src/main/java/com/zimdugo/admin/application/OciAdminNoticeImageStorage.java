@@ -91,16 +91,47 @@ public class OciAdminNoticeImageStorage implements AdminNoticeImageStorage {
                 .putObjectBody(inputStream)
                 .build());
             return pathResolver.buildPublicUrl(key);
-        } catch (IOException | BmcException exception) {
-            log.error(
-                "공지 이미지 OCI 업로드 실패. bucket={}, key={}, contentType={}, fileSize={}",
-                properties.bucket(),
-                key,
-                contentType,
-                file.getSize(),
-                exception
-            );
-            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED, exception);
+        } catch (BmcException exception) {
+            throw bmcUploadFailure(key, contentType, file.getSize(), exception);
+        } catch (IOException exception) {
+            throw ioUploadFailure(key, contentType, file.getSize(), exception);
         }
+    }
+
+    private ExternalApiException bmcUploadFailure(
+        String key,
+        String contentType,
+        long fileSize,
+        BmcException exception
+    ) {
+        log.error(
+            "공지 이미지 OCI 업로드 실패. bucket={}, key={}, contentType={}, fileSize={}, "
+                + "statusCode={}, serviceCode={}, requestId={}",
+            properties.bucket(),
+            key,
+            contentType,
+            fileSize,
+            exception.getStatusCode(),
+            exception.getServiceCode(),
+            exception.getOpcRequestId()
+        );
+        return new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
+    }
+
+    private ExternalApiException ioUploadFailure(
+        String key,
+        String contentType,
+        long fileSize,
+        IOException exception
+    ) {
+        log.error(
+            "공지 이미지 OCI 업로드 실패. bucket={}, key={}, contentType={}, fileSize={}, reason={}",
+            properties.bucket(),
+            key,
+            contentType,
+            fileSize,
+            exception.getClass().getSimpleName()
+        );
+        return new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
     }
 }
