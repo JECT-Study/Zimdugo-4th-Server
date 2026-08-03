@@ -2,6 +2,7 @@ package com.zimdugo.locker.infrastructure.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.data.Offset.offset;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -146,24 +147,44 @@ class OciLockerReportImageMetadataReaderTest {
     }
 
     @Test
-    void translatesOciReadFailureWithoutLoggingTheImageUrl() {
+    void sanitizesOciFailureBeforeLoggingOrPropagatingIt() {
+        String endpointMarker = "https://objectstorage.ap-osaka-1.oraclecloud.com";
+        String objectKeyMarker = "reports/private-token.jpg";
+        String responseDetailMarker = "response-detail-marker";
+        BmcException storageFailure = new BmcException(
+            500,
+            "InternalError",
+            endpointMarker + "/n/testnamespace/b/test-bucket/o/" + objectKeyMarker
+                + " " + responseDetailMarker,
+            "safe-request-id"
+        );
         given(clientProvider.get()).willReturn(objectStorage);
-        given(objectStorage.getObject(any(GetObjectRequest.class))).willThrow(bmcException);
-        given(bmcException.getStatusCode()).willReturn(500);
+        given(objectStorage.getObject(any(GetObjectRequest.class))).willThrow(storageFailure);
         Logger logger = (Logger) LoggerFactory.getLogger(OciLockerReportImageMetadataReader.class);
         ListAppender<ILoggingEvent> appender = new ListAppender<>();
         appender.start();
         logger.addAppender(appender);
 
         try {
-            assertThatThrownBy(() -> reader().readMetadata(publicUrl("reports/private-token.jpg")))
+            Throwable thrown = catchThrowable(() -> reader().readMetadata(publicUrl(objectKeyMarker)));
+
+            assertThat(thrown)
                 .isInstanceOf(ExternalApiException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.IMAGE_STORAGE_READ_FAILED);
-
+            assertThat(thrown.getCause()).isNull();
+            assertThat(thrown.getMessage())
+                .doesNotContain(endpointMarker, objectKeyMarker, responseDetailMarker);
             assertThat(appender.list)
                 .extracting(ILoggingEvent::getFormattedMessage)
-                .noneMatch(message -> message.contains("private-token.jpg"));
+                .noneMatch(message -> containsAny(
+                    message,
+                    endpointMarker,
+                    objectKeyMarker,
+                    responseDetailMarker
+                ));
+            assertThat(appender.list)
+                .noneMatch(event -> event.getThrowableProxy() != null);
         } finally {
             logger.detachAppender(appender);
         }
@@ -250,6 +271,15 @@ class OciLockerReportImageMetadataReaderTest {
         while (fields.hasNext()) {
             JsonNode node = fields.next();
             if (tagName.equals(node.path("tagName").asText()) && value.equals(node.path("value").asText())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containsAny(String value, String... markers) {
+        for (String marker : markers) {
+            if (value.contains(marker)) {
                 return true;
             }
         }

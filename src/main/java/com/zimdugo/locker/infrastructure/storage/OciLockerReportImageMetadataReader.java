@@ -75,21 +75,31 @@ public class OciLockerReportImageMetadataReader implements LockerReportImageMeta
             .build();
 
         try {
-            GetObjectResponse response = clientProvider.get().getObject(request);
-            try (InputStream inputStream = response.getInputStream()) {
-                imageUploadPolicy.validateContentType(response.getContentType());
-                Metadata metadata = parseMetadata(inputStream);
-                return buildImageMetadata(metadata);
-            }
+            return readObjectMetadata(request);
         } catch (BmcException exception) {
             if (exception.getStatusCode() == HTTP_NOT_FOUND) {
-                throw new BusinessException(ErrorCode.INVALID_IMAGE_URL, exception);
+                throw new BusinessException(ErrorCode.INVALID_IMAGE_URL);
             }
-            log.warn("제보 이미지 OCI 조회 실패", exception);
-            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_READ_FAILED, exception);
+            log.warn(
+                "제보 이미지 OCI 조회 실패. statusCode={}, serviceCode={}, requestId={}",
+                exception.getStatusCode(),
+                exception.getServiceCode(),
+                exception.getOpcRequestId()
+            );
+            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_READ_FAILED);
         } catch (ImageProcessingException | IOException exception) {
             log.warn("제보 이미지 메타데이터 해석 실패", exception);
             throw new BusinessException(ErrorCode.IMAGE_METADATA_PARSE_FAILED, exception);
+        }
+    }
+
+    private LockerReportImageMetadata readObjectMetadata(GetObjectRequest request)
+        throws ImageProcessingException, IOException {
+        GetObjectResponse response = clientProvider.get().getObject(request);
+        try (InputStream inputStream = response.getInputStream()) {
+            imageUploadPolicy.validateContentType(response.getContentType());
+            Metadata metadata = parseMetadata(inputStream);
+            return buildImageMetadata(metadata);
         }
     }
 
