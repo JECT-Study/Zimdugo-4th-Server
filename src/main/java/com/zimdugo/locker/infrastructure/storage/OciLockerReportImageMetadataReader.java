@@ -11,9 +11,13 @@ import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.exif.GpsDirectory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oracle.bmc.model.BmcException;
+import com.oracle.bmc.objectstorage.requests.GetObjectRequest;
+import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
 import com.zimdugo.common.storage.ImageUploadPolicy;
-import com.zimdugo.common.storage.S3ImagePathResolver;
-import com.zimdugo.common.storage.S3StorageProperties;
+import com.zimdugo.common.storage.OciImagePathResolver;
+import com.zimdugo.common.storage.OciObjectStorageClientProvider;
+import com.zimdugo.common.storage.OciObjectStorageProperties;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.core.exception.ExternalApiException;
@@ -29,34 +33,28 @@ import java.util.Date;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.core.ResponseInputStream;
-import software.amazon.awssdk.core.exception.SdkException;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Slf4j
 @Component
-public class S3LockerReportImageMetadataReader implements LockerReportImageMetadataReader {
+public class OciLockerReportImageMetadataReader implements LockerReportImageMetadataReader {
 
     private static final int HTTP_NOT_FOUND = 404;
+    private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
 
-    private final S3Client s3Client;
+    private final OciObjectStorageClientProvider clientProvider;
     private final ObjectMapper objectMapper;
-    private final S3StorageProperties properties;
+    private final OciObjectStorageProperties properties;
     private final ImageUploadPolicy imageUploadPolicy;
-    private final S3ImagePathResolver pathResolver;
+    private final OciImagePathResolver pathResolver;
 
-    public S3LockerReportImageMetadataReader(
-        S3Client s3Client,
+    public OciLockerReportImageMetadataReader(
+        OciObjectStorageClientProvider clientProvider,
         ObjectMapper objectMapper,
-        S3StorageProperties properties,
+        OciObjectStorageProperties properties,
         ImageUploadPolicy imageUploadPolicy,
-        S3ImagePathResolver pathResolver
+        OciImagePathResolver pathResolver
     ) {
-        this.s3Client = s3Client;
+        this.clientProvider = clientProvider;
         this.objectMapper = objectMapper;
         this.properties = properties;
         this.imageUploadPolicy = imageUploadPolicy;
@@ -71,28 +69,27 @@ public class S3LockerReportImageMetadataReader implements LockerReportImageMetad
 
         String key = pathResolver.resolveReportImageKey(imageUrl);
         GetObjectRequest request = GetObjectRequest.builder()
-            .bucket(properties.bucket())
-            .key(key)
+            .namespaceName(properties.namespace())
+            .bucketName(properties.bucket())
+            .objectName(key)
             .build();
 
-        try (ResponseInputStream<GetObjectResponse> inputStream = s3Client.getObject(request)) {
-            imageUploadPolicy.validateContentType(inputStream.response().contentType());
-            Metadata metadata = parseMetadata(inputStream);
-            return buildImageMetadata(metadata);
-        } catch (NoSuchKeyException e) {
-            throw new BusinessException(ErrorCode.INVALID_IMAGE_URL, e);
-        } catch (S3Exception e) {
-            if (e.statusCode() == HTTP_NOT_FOUND) {
-                throw new BusinessException(ErrorCode.INVALID_IMAGE_URL, e);
+        try {
+            GetObjectResponse response = clientProvider.get().getObject(request);
+            try (InputStream inputStream = response.getInputStream()) {
+                imageUploadPolicy.validateContentType(response.getContentType());
+                Metadata metadata = parseMetadata(inputStream);
+                return buildImageMetadata(metadata);
             }
-            log.warn("제보 이미지 S3 조회 실패. imageUrl: {}", imageUrl, e);
-            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_READ_FAILED, e);
-        } catch (SdkException e) {
-            log.warn("제보 이미지 메타데이터 추출 중 S3 호출 실패. imageUrl: {}", imageUrl, e);
-            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_READ_FAILED, e);
-        } catch (ImageProcessingException | IOException e) {
-            log.warn("제보 이미지 메타데이터 해석 실패. imageUrl: {}", imageUrl, e);
-            throw new BusinessException(ErrorCode.IMAGE_METADATA_PARSE_FAILED, e);
+        } catch (BmcException exception) {
+            if (exception.getStatusCode() == HTTP_NOT_FOUND) {
+                throw new BusinessException(ErrorCode.INVALID_IMAGE_URL, exception);
+            }
+            log.warn("제보 이미지 OCI 조회 실패", exception);
+            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_READ_FAILED, exception);
+        } catch (ImageProcessingException | IOException exception) {
+            log.warn("제보 이미지 메타데이터 해석 실패", exception);
+            throw new BusinessException(ErrorCode.IMAGE_METADATA_PARSE_FAILED, exception);
         }
     }
 
@@ -111,7 +108,6 @@ public class S3LockerReportImageMetadataReader implements LockerReportImageMetad
         }
 
         LocalDateTime capturedAt = extractCapturedAt(metadata);
-
         return new LockerReportImageMetadata(
             objectMapper.writeValueAsString(toEntries(metadata)),
             LocalDateTime.now(),
@@ -127,9 +123,9 @@ public class S3LockerReportImageMetadataReader implements LockerReportImageMetad
     }
 
     private LocalDateTime extractCapturedAt(Metadata metadata) {
-        ExifSubIFDDirectory subIFDDirectory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
-        if (subIFDDirectory != null) {
-            Date date = subIFDDirectory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
+        ExifSubIFDDirectory subIfdDirectory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+        if (subIfdDirectory != null) {
+            Date date = subIfdDirectory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
             if (date != null) {
                 return toLocalDateTime(date);
             }
@@ -153,18 +149,11 @@ public class S3LockerReportImageMetadataReader implements LockerReportImageMetad
 
         double altitudeMeters = altitude.doubleValue();
         Integer altitudeRef = gpsDirectory.getInteger(GpsDirectory.TAG_ALTITUDE_REF);
-        if (altitudeRef != null && altitudeRef == 1) {
-            return -altitudeMeters;
-        }
-        return altitudeMeters;
+        return altitudeRef != null && altitudeRef == 1 ? -altitudeMeters : altitudeMeters;
     }
 
-    private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
-
     private LocalDateTime toLocalDateTime(Date date) {
-        return date.toInstant()
-            .atZone(SEOUL_ZONE)
-            .toLocalDateTime();
+        return date.toInstant().atZone(SEOUL_ZONE).toLocalDateTime();
     }
 
     private List<MetadataEntry> toEntries(Metadata metadata) {
@@ -190,8 +179,7 @@ public class S3LockerReportImageMetadataReader implements LockerReportImageMetad
         if (value == null) {
             return null;
         }
-        Class<?> valueClass = value.getClass();
-        if (!valueClass.isArray()) {
+        if (!value.getClass().isArray()) {
             return value.toString();
         }
 
