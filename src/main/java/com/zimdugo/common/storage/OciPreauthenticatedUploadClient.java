@@ -85,11 +85,15 @@ public class OciPreauthenticatedUploadClient {
                     .build());
         } catch (BmcException exception) {
             log.error(
-                "OCI Object Storage PAR 생성 실패. bucket={}, key={}",
+                "OCI Object Storage PAR 생성 실패. "
+                    + "bucket={}, key={}, status={}, serviceCode={}, requestId={}",
                 properties.bucket(),
-                key
+                key,
+                exception.getStatusCode(),
+                exception.getServiceCode(),
+                exception.getOpcRequestId()
             );
-            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED, exception);
+            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
         }
         return response;
     }

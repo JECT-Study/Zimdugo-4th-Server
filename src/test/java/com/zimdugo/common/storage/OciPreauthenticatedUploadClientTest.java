@@ -47,9 +47,6 @@ class OciPreauthenticatedUploadClientTest {
     @Mock
     private ObjectStorage objectStorage;
 
-    @Mock
-    private BmcException bmcException;
-
     @Test
     void constructJerseyHttpClientWithoutCredentials() throws Exception {
         try (ObjectStorageClient client = ObjectStorageClient.builder()
@@ -97,7 +94,19 @@ class OciPreauthenticatedUploadClientTest {
     }
 
     @Test
-    void translateOciFailureWithoutLoggingPreauthenticatedUrl() {
+    void sanitizeOciFailureBeforeApplicationBoundary() {
+        String marker = "sensitive-bmc-marker";
+        String endpoint = "https://objectstorage.ap-osaka-1.oraclecloud.com/p/sensitive";
+        String rawKey = "reports/raw-sensitive-key.jpg";
+        String detail = "upstream response detail";
+        BmcException bmcException = new BmcException(
+            500,
+            "InternalError",
+            marker + " " + endpoint + " " + rawKey + " " + detail,
+            "oci-request-id"
+        );
+        assertThat(bmcException.getMessage())
+            .contains(marker, endpoint, rawKey, detail);
         given(clientProvider.get()).willReturn(objectStorage);
         given(objectStorage.createPreauthenticatedRequest(any())).willThrow(bmcException);
         OciObjectStorageProperties properties = properties();
@@ -118,15 +127,22 @@ class OciPreauthenticatedUploadClientTest {
             )).isInstanceOfSatisfying(ExternalApiException.class, exception -> {
                 assertThat(exception.getErrorCode())
                     .isEqualTo(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
-                assertThat(exception.getCause()).isSameAs(bmcException);
+                assertThat(exception.getMessage())
+                    .isEqualTo(ErrorCode.IMAGE_STORAGE_WRITE_FAILED.getMessage())
+                    .doesNotContain(marker, endpoint, rawKey, detail);
+                assertThat(exception.getCause()).isNull();
+                assertThat(exception.toString())
+                    .doesNotContain(marker, endpoint, rawKey, detail);
             });
             assertThat(appender.list).singleElement().satisfies(event -> {
                 assertThat(event.getLevel()).isEqualTo(Level.ERROR);
                 assertThat(event.getFormattedMessage())
                     .contains("bucket=test-bucket")
                     .contains("key=reports/test.jpg")
-                    .doesNotContain("/p/")
-                    .doesNotContain("token");
+                    .contains("status=500")
+                    .contains("serviceCode=InternalError")
+                    .contains("requestId=oci-request-id")
+                    .doesNotContain(marker, endpoint, rawKey, detail);
                 assertThat(event.getThrowableProxy()).isNull();
             });
         } finally {
