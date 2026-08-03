@@ -2,6 +2,7 @@ HELP.md
 .gradle
 build/
 .code-review-graph/
+.worktrees/
 .venv/
 .env
 *.env
