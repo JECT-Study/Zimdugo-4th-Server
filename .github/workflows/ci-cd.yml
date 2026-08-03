@@ -41,6 +41,16 @@ jobs:
       - name: Validate deployment Compose
         run: APP_ENV_FILE=.env.example docker compose --env-file .env.example -f docker-compose.deploy.yml config --quiet
 
+      - name: Reject AWS storage references
+        run: |
+          aws_prefix='AWS_'
+          pattern="software\\.amazon\\.awssdk|${aws_prefix}S3_|${aws_prefix}CLOUDFRONT|storage\\.s3|S3(Client|Storage|Image|Presigned|Locker)"
+          if rg -n "$pattern" \
+            build.gradle.kts src/main src/test .env.example docker-compose.deploy.yml .github/workflows/ci-cd.yml; then
+            echo "AWS storage reference remains" >&2
+            exit 1
+          fi
+
       - name: Build
         run: |
           ./gradlew build
@@ -184,7 +194,7 @@ jobs:
           test ! -L .env
           test "$(stat -c '%a' .env)" = "600"
           test "$(stat -c '%u' .env)" = "$(id -u)"
-          for key in DB_USERNAME DB_PASSWORD JWT_SECRET AWS_S3_BUCKET AWS_CLOUDFRONT_PUBLIC_BASE_URL; do
+          for key in DB_USERNAME DB_PASSWORD JWT_SECRET OCI_REGION OCI_OBJECT_STORAGE_NAMESPACE OCI_OBJECT_STORAGE_BUCKET OCI_AUTH_MODE; do
             value="$(sed -n "s/^${key}=//p" .env | tail -n 1)"
             if [ -z "$value" ]; then
               echo "Required deployment value is missing: ${key}" >&2

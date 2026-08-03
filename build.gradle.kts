@@ -56,11 +56,6 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
-    // AWS S3
-    implementation("software.amazon.awssdk:s3")
-    implementation("software.amazon.awssdk:sso")
-    implementation("software.amazon.awssdk:ssooidc")
-
     // OCI Object Storage
     implementation("com.oracle.oci.sdk:oci-java-sdk-objectstorage")
     implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3")
@@ -101,7 +96,6 @@ dependencies {
 
 dependencyManagement {
     imports {
-        mavenBom("software.amazon.awssdk:bom:2.32.4")
         mavenBom("com.oracle.oci.sdk:oci-java-sdk-bom:3.93.0")
     }
     dependencies {

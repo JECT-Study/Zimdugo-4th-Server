@@ -63,10 +63,12 @@ jwt:
   refresh-token-expiration-seconds: 2592000
 
 storage:
-  s3:
-    region: ap-northeast-2
+  oci:
+    region: ap-osaka-1
+    namespace: testnamespace
     bucket: test-bucket
-    public-base-url: https://test-cdn.example.com
+    auth-mode: CONFIG_FILE
+    config-profile: DEFAULT
     upload-expiration-minutes: 10
     max-upload-bytes: 10485760
 
