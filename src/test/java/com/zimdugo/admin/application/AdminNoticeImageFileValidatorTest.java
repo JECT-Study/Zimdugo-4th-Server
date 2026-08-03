@@ -1,7 +1,8 @@
 package com.zimdugo.admin.application;
 
 import com.zimdugo.common.storage.ImageUploadPolicy;
-import com.zimdugo.common.storage.S3StorageProperties;
+import com.zimdugo.common.storage.OciAuthenticationMode;
+import com.zimdugo.common.storage.OciObjectStorageProperties;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import java.awt.image.BufferedImage;
@@ -73,11 +74,13 @@ class AdminNoticeImageFileValidatorTest {
         );
     }
 
-    private S3StorageProperties properties() {
-        return new S3StorageProperties(
-            "ap-northeast-2",
+    private OciObjectStorageProperties properties() {
+        return new OciObjectStorageProperties(
+            "ap-osaka-1",
+            "namespace",
             "bucket",
-            "https://cdn.example.com",
+            OciAuthenticationMode.CONFIG_FILE,
+            "DEFAULT",
             10,
             10 * 1024 * 1024
         );
