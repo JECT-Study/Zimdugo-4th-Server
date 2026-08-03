@@ -3,8 +3,8 @@ title: Close the OCI GetObject response input stream explicitly
 date: 2026-08-03
 category: architecture-patterns
 module: object-storage
-problem_type: resource_lifecycle
-component: oci_java_sdk
+problem_type: architecture_pattern
+component: service_object
 severity: high
 applies_when:
   - "Reading an OCI Object Storage object with GetObject"

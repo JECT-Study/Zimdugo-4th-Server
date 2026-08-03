@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class OciAdminLockerImageStorage implements AdminLockerImageStorage {
 
-    private static final String LOCKER_IMAGE_KEY_PREFIX = "admin/notice-images/";
+    private static final String LOCKER_IMAGE_KEY_PREFIX = "admin/locker-images/";
 
     private final OciObjectStorageClientProvider clientProvider;
     private final OciObjectStorageProperties properties;

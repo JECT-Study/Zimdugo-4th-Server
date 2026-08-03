@@ -257,6 +257,60 @@ class OciAdminNoticeImageStorageTest {
         verifyNoInteractions(clientProvider, objectStorage);
     }
 
+    @Test
+    void rejectLockerImageWithoutDeletingIt() {
+        String lockerKey = "admin/locker-images/locker.png";
+        String lockerUrl = "https://objectstorage.ap-osaka-1.oraclecloud.com/n/ns/b/bucket/o/"
+            + "admin%2Flocker-images%2Flocker.png";
+        given(pathResolver.resolveKey(lockerUrl)).willReturn(lockerKey);
+
+        storage().deleteAll(List.of(lockerUrl));
+
+        verifyNoInteractions(clientProvider, objectStorage);
+    }
+
+    @Test
+    void sanitizeClientInitializationFailureBeforeLoggingOrPropagatingIt() {
+        MockMultipartFile image = file("notice.png");
+        String marker = "private-key-marker";
+        String endpoint = "https://objectstorage.ap-osaka-1.oraclecloud.com/private";
+        String objectKey = "admin/notice-images/private-object.png";
+        String detail = "response-detail-marker";
+        IllegalStateException failure = new IllegalStateException(
+            marker + " " + endpoint + " " + objectKey + " " + detail
+        );
+        given(imageUploadPolicy.extractValidExtension("notice.png")).willReturn("png");
+        given(imageUploadPolicy.validateContentType("image/png")).willReturn("image/png");
+        given(pathResolver.createImageKey("admin/notice-images/", "png"))
+            .willReturn("admin/notice-images/generated.png");
+        given(clientProvider.get()).willThrow(failure);
+        Logger logger = (Logger) LoggerFactory.getLogger(OciAdminNoticeImageStorage.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+
+        try {
+            Throwable thrown = catchThrowable(() -> storage().uploadAll(List.of(image)));
+
+            assertThat(thrown).isInstanceOfSatisfying(ExternalApiException.class, exception ->
+                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.IMAGE_STORAGE_WRITE_FAILED)
+            );
+            assertThat(thrown.getCause()).isNull();
+            assertThat(thrown.getMessage()).doesNotContain(marker, endpoint, objectKey, detail);
+            assertThat(appender.list).singleElement().satisfies(event -> {
+                assertThat(event.getLevel()).isEqualTo(Level.ERROR);
+                assertThat(event.getFormattedMessage())
+                    .contains("bucket=bucket")
+                    .contains("reason=IllegalStateException")
+                    .doesNotContain(marker, endpoint, objectKey, detail);
+                assertThat(event.getThrowableProxy()).isNull();
+            });
+            verifyNoInteractions(objectStorage);
+        } finally {
+            logger.detachAppender(appender);
+        }
+    }
+
     private OciAdminNoticeImageStorage storage() {
         return new OciAdminNoticeImageStorage(
             clientProvider,

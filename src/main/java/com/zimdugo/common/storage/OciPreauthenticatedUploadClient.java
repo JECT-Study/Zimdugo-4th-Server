@@ -1,6 +1,7 @@
 package com.zimdugo.common.storage;
 
 import com.oracle.bmc.model.BmcException;
+import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails;
 import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest;
 import com.oracle.bmc.objectstorage.responses.CreatePreauthenticatedRequestResponse;
@@ -77,7 +78,7 @@ public class OciPreauthenticatedUploadClient {
     ) {
         CreatePreauthenticatedRequestResponse response;
         try {
-            response = clientProvider.get()
+            response = objectStorage()
                 .createPreauthenticatedRequest(CreatePreauthenticatedRequestRequest.builder()
                     .namespaceName(properties.namespace())
                     .bucketName(properties.bucket())
@@ -96,6 +97,21 @@ public class OciPreauthenticatedUploadClient {
             throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
         }
         return response;
+    }
+
+    private ObjectStorage objectStorage() {
+        try {
+            return clientProvider.get();
+        } catch (BmcException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
+            log.error(
+                "OCI Object Storage 클라이언트 초기화 실패. bucket={}, reason={}",
+                properties.bucket(),
+                exception.getClass().getSimpleName()
+            );
+            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
+        }
     }
 
     private String extractAccessUri(CreatePreauthenticatedRequestResponse response) {

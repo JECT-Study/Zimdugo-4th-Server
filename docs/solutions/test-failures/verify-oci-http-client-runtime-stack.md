@@ -3,9 +3,13 @@ title: Verify the resolved OCI HTTP client stack under Spring Boot dependency ma
 date: 2026-08-03
 category: test-failures
 module: object-storage
-problem_type: dependency_conflict
-component: oci_java_sdk
+problem_type: test_failure
+component: testing_framework
 severity: high
+symptoms:
+  - "Compilation and mocked ObjectStorage tests passed while real OCI client construction failed"
+root_cause: config_error
+resolution_type: dependency_update
 applies_when:
   - "Using the OCI Java SDK Jersey 3 HTTP client in a Spring Boot application"
   - "SDK boundary tests mock ObjectStorage and never construct the real HTTP client"

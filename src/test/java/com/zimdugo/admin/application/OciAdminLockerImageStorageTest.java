@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 @ExtendWith(MockitoExtension.class)
 class OciAdminLockerImageStorageTest {
 
-    private static final String IMAGE_PREFIX = "admin/notice-images/";
+    private static final String IMAGE_PREFIX = "admin/locker-images/";
 
     @Mock
     private OciObjectStorageClientProvider clientProvider;
@@ -149,9 +149,20 @@ class OciAdminLockerImageStorageTest {
     }
 
     @Test
+    void rejectNoticeImageWithoutDeletingIt() {
+        String noticeKey = "admin/notice-images/notice.png";
+        String noticeUrl = publicUrl(noticeKey);
+        given(pathResolver.resolveKey(noticeUrl)).willReturn(noticeKey);
+
+        storage().deleteAll(List.of(noticeUrl));
+
+        verifyNoInteractions(clientProvider, objectStorage);
+    }
+
+    @Test
     void rejectInvalidUrlWithoutLoggingItsParToken() {
         String parUrl = "https://objectstorage.ap-osaka-1.oraclecloud.com/p/secret-token/"
-            + "n/testnamespace/b/test-bucket/o/admin%2Fnotice-images%2Flocker.png";
+            + "n/testnamespace/b/test-bucket/o/admin%2Flocker-images%2Flocker.png";
         given(pathResolver.resolveKey(parUrl))
             .willThrow(new BusinessException(ErrorCode.INVALID_IMAGE_URL));
         Logger logger = logger();

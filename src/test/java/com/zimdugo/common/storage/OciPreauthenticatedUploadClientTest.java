@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class OciPreauthenticatedUploadClientTest {
@@ -145,6 +146,54 @@ class OciPreauthenticatedUploadClientTest {
                     .doesNotContain(marker, endpoint, rawKey, detail);
                 assertThat(event.getThrowableProxy()).isNull();
             });
+        } finally {
+            logger.detachAppender(appender);
+        }
+    }
+
+    @Test
+    void sanitizeClientInitializationFailureBeforeApplicationBoundary() {
+        String marker = "private-key-marker";
+        String endpoint = "https://objectstorage.ap-osaka-1.oraclecloud.com/private";
+        String rawKey = "reports/raw-sensitive-key.jpg";
+        String detail = "response-detail-marker";
+        IllegalStateException failure = new IllegalStateException(
+            marker + " " + endpoint + " " + rawKey + " " + detail
+        );
+        given(clientProvider.get()).willThrow(failure);
+        OciObjectStorageProperties properties = properties();
+        OciPreauthenticatedUploadClient client = new OciPreauthenticatedUploadClient(
+            clientProvider,
+            properties,
+            new OciImagePathResolver(properties),
+            Clock.systemUTC()
+        );
+        Logger logger = (Logger) LoggerFactory.getLogger(OciPreauthenticatedUploadClient.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+
+        try {
+            Throwable thrown = catchThrowable(() -> client.createObjectWrite(rawKey));
+
+            assertThat(thrown).isInstanceOfSatisfying(ExternalApiException.class, exception -> {
+                assertThat(exception.getErrorCode())
+                    .isEqualTo(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
+                assertThat(exception.getMessage())
+                    .isEqualTo(ErrorCode.IMAGE_STORAGE_WRITE_FAILED.getMessage())
+                    .doesNotContain(marker, endpoint, rawKey, detail);
+                assertThat(exception.getCause()).isNull();
+                assertThat(exception.toString()).doesNotContain(marker, endpoint, rawKey, detail);
+            });
+            assertThat(appender.list).singleElement().satisfies(event -> {
+                assertThat(event.getLevel()).isEqualTo(Level.ERROR);
+                assertThat(event.getFormattedMessage())
+                    .contains("bucket=test-bucket")
+                    .contains("reason=IllegalStateException")
+                    .doesNotContain(marker, endpoint, rawKey, detail);
+                assertThat(event.getThrowableProxy()).isNull();
+            });
+            verifyNoInteractions(objectStorage);
         } finally {
             logger.detachAppender(appender);
         }

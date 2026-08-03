@@ -1,6 +1,7 @@
 package com.zimdugo.admin.application;
 
 import com.oracle.bmc.model.BmcException;
+import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
 import com.zimdugo.common.storage.ImageUploadPolicy;
@@ -82,7 +83,7 @@ public class OciAdminNoticeImageStorage implements AdminNoticeImageStorage {
         String contentType = imageUploadPolicy.validateContentType(file.getContentType());
         String key = pathResolver.createImageKey(NOTICE_IMAGE_KEY_PREFIX, extension);
         try (InputStream inputStream = file.getInputStream()) {
-            clientProvider.get().putObject(PutObjectRequest.builder()
+            objectStorage().putObject(PutObjectRequest.builder()
                 .namespaceName(properties.namespace())
                 .bucketName(properties.bucket())
                 .objectName(key)
@@ -133,5 +134,20 @@ public class OciAdminNoticeImageStorage implements AdminNoticeImageStorage {
             exception.getClass().getSimpleName()
         );
         return new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
+    }
+
+    private ObjectStorage objectStorage() {
+        try {
+            return clientProvider.get();
+        } catch (BmcException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
+            log.error(
+                "공지 이미지 OCI 클라이언트 초기화 실패. bucket={}, reason={}",
+                properties.bucket(),
+                exception.getClass().getSimpleName()
+            );
+            throw new ExternalApiException(ErrorCode.IMAGE_STORAGE_WRITE_FAILED);
+        }
     }
 }

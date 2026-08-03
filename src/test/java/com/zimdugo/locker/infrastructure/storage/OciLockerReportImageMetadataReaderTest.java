@@ -190,6 +190,43 @@ class OciLockerReportImageMetadataReaderTest {
         }
     }
 
+    @Test
+    void sanitizesClientInitializationFailureBeforeLoggingOrPropagatingIt() {
+        String marker = "private-key-marker";
+        String endpoint = "https://objectstorage.ap-osaka-1.oraclecloud.com/private";
+        String objectKey = "reports/private-token.jpg";
+        String detail = "response-detail-marker";
+        IllegalStateException failure = new IllegalStateException(
+            marker + " " + endpoint + " " + objectKey + " " + detail
+        );
+        given(clientProvider.get()).willThrow(failure);
+        Logger logger = (Logger) LoggerFactory.getLogger(OciLockerReportImageMetadataReader.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+
+        try {
+            Throwable thrown = catchThrowable(() -> reader().readMetadata(publicUrl(objectKey)));
+
+            assertThat(thrown)
+                .isInstanceOf(ExternalApiException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.IMAGE_STORAGE_READ_FAILED);
+            assertThat(thrown.getCause()).isNull();
+            assertThat(thrown.getMessage()).doesNotContain(marker, endpoint, objectKey, detail);
+            assertThat(appender.list).singleElement().satisfies(event -> {
+                assertThat(event.getFormattedMessage())
+                    .contains("bucket=test-bucket")
+                    .contains("reason=IllegalStateException")
+                    .doesNotContain(marker, endpoint, objectKey, detail);
+                assertThat(event.getThrowableProxy()).isNull();
+            });
+            verifyNoInteractions(objectStorage);
+        } finally {
+            logger.detachAppender(appender);
+        }
+    }
+
     private OciLockerReportImageMetadataReader reader() {
         OciObjectStorageProperties properties = properties();
         return new OciLockerReportImageMetadataReader(
