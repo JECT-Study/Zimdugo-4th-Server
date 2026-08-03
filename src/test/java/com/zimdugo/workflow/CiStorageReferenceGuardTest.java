@@ -17,39 +17,57 @@ class CiStorageReferenceGuardTest {
     @TempDir
     private Path temporaryDirectory;
 
-    @ParameterizedTest(name = "rg status {0} produces guard status {1}")
+    @ParameterizedTest(name = "git grep status {0} produces guard status {1}")
     @CsvSource({
         "0, 1, AWS storage reference remains",
         "1, 0, ''",
         "2, 2, AWS storage scan failed with status 2"
     })
     void distinguishMatchesCleanScanAndScannerFailure(
-        int rgStatus,
+        int gitGrepStatus,
         int expectedStatus,
         String expectedError
     ) throws Exception {
-        installFakeRipgrep();
+        installFakeGit();
 
-        ProcessResult result = runGuard(rgStatus);
+        ProcessResult result = runGuard(gitGrepStatus);
 
         assertThat(result.exitCode()).isEqualTo(expectedStatus);
         assertThat(result.standardError()).contains(expectedError);
     }
 
-    private void installFakeRipgrep() throws IOException {
-        Path fakeRipgrep = temporaryDirectory.resolve("rg");
+    private void installFakeGit() throws IOException {
+        Path fakeGit = temporaryDirectory.resolve("git");
         Files.writeString(
-            fakeRipgrep,
-            "#!/usr/bin/env bash\nexit \"${FAKE_RG_STATUS}\"\n",
+            fakeGit,
+            """
+            #!/usr/bin/env bash
+            if [ "$#" -ne 11 ] \
+              || [ "$1" != "grep" ] \
+              || [ "$2" != "-n" ] \
+              || [ "$3" != "-E" ] \
+              || [ -z "$4" ] \
+              || [ "$5" != "--" ] \
+              || [ "$6" != "build.gradle.kts" ] \
+              || [ "$7" != "src/main" ] \
+              || [ "$8" != "src/test" ] \
+              || [ "$9" != ".env.example" ] \
+              || [ "${10}" != "docker-compose.deploy.yml" ] \
+              || [ "${11}" != ".github/workflows/ci-cd.yml" ]; then
+              echo "unexpected git invocation" >&2
+              exit 64
+            fi
+            exit "${FAKE_GIT_GREP_STATUS}"
+            """,
             StandardCharsets.UTF_8
         );
         Files.setPosixFilePermissions(
-            fakeRipgrep,
+            fakeGit,
             PosixFilePermissions.fromString("rwxr-xr-x")
         );
     }
 
-    private ProcessResult runGuard(int rgStatus) throws IOException, InterruptedException {
+    private ProcessResult runGuard(int gitGrepStatus) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder(
             "/bin/bash",
             "--noprofile",
@@ -64,7 +82,10 @@ class CiStorageReferenceGuardTest {
             "PATH",
             temporaryDirectory + ":" + System.getenv("PATH")
         );
-        processBuilder.environment().put("FAKE_RG_STATUS", Integer.toString(rgStatus));
+        processBuilder.environment().put(
+            "FAKE_GIT_GREP_STATUS",
+            Integer.toString(gitGrepStatus)
+        );
         Process process = processBuilder.start();
         String standardOutput = new String(
             process.getInputStream().readAllBytes(),
