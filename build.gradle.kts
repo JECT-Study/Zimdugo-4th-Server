@@ -61,6 +61,10 @@ dependencies {
     implementation("software.amazon.awssdk:sso")
     implementation("software.amazon.awssdk:ssooidc")
 
+    // OCI Object Storage
+    implementation("com.oracle.oci.sdk:oci-java-sdk-objectstorage")
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3")
+
     // Image metadata
     implementation("com.drewnoakes:metadata-extractor:2.19.0")
 
@@ -98,6 +102,7 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom("software.amazon.awssdk:bom:2.32.4")
+        mavenBom("com.oracle.oci.sdk:oci-java-sdk-bom:3.93.0")
     }
 }
 
