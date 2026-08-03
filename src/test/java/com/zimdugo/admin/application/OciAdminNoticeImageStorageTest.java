@@ -164,6 +164,43 @@ class OciAdminNoticeImageStorageTest {
         calls.verify(objectStorage).deleteObject(any(DeleteObjectRequest.class));
     }
 
+    @Test
+    void rejectParUrlWithoutLoggingItsToken() {
+        String parUrl = "https://objectstorage.ap-osaka-1.oraclecloud.com/p/secret-token/n/ns/b/bucket/o/admin%2Fnotice-images%2Fnotice.png";
+        given(pathResolver.resolveKey(parUrl))
+            .willThrow(new BusinessException(ErrorCode.INVALID_IMAGE_URL));
+        Logger logger = (Logger) LoggerFactory.getLogger(OciAdminNoticeImageStorage.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+
+        try {
+            storage().deleteAll(List.of(parUrl));
+
+            assertThat(appender.list).singleElement().satisfies(event -> {
+                assertThat(event.getLevel()).isEqualTo(Level.WARN);
+                assertThat(event.getFormattedMessage())
+                    .contains("공지 이미지 OCI 삭제 실패")
+                    .doesNotContain("secret-token")
+                    .doesNotContain("/p/");
+                assertThat(event.getThrowableProxy()).isNull();
+            });
+            verifyNoInteractions(clientProvider, objectStorage);
+        } finally {
+            logger.detachAppender(appender);
+        }
+    }
+
+    @Test
+    void rejectResolvedObjectOutsideNoticePrefixWithoutDeletingIt() {
+        String publicUrl = "https://objectstorage.ap-osaka-1.oraclecloud.com/n/ns/b/bucket/o/reports%2Fother.png";
+        given(pathResolver.resolveKey(publicUrl)).willReturn("reports/other.png");
+
+        storage().deleteAll(List.of(publicUrl));
+
+        verifyNoInteractions(clientProvider, objectStorage);
+    }
+
     private OciAdminNoticeImageStorage storage() {
         return new OciAdminNoticeImageStorage(
             clientProvider,

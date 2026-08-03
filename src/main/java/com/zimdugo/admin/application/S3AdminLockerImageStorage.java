@@ -1,33 +1,33 @@
 package com.zimdugo.admin.application;
 
-import com.oracle.bmc.model.BmcException;
-import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
-import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
 import com.zimdugo.common.storage.ImageUploadPolicy;
-import com.zimdugo.common.storage.OciImagePathResolver;
-import com.zimdugo.common.storage.OciObjectStorageClientProvider;
-import com.zimdugo.common.storage.OciObjectStorageProperties;
+import com.zimdugo.common.storage.S3ImagePathResolver;
+import com.zimdugo.common.storage.S3StorageProperties;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.core.exception.ExternalApiException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class OciAdminNoticeImageStorage implements AdminNoticeImageStorage {
+public class S3AdminLockerImageStorage implements AdminLockerImageStorage {
 
-    private static final String NOTICE_IMAGE_KEY_PREFIX = "admin/notice-images/";
+    private static final String LOCKER_IMAGE_KEY_PREFIX = "admin/notice-images/";
 
-    private final OciObjectStorageClientProvider clientProvider;
-    private final OciObjectStorageProperties properties;
-    private final OciImagePathResolver pathResolver;
+    private final S3Client s3Client;
+    private final S3StorageProperties properties;
+    private final S3ImagePathResolver pathResolver;
     private final ImageUploadPolicy imageUploadPolicy;
     private final AdminNoticeImageFileValidator fileValidator;
 
@@ -53,22 +53,17 @@ public class OciAdminNoticeImageStorage implements AdminNoticeImageStorage {
             try {
                 key = pathResolver.resolveKey(imageUrl);
             } catch (RuntimeException exception) {
-                log.warn("공지 이미지 OCI 삭제 실패. reason={}", exception.getClass().getSimpleName());
-                continue;
-            }
-            if (!key.startsWith(NOTICE_IMAGE_KEY_PREFIX)) {
-                log.warn("공지 이미지 OCI 삭제 실패. reason=unexpected object key prefix");
+                log.warn("보관함 이미지 S3 삭제 실패. reason={}", exception.getClass().getSimpleName());
                 continue;
             }
             try {
-                clientProvider.get().deleteObject(DeleteObjectRequest.builder()
-                    .namespaceName(properties.namespace())
-                    .bucketName(properties.bucket())
-                    .objectName(key)
+                s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(properties.bucket())
+                    .key(key)
                     .build());
             } catch (RuntimeException exception) {
                 log.warn(
-                    "공지 이미지 OCI 삭제 실패. bucket={}, key={}, reason={}",
+                    "보관함 이미지 S3 삭제 실패. bucket={}, key={}, reason={}",
                     properties.bucket(),
                     key,
                     exception.getClass().getSimpleName()
@@ -80,20 +75,19 @@ public class OciAdminNoticeImageStorage implements AdminNoticeImageStorage {
     private String upload(MultipartFile file) {
         String extension = imageUploadPolicy.extractValidExtension(file.getOriginalFilename());
         String contentType = imageUploadPolicy.validateContentType(file.getContentType());
-        String key = pathResolver.createImageKey(NOTICE_IMAGE_KEY_PREFIX, extension);
-        try (InputStream inputStream = file.getInputStream()) {
-            clientProvider.get().putObject(PutObjectRequest.builder()
-                .namespaceName(properties.namespace())
-                .bucketName(properties.bucket())
-                .objectName(key)
-                .contentType(contentType)
-                .contentLength(file.getSize())
-                .putObjectBody(inputStream)
-                .build());
+        String key = pathResolver.createImageKey(LOCKER_IMAGE_KEY_PREFIX, extension);
+        PutObjectRequest request = PutObjectRequest.builder()
+            .bucket(properties.bucket())
+            .key(key)
+            .contentType(contentType)
+            .contentLength(file.getSize())
+            .build();
+        try {
+            s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
             return pathResolver.buildPublicUrl(key);
-        } catch (IOException | BmcException exception) {
+        } catch (IOException | SdkException exception) {
             log.error(
-                "공지 이미지 OCI 업로드 실패. bucket={}, key={}, contentType={}, fileSize={}",
+                "보관함 이미지 S3 업로드 실패. bucket={}, key={}, contentType={}, fileSize={}",
                 properties.bucket(),
                 key,
                 contentType,
