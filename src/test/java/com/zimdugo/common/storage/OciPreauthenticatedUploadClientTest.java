@@ -4,14 +4,19 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.oracle.bmc.Region;
+import com.oracle.bmc.auth.AuthCachingPolicy;
+import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.model.BmcException;
 import com.oracle.bmc.objectstorage.ObjectStorage;
+import com.oracle.bmc.objectstorage.ObjectStorageClient;
 import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails;
 import com.oracle.bmc.objectstorage.model.PreauthenticatedRequest;
 import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest;
 import com.oracle.bmc.objectstorage.responses.CreatePreauthenticatedRequestResponse;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.core.exception.ExternalApiException;
+import java.io.InputStream;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -44,6 +49,16 @@ class OciPreauthenticatedUploadClientTest {
 
     @Mock
     private BmcException bmcException;
+
+    @Test
+    void constructJerseyHttpClientWithoutCredentials() throws Exception {
+        try (ObjectStorageClient client = ObjectStorageClient.builder()
+            .region(Region.AP_OSAKA_1)
+            .build(new CredentialFreeAuthenticationProvider())) {
+            assertThat(client.getEndpoint())
+                .isEqualTo("https://objectstorage.ap-osaka-1.oraclecloud.com");
+        }
+    }
 
     @Test
     void createObjectWriteParForExactlyOneObject() {
@@ -173,5 +188,45 @@ class OciPreauthenticatedUploadClientTest {
             10,
             10 * 1024 * 1024
         );
+    }
+
+    @AuthCachingPolicy(cacheKeyId = false, cachePrivateKey = false)
+    private static final class CredentialFreeAuthenticationProvider
+        implements AuthenticationDetailsProvider {
+
+        @Override
+        public String getFingerprint() {
+            throw new AssertionError("credentials must not be loaded");
+        }
+
+        @Override
+        public String getTenantId() {
+            throw new AssertionError("credentials must not be loaded");
+        }
+
+        @Override
+        public String getUserId() {
+            throw new AssertionError("credentials must not be loaded");
+        }
+
+        @Override
+        public String getKeyId() {
+            throw new AssertionError("credentials must not be loaded");
+        }
+
+        @Override
+        public InputStream getPrivateKey() {
+            throw new AssertionError("credentials must not be loaded");
+        }
+
+        @Override
+        public String getPassPhrase() {
+            throw new AssertionError("credentials must not be loaded");
+        }
+
+        @Override
+        public char[] getPassphraseCharacters() {
+            throw new AssertionError("credentials must not be loaded");
+        }
     }
 }

@@ -104,6 +104,15 @@ dependencyManagement {
         mavenBom("software.amazon.awssdk:bom:2.32.4")
         mavenBom("com.oracle.oci.sdk:oci-java-sdk-bom:3.93.0")
     }
+    dependencies {
+        dependency("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
+        dependency("org.glassfish.jersey.connectors:jersey-apache-connector:3.0.8")
+        dependency("org.glassfish.jersey.core:jersey-client:3.0.8")
+        dependency("org.glassfish.jersey.core:jersey-common:3.0.8")
+        dependency("org.glassfish.jersey.ext:jersey-entity-filtering:3.0.8")
+        dependency("org.glassfish.jersey.inject:jersey-hk2:3.0.8")
+        dependency("org.glassfish.jersey.media:jersey-media-json-jackson:3.0.8")
+    }
 }
 
 tasks.withType<Test> {
