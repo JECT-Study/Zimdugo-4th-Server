@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface ImageUploadApi {
 
     @Operation(
-        summary = "이미지 업로드용 presigned URL 발급",
-        description = "프로필 이미지 또는 제보 이미지 업로드에 사용할 presigned PUT URL을 발급합니다."
+        summary = "이미지 직접 업로드 URL 발급",
+        description = "프로필 이미지 또는 제보 이미지 업로드에 사용할 단기 OCI Object Storage PUT URL을 발급합니다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "발급 성공"),

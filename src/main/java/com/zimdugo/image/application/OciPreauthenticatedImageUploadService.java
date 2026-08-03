@@ -1,10 +1,10 @@
 package com.zimdugo.image.application;
 
 import com.zimdugo.common.storage.ImageUploadPolicy;
-import com.zimdugo.common.storage.PresignedUpload;
-import com.zimdugo.common.storage.S3ImagePathResolver;
-import com.zimdugo.common.storage.S3PresignedUploadClient;
-import com.zimdugo.common.storage.S3StorageProperties;
+import com.zimdugo.common.storage.OciImagePathResolver;
+import com.zimdugo.common.storage.OciObjectStorageProperties;
+import com.zimdugo.common.storage.OciPreauthenticatedUploadClient;
+import com.zimdugo.common.storage.PreauthenticatedUpload;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +14,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class S3PresignedImageUploadService implements PresignedImageUploadService {
+public class OciPreauthenticatedImageUploadService implements PresignedImageUploadService {
 
-    private final S3StorageProperties properties;
+    private final OciObjectStorageProperties properties;
     private final ImageUploadPolicy imageUploadPolicy;
-    private final S3ImagePathResolver pathResolver;
-    private final S3PresignedUploadClient presignedUploadClient;
+    private final OciImagePathResolver pathResolver;
+    private final OciPreauthenticatedUploadClient uploadClient;
 
     @Override
     public PresignedUploadResult createPresignedUpload(
@@ -33,14 +33,13 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
 
         String normalizedContentType = imageUploadPolicy.validateContentType(contentType);
         String extension = imageUploadPolicy.extractValidExtension(originalFileName);
-        String key = createKey(category, extension, userId);
-        PresignedUpload upload = presignedUploadClient.createPresignedPutObject(
-            key,
-            normalizedContentType,
-            contentLength
-        );
+        String key = switch (category) {
+            case PROFILE -> pathResolver.createProfileImageKey(userId, extension);
+            case LOCKER_REPORT -> pathResolver.createReportImageKey(extension);
+        };
+        PreauthenticatedUpload upload = uploadClient.createObjectWrite(key);
         log.info(
-            "이미지 업로드 URL 발급 완료. category={}, userId={}, key={}, contentType={}, contentLength={}",
+            "이미지 직접 업로드 URL 발급 완료. category={}, userId={}, key={}, contentType={}, contentLength={}",
             category,
             userId,
             upload.key(),
@@ -71,12 +70,5 @@ public class S3PresignedImageUploadService implements PresignedImageUploadServic
         if (contentLength == null || contentLength <= 0 || contentLength > properties.maxUploadBytes()) {
             throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
         }
-    }
-
-    private String createKey(UploadCategory category, String extension, Long userId) {
-        return switch (category) {
-            case PROFILE -> pathResolver.createProfileImageKey(userId, extension);
-            case LOCKER_REPORT -> pathResolver.createReportImageKey(extension);
-        };
     }
 }
