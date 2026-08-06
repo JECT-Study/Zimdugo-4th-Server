@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 
 public record PresignedUploadResponse(
-    @Schema(description = "S3 PUT 업로드용 presigned URL")
+    @Schema(description = "객체 저장소 PUT 업로드용 단기 URL")
     String uploadUrl,
 
     @Schema(description = "업로드 후 저장해서 사용할 공개 URL")
