@@ -56,10 +56,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
-    // AWS S3
-    implementation("software.amazon.awssdk:s3")
-    implementation("software.amazon.awssdk:sso")
-    implementation("software.amazon.awssdk:ssooidc")
+    // OCI Object Storage
+    implementation("com.oracle.oci.sdk:oci-java-sdk-objectstorage")
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3")
 
     // Image metadata
     implementation("com.drewnoakes:metadata-extractor:2.19.0")
@@ -97,7 +96,16 @@ dependencies {
 
 dependencyManagement {
     imports {
-        mavenBom("software.amazon.awssdk:bom:2.32.4")
+        mavenBom("com.oracle.oci.sdk:oci-java-sdk-bom:3.93.0")
+    }
+    dependencies {
+        dependency("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
+        dependency("org.glassfish.jersey.connectors:jersey-apache-connector:3.0.8")
+        dependency("org.glassfish.jersey.core:jersey-client:3.0.8")
+        dependency("org.glassfish.jersey.core:jersey-common:3.0.8")
+        dependency("org.glassfish.jersey.ext:jersey-entity-filtering:3.0.8")
+        dependency("org.glassfish.jersey.inject:jersey-hk2:3.0.8")
+        dependency("org.glassfish.jersey.media:jersey-media-json-jackson:3.0.8")
     }
 }
 
