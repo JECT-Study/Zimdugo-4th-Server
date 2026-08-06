@@ -127,14 +127,18 @@ tasks.withType<Checkstyle> {
     }
 }
 
+val gitHooksDirectory = providers.exec {
+    commandLine("git", "rev-parse", "--git-path", "hooks")
+}.standardOutput.asText.map { it.trim() }
+
 tasks.register<Copy>("installGitHooks") {
     description = "pre-commit hook을 설치합니다 (Checkstyle 검사 자동 실행)"
     group = "setup"
     onlyIf {
-        !file("${rootDir}/.git/hooks/pre-commit").exists()
+        !file(gitHooksDirectory.get()).resolve("pre-commit").exists()
     }
     from("${rootDir}/scripts/pre-commit")
-    into("${rootDir}/.git/hooks")
+    into(gitHooksDirectory)
     filePermissions {
         unix("rwxr-xr-x")
     }
