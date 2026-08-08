@@ -1,6 +1,6 @@
 package com.zimdugo.locker.application.suggest;
 
-import com.zimdugo.locker.application.search.LockerSearchQueryService;
+import com.zimdugo.locker.application.search.LockerSearchTargetQueryService;
 
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
@@ -14,18 +14,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class LockerSuggestQueryService {
 
-    private final LockerSearchQueryService lockerSearchQueryService;
+    private final LockerSearchTargetQueryService lockerSearchTargetQueryService;
 
     public LockerSuggestResult getSuggestions(
         double latitude,
         double longitude,
         String keyword
     ) {
-        List<LockerSuggestItemResult> items = lockerSearchQueryService.search(
+        List<LockerSuggestItemResult> items = lockerSearchTargetQueryService.findTargets(
             latitude,
             longitude,
-            keyword
-        );
+            keyword,
+            null
+        ).stream().map(LockerSuggestItemResult::from).toList();
         if (items.isEmpty()) {
             return LockerSuggestResult.empty();
         }

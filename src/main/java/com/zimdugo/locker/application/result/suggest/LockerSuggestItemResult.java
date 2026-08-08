@@ -1,7 +1,7 @@
 package com.zimdugo.locker.application.result.suggest;
 
 import com.zimdugo.locker.application.result.LockerItemType;
-import com.zimdugo.locker.domain.search.LockerSuggestCandidate;
+import com.zimdugo.locker.application.search.LockerSearchTarget;
 import java.time.LocalDateTime;
 
 public record LockerSuggestItemResult(
@@ -18,37 +18,20 @@ public record LockerSuggestItemResult(
     long distanceMeters,
     LocalDateTime updatedAt
 ) {
-    public static LockerSuggestItemResult locker(LockerSuggestCandidate candidate) {
+    public static LockerSuggestItemResult from(LockerSearchTarget target) {
         return new LockerSuggestItemResult(
-            LockerItemType.LOCKER,
-            candidate.placeId(),
-            candidate.placeName(),
-            candidate.lockerId(),
-            candidate.lockerName(),
-            candidate.roadAddress(),
-            candidate.lockerType().name(),
-            candidate.minPrice(),
-            candidate.lockerLatitude(),
-            candidate.lockerLongitude(),
-            candidate.distanceMeters(),
-            candidate.updatedAt()
-        );
-    }
-
-    public static LockerSuggestItemResult place(LockerSuggestCandidate candidate) {
-        return new LockerSuggestItemResult(
-            LockerItemType.PLACE,
-            candidate.placeId(),
-            candidate.placeName(),
-            null,
-            null,
-            candidate.roadAddress(),
-            null,
-            null,
-            candidate.placeLatitude(),
-            candidate.placeLongitude(),
-            candidate.distanceMeters(),
-            null
+            target.type(),
+            target.placeId(),
+            target.placeName(),
+            target.lockerId(),
+            target.lockerName(),
+            target.roadAddress(),
+            target.lockerType(),
+            target.minPrice(),
+            target.latitude(),
+            target.longitude(),
+            target.distanceMeters(),
+            target.updatedAt()
         );
     }
 }

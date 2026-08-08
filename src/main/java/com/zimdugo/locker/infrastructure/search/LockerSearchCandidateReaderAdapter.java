@@ -14,12 +14,14 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.search.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.search.LockerSearchCandidateReader;
 import com.zimdugo.locker.domain.search.LockerSearchFilter;
-import com.zimdugo.locker.domain.search.LockerSuggestCandidate;
+import com.zimdugo.locker.domain.search.LockerSearchCandidate;
+import com.zimdugo.locker.domain.search.LockerSearchMatchSource;
 import com.zimdugo.locker.domain.locker.LockerType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -76,10 +78,11 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         );
         SearchHits<LockerSuggestDocument> nameHits =
             elasticsearchOperations.search(nameQuery, LockerSuggestDocument.class);
-        if (!nameHits.getSearchHits().isEmpty()) {
+        if (!nameHits.getSearchHits().isEmpty()) { // 이름 결과 존재 시
             return LockerSearchCandidateResult.name(convertToCandidates(nameHits, requestedLanguage));
         }
 
+        // 위에서 이름 결과 없으면 주소 검색 쿼리 생성함
         NativeQuery addressQuery = buildSearchQuery(
             buildFilteredQuery(buildAddressQuery(normalizedKeyword), filter),
             latitude,
@@ -136,7 +139,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         String decomposed,
         SearchTargets targets
     ) {
-        type.queryName(LockerSuggestCandidate.PLACE_NAME_QUERY);
+        type.queryName(LockerSearchMatchSource.PLACE_NAME.queryName());
         type.should(name -> name.matchPhrasePrefix(ma -> ma
             .field("placeSearchNames.autocomplete").query(keyword).boost(PLACE_AUTO_BOOST)));
         type.should(name -> name.matchPhrasePrefix(ma -> ma
@@ -167,7 +170,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         String decomposed,
         SearchTargets targets
     ) {
-        type.queryName(LockerSuggestCandidate.LOCKER_NAME_QUERY);
+        type.queryName(LockerSearchMatchSource.LOCKER_NAME.queryName());
         type.should(name -> name.matchPhrasePrefix(ma -> ma
             .field("lockerSearchNames.autocomplete").query(keyword).boost(LOCKER_AUTO_BOOST)));
         type.should(name -> name.matchPhrasePrefix(ma -> ma
@@ -214,7 +217,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         if (filter.isEmpty()) {
             return query;
         }
- 
+
         return Query.of(q -> q.bool(b -> {
             b.must(query);
             addTermsFilter(b, "lockerSize", filter.sizeTypes());
@@ -223,7 +226,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
             return b;
         }));
     }
- 
+
     private <T extends Enum<T>> void addTermsFilter(
         BoolQuery.Builder builder,
         String fieldName,
@@ -241,12 +244,12 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         ));
     }
 
-    private List<LockerSuggestCandidate> convertToCandidates(
+    private List<LockerSearchCandidate> convertToCandidates(
         SearchHits<LockerSuggestDocument> hits,
         SupportedLanguage requestedLanguage
     ) {
         List<SearchHit<LockerSuggestDocument>> searchHits = hits.getSearchHits();
-        List<LockerSuggestCandidate> candidates = new ArrayList<>(searchHits.size());
+        List<LockerSearchCandidate> candidates = new ArrayList<>(searchHits.size());
         for (SearchHit<LockerSuggestDocument> hit : searchHits) {
             candidates.add(toCandidate(hit, requestedLanguage));
         }
@@ -270,7 +273,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         return 0;
     }
 
-    private LockerSuggestCandidate toCandidate(
+    private LockerSearchCandidate toCandidate(
         SearchHit<LockerSuggestDocument> hit,
         SupportedLanguage requestedLanguage
     ) {
@@ -282,10 +285,12 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         String lockerName = getLocalizedValue(doc.getLocalizedLockerNames(), doc.getLockerName(), langKey);
         String roadAddress = getLocalizedValue(doc.getLocalizedRoadAddresses(), doc.getRoadAddress(), langKey);
         String placeName = getLocalizedValue(doc.getLocalizedPlaceNames(), doc.getPlaceName(), langKey);
-        return new LockerSuggestCandidate(
+        return new LockerSearchCandidate(
             doc.getLockerId(), lockerName, roadAddress,
             LockerType.valueOf(doc.getLockerType()), doc.getMinPrice(), doc.getUpdatedAt(),
-            doc.getPlaceId(), placeName, Set.copyOf(hit.getMatchedQueries().keySet()),
+            doc.getPlaceId(), placeName, hit.getMatchedQueries().keySet().stream()
+                .map(LockerSearchMatchSource::fromQueryName)
+                .collect(Collectors.toUnmodifiableSet()),
             doc.getLockerCount(), (long) distanceMeters,
             lockerPoint.getLat(), lockerPoint.getLon(),
             placePoint.getLat(), placePoint.getLon(), hit.getScore()

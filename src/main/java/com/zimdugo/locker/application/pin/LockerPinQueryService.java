@@ -2,7 +2,7 @@ package com.zimdugo.locker.application.pin;
 
 import com.zimdugo.locker.application.filter.LockerSearchFilterFactory;
 import com.zimdugo.locker.application.common.LocationValidator;
-import com.zimdugo.locker.application.search.LockerSearchResultQueryService;
+import com.zimdugo.locker.application.search.LockerSearchDisplayQueryService;
 import com.zimdugo.locker.application.result.search.LockerSearchItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
@@ -27,7 +27,7 @@ public class LockerPinQueryService {
     private final LockerSearchPinAssembler lockerSearchPinAssembler;
     private final LockerPinClusterer lockerPinClusterer;
     private final FavoriteLockerReader favoriteLockerReader;
-    private final LockerSearchResultQueryService lockerSearchResultQueryService;
+    private final LockerSearchDisplayQueryService lockerSearchDisplayQueryService;
 
     public LockerPinResult getPins(Long userId, LockerPinQuery query) {
         LocationValidator.validateBounds(query.swLat(), query.swLng(), query.neLat(), query.neLng()); //좌표 검증
@@ -63,7 +63,7 @@ public class LockerPinQueryService {
             return LockerPinResult.empty();
         }
 
-        List<LockerSearchItemResult> items = lockerSearchResultQueryService.getDisplayableSearchItemsForPins(
+        List<LockerSearchItemResult> items = lockerSearchDisplayQueryService.getDisplayableItems(
             userId,
             query.userLat(),
             query.userLng(),
