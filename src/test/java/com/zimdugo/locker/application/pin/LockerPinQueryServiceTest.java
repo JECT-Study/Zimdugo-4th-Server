@@ -5,7 +5,7 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.filter.IndoorOutdoorFilterType;
 import com.zimdugo.locker.application.filter.LockerFacilityFilterType;
 import com.zimdugo.locker.application.filter.LockerSizeFilterType;
-import com.zimdugo.locker.application.search.LockerSearchResultQueryService;
+import com.zimdugo.locker.application.search.LockerSearchDisplayQueryService;
 import com.zimdugo.locker.application.result.LockerItemType;
 import com.zimdugo.locker.application.result.search.LockerSearchItemResult;
 import com.zimdugo.locker.application.result.pin.LockerPinItemResult;
@@ -72,7 +72,7 @@ class LockerPinQueryServiceTest {
     private FavoriteLockerReader favoriteLockerReader;
 
     @Mock
-    private LockerSearchResultQueryService lockerSearchResultQueryService;
+    private LockerSearchDisplayQueryService lockerSearchDisplayQueryService;
 
     @InjectMocks
     private LockerPinQueryService lockerPinQueryService;
@@ -184,7 +184,7 @@ class LockerPinQueryServiceTest {
             LockerPinItemResult.locker(1L, 37.55, 126.93, true)
         );
 
-        given(lockerSearchResultQueryService.getDisplayableSearchItemsForPins(
+        given(lockerSearchDisplayQueryService.getDisplayableItems(
             1L,
             37.55,
             126.93,
