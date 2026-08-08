@@ -1,8 +1,6 @@
 package com.zimdugo.locker.application.search;
 
 import com.zimdugo.locker.application.common.LocationValidator;
-
-import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.domain.search.LockerSearchCandidateReader;
 import com.zimdugo.locker.domain.search.LockerSearchCandidateResult;
 import com.zimdugo.locker.domain.search.LockerSearchFilter;
@@ -16,54 +14,40 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class LockerSearchQueryService {
+public class LockerSearchTargetQueryService {
 
     private final LockerSearchCandidateReader lockerSearchCandidateReader;
-    private final LockerSearchAssembler lockerSearchAssembler;
+    private final LockerSearchTargetAssembler lockerSearchTargetAssembler;
 
-    public List<LockerSuggestItemResult> search(
-        double latitude,
-        double longitude,
-        String keyword
-    ) {
-        return search(latitude, longitude, keyword, LockerSearchFilter.empty());
-    }
-
-    public List<LockerSuggestItemResult> search(
+    public List<LockerSearchTarget> findTargets(
         double latitude,
         double longitude,
         String keyword,
         LockerSearchFilter filter
     ) {
         LocationValidator.validate(latitude, longitude);
-
-        if (filter == null) {
-            filter = LockerSearchFilter.empty();
-        }
+        LockerSearchFilter effectiveFilter = filter == null ? LockerSearchFilter.empty() : filter;
         LockerSearchCandidateResult candidateResult = lockerSearchCandidateReader.search(
             latitude,
             longitude,
             keyword,
-            filter
-        );
-        log.debug(
-            "보관함 검색 후보 조회 완료. keywordPresent={}, filterEmpty={}, matchType={}, resultCount={}",
-            keyword != null && !keyword.isBlank(),
-            filter.isEmpty(),
-            candidateResult.matchType(),
-            candidateResult.candidates().size()
+            effectiveFilter
         );
         if (candidateResult.candidates().isEmpty()) {
             return List.of();
         }
 
-        List<LockerSuggestItemResult> results = lockerSearchAssembler.assemble(
+        List<LockerSearchTarget> targets = lockerSearchTargetAssembler.assemble(
             candidateResult.candidates(),
             candidateResult.matchType()
         );
-        log.debug("보관함 검색 응답 생성 완료. resultCount={}", results.size());
-        return results;
+        log.debug(
+            "보관함 검색 대상 조회 완료. keywordPresent={}, filterEmpty={}, matchType={}, targetCount={}",
+            keyword != null && !keyword.isBlank(),
+            effectiveFilter.isEmpty(),
+            candidateResult.matchType(),
+            targets.size()
+        );
+        return targets;
     }
-
-
 }

@@ -1,7 +1,7 @@
 package com.zimdugo.locker.application.result.search;
 
 import com.zimdugo.locker.application.result.LockerItemType;
-import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
+import com.zimdugo.locker.application.search.LockerSearchTarget;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,42 +21,42 @@ public record LockerSearchItemResult(
     Boolean isFavorite,
     List<LockerSearchLockerResult> lockers
 ) {
-    public static LockerSearchItemResult locker(LockerSuggestItemResult item, boolean isFavorite) {
+    public static LockerSearchItemResult locker(LockerSearchTarget target, boolean isFavorite) {
         return new LockerSearchItemResult(
-            item.type(),
-            item.placeId(),
-            item.placeName(),
-            item.lockerId(),
-            item.lockerName(),
-            item.roadAddress(),
-            item.lockerType(),
-            item.minPrice(),
-            item.latitude(),
-            item.longitude(),
-            item.distanceMeters(),
-            item.updatedAt(),
+            target.type(),
+            target.placeId(),
+            target.placeName(),
+            target.lockerId(),
+            target.lockerName(),
+            target.roadAddress(),
+            target.lockerType(),
+            target.minPrice(),
+            target.latitude(),
+            target.longitude(),
+            target.distanceMeters(),
+            target.updatedAt(),
             isFavorite,
             List.of()
         );
     }
 
     public static LockerSearchItemResult place(
-        LockerSuggestItemResult item,
+        LockerSearchTarget target,
         List<LockerSearchLockerResult> lockers
     ) {
         return new LockerSearchItemResult(
-            item.type(),
-            item.placeId(),
-            item.placeName(),
-            item.lockerId(),
-            item.lockerName(),
-            item.roadAddress(),
-            item.lockerType(),
+            target.type(),
+            target.placeId(),
+            target.placeName(),
+            target.lockerId(),
+            target.lockerName(),
+            target.roadAddress(),
+            target.lockerType(),
             null,
-            item.latitude(),
-            item.longitude(),
-            item.distanceMeters(),
-            item.updatedAt(),
+            target.latitude(),
+            target.longitude(),
+            target.distanceMeters(),
+            target.updatedAt(),
             null,
             lockers
         );
