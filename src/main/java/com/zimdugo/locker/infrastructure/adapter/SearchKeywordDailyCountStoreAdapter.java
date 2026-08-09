@@ -13,7 +13,7 @@ public class SearchKeywordDailyCountStoreAdapter implements SearchKeywordDailyCo
     private final SearchKeywordDailyCountRepository searchKeywordDailyCountRepository;
 
     @Override
-    public void increase(String keyword, LocalDate statDate) {
-        searchKeywordDailyCountRepository.increase(keyword, statDate);
+    public void increase(String keyword, LocalDate statDate, long amount) {
+        searchKeywordDailyCountRepository.increase(keyword, statDate, amount);
     }
 }

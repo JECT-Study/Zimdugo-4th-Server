@@ -12,11 +12,11 @@ public interface SearchKeywordCountRepository extends JpaRepository<SearchKeywor
     @Modifying
     @Query(value = """
         INSERT INTO keyword_counts (keyword, search_count)
-        VALUES (:keyword, 1)
+        VALUES (:keyword, :amount)
         ON CONFLICT (keyword)
-        DO UPDATE SET search_count = keyword_counts.search_count + 1
+        DO UPDATE SET search_count = keyword_counts.search_count + :amount
         """, nativeQuery = true)
-    void increase(@Param("keyword") String keyword);
+    void increase(@Param("keyword") String keyword, @Param("amount") long amount);
 
     @Query(value = """
         SELECT
