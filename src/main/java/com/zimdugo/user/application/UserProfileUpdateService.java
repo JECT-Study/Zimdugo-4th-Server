@@ -23,7 +23,7 @@ public class UserProfileUpdateService {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
-        user.updateProfile(user.getNickname(), profileImageUrl);
+        user.updateProfile(profileImageUrl);
         User updatedUser = userStore.store(user);
 
         return new UserProfileDto(

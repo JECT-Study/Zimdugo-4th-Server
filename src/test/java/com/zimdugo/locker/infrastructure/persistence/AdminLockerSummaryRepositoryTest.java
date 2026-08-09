@@ -166,7 +166,6 @@ class AdminLockerSummaryRepositoryTest {
         UserEntity user = userRepository.save(new UserEntity(
             null,
             "delete-test@example.com",
-            "삭제 테스트",
             null,
             UserStatus.ACTIVE,
             UserRole.USER,

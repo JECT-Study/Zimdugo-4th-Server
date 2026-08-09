@@ -32,8 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-    private static final String UNUSED_NICKNAME = "unused";
-
     private final UserStore userStore;
     private final SocialAccountReader socialAccountReader;
     private final SocialAccountStore socialAccountStore;
@@ -110,7 +108,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         User user = new User(
             email,
-            UNUSED_NICKNAME,
             profileImageUrl,
             UserStatus.ACTIVE
         );

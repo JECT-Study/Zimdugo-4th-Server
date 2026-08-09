@@ -8,26 +8,24 @@ public class User {
 
     private Long id;
     private String email;
-    private String nickname;
     private String profileImageUrl;
     private UserStatus status;
     private UserRole role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public User(String email, String nickname, String profileImageUrl, UserStatus status) {
-        this(null, email, nickname, profileImageUrl, status, UserRole.USER, null, null);
+    public User(String email, String profileImageUrl, UserStatus status) {
+        this(null, email, profileImageUrl, status, UserRole.USER, null, null);
     }
 
-    public User(String email, String nickname, String profileImageUrl, UserStatus status, UserRole role) {
-        this(null, email, nickname, profileImageUrl, status, role, null, null);
+    public User(String email, String profileImageUrl, UserStatus status, UserRole role) {
+        this(null, email, profileImageUrl, status, role, null, null);
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber")
     public User(
         Long id,
         String email,
-        String nickname,
         String profileImageUrl,
         UserStatus status,
         UserRole role,
@@ -36,7 +34,6 @@ public class User {
     ) {
         this.id = id;
         this.email = email;
-        this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.status = status;
         this.role = role != null ? role : UserRole.USER;
@@ -44,8 +41,7 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    public void updateProfile(String nickname, String profileImageUrl) {
-        this.nickname = nickname;
+    public void updateProfile(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
 
@@ -55,7 +51,6 @@ public class User {
 
     public void anonymizeForWithdrawal() {
         this.email = null;
-        this.nickname = id == null ? "deleted-user" : "deleted-user-" + id;
         this.profileImageUrl = null;
         this.status = UserStatus.DELETED;
     }

@@ -173,7 +173,6 @@ class LockerReportRepositoryTest {
         UserEntity user = new UserEntity(
             null,
             "reporter@example.com",
-            "reporter",
             null,
             UserStatus.ACTIVE,
             UserRole.USER,
