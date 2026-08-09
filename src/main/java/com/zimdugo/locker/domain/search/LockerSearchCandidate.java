@@ -4,7 +4,7 @@ import com.zimdugo.locker.domain.locker.LockerType;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-public record LockerSuggestCandidate(
+public record LockerSearchCandidate(
     Long lockerId,
     String lockerName,
     String roadAddress,
@@ -13,7 +13,7 @@ public record LockerSuggestCandidate(
     LocalDateTime updatedAt,
     Long placeId,
     String placeName,
-    Set<String> matchedQueries,
+    Set<LockerSearchMatchSource> matchSources,
     int lockerCount,
     long distanceMeters,
     double lockerLatitude,
@@ -22,6 +22,4 @@ public record LockerSuggestCandidate(
     double placeLongitude,
     float score
 ) {
-    public static final String PLACE_NAME_QUERY = "place_name";
-    public static final String LOCKER_NAME_QUERY = "locker_name";
 }

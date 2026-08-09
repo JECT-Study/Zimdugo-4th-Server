@@ -8,7 +8,7 @@ import com.drew.metadata.jpeg.JpegDirectory;
 import com.drew.metadata.png.PngDirectory;
 import com.drew.metadata.webp.WebpDirectory;
 import com.zimdugo.common.storage.ImageUploadPolicy;
-import com.zimdugo.common.storage.S3StorageProperties;
+import com.zimdugo.common.storage.OciObjectStorageProperties;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class AdminNoticeImageFileValidator {
     );
 
     private final AdminNoticeImageProperties noticeImageProperties;
-    private final S3StorageProperties storageProperties;
+    private final OciObjectStorageProperties storageProperties;
     private final ImageUploadPolicy imageUploadPolicy;
 
     public void validate(MultipartFile file) {

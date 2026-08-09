@@ -7,7 +7,7 @@ import com.zimdugo.admin.application.dto.AdminDocumentDetailResult;
 import com.zimdugo.admin.application.dto.AdminDocumentSummaryResult;
 import com.zimdugo.admin.entrypoint.dto.AdminDocumentForm;
 import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.common.storage.S3StorageProperties;
+import com.zimdugo.common.storage.OciObjectStorageProperties;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class AdminDocumentController {
     private final AdminDocumentService adminDocumentService;
     private final AdminDocumentImageWorkflow documentImageWorkflow;
     private final AdminNoticeImageProperties noticeImageProperties;
-    private final S3StorageProperties storageProperties;
+    private final OciObjectStorageProperties storageProperties;
 
     @ModelAttribute
     public void addNoticeImageConfiguration(Model model) {

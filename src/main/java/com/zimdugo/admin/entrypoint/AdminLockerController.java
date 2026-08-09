@@ -1,6 +1,6 @@
 package com.zimdugo.admin.entrypoint;
 
-import com.zimdugo.admin.application.AdminNoticeImageStorage;
+import com.zimdugo.admin.application.AdminLockerImageStorage;
 import com.zimdugo.admin.i18n.LockerContentI18nAdminService;
 import com.zimdugo.admin.locker.AdminLockerService;
 import com.zimdugo.admin.locker.dto.AdminLockerCommand;
@@ -36,7 +36,7 @@ public class AdminLockerController {
 
     private final AdminLockerService adminLockerService;
     private final LockerContentI18nAdminService i18nAdminService;
-    private final AdminNoticeImageStorage imageStorage;
+    private final AdminLockerImageStorage imageStorage;
 
     @ModelAttribute
     public void addOptions(Model model) {
