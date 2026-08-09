@@ -12,4 +12,4 @@ BEGIN
             DROP COLUMN nickname;
     END IF;
 END;
-$$;
+$$;;
