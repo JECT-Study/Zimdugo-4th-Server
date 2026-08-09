@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LockerSearchResultQueryService {
 
     private final LockerSearchDisplayQueryService lockerSearchDisplayQueryService;
-    private final SearchKeywordCountCommandService searchKeywordCountCommandService;
+    private final SearchKeywordEventCommandService searchKeywordEventCommandService;
 
     public LockerSearchResult getSearchResults(Long userId, LockerSearchCommand command) {
         return getSearchResults(
@@ -42,7 +42,7 @@ public class LockerSearchResultQueryService {
         String keyword,
         LockerSearchFilter filter
     ) {
-        increaseSearchKeywordCount(keyword);
+        recordSearchKeywordEvent(keyword);
         List<LockerSearchItemResult> items = lockerSearchDisplayQueryService.getDisplayableItems(
             userId,
             latitude,
@@ -53,11 +53,11 @@ public class LockerSearchResultQueryService {
         return LockerSearchResult.of(items);
     }
 
-    private void increaseSearchKeywordCount(String keyword) {
+    private void recordSearchKeywordEvent(String keyword) {
         try {
-            searchKeywordCountCommandService.increase(keyword);
+            searchKeywordEventCommandService.record(keyword);
         } catch (DataAccessException | TransactionException exception) {
-            log.warn("키워드 집계 저장에 실패해도 검색은 계속 진행합니다. keyword={}", keyword, exception);
+            log.warn("키워드 집계 이벤트 저장에 실패해도 검색은 계속 진행합니다. keyword={}", keyword, exception);
         }
     }
 }
