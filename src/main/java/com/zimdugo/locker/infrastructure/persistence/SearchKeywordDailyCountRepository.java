@@ -11,9 +11,13 @@ public interface SearchKeywordDailyCountRepository extends JpaRepository<SearchK
     @Modifying
     @Query(value = """
         INSERT INTO keyword_daily_counts (keyword, stat_date, search_count)
-        VALUES (:keyword, :statDate, 1)
+        VALUES (:keyword, :statDate, :amount)
         ON CONFLICT (keyword, stat_date)
-        DO UPDATE SET search_count = keyword_daily_counts.search_count + 1
+        DO UPDATE SET search_count = keyword_daily_counts.search_count + :amount
         """, nativeQuery = true)
-    void increase(@Param("keyword") String keyword, @Param("statDate") LocalDate statDate);
+    void increase(
+        @Param("keyword") String keyword,
+        @Param("statDate") LocalDate statDate,
+        @Param("amount") long amount
+    );
 }

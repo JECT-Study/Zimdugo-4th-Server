@@ -12,7 +12,7 @@ public class SearchKeywordCountStoreAdapter implements SearchKeywordCountStore {
     private final SearchKeywordCountRepository searchKeywordCountRepository;
 
     @Override
-    public void increase(String keyword) {
-        searchKeywordCountRepository.increase(keyword);
+    public void increase(String keyword, long amount) {
+        searchKeywordCountRepository.increase(keyword, amount);
     }
 }

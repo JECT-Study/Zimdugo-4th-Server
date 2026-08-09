@@ -102,3 +102,7 @@ translation:
     model: ${GEMINI_TRANSLATION_MODEL:gemini-2.5-flash-lite}
     connect-timeout-millis: ${GEMINI_CONNECT_TIMEOUT_MILLIS:1500}
     read-timeout-millis: ${GEMINI_READ_TIMEOUT_MILLIS:30000}
+
+search:
+  keyword-aggregation:
+    fixed-delay-millis: ${SEARCH_KEYWORD_AGGREGATION_FIXED_DELAY_MILLIS:10000}
