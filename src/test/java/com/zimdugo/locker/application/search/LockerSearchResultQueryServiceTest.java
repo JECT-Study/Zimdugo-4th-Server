@@ -20,7 +20,7 @@ class LockerSearchResultQueryServiceTest {
     @Mock
     private LockerSearchDisplayQueryService displayQueryService;
     @Mock
-    private SearchKeywordCountCommandService keywordCountCommandService;
+    private SearchKeywordEventCommandService searchKeywordEventCommandService;
 
     @Test
     void recordsTheKeywordAndWrapsDisplayItemsAsASearchResult() {
@@ -29,14 +29,14 @@ class LockerSearchResultQueryServiceTest {
         given(displayQueryService.getDisplayableItems(1L, 37.55, 126.93, "신촌", filter)).willReturn(items);
         LockerSearchResultQueryService service = new LockerSearchResultQueryService(
             displayQueryService,
-            keywordCountCommandService
+            searchKeywordEventCommandService
         );
 
         var result = service.getSearchResults(1L, 37.55, 126.93, "신촌", filter);
 
         assertThat(result.count()).isEqualTo(1);
         assertThat(result.items()).containsExactlyElementsOf(items);
-        verify(keywordCountCommandService).increase("신촌");
+        verify(searchKeywordEventCommandService).record("신촌");
     }
 
     private LockerSearchItemResult lockerItem() {
