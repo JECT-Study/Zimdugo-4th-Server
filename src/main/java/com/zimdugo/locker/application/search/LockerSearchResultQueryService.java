@@ -57,7 +57,7 @@ public class LockerSearchResultQueryService {
         try {
             searchKeywordEventCommandService.record(keyword);
         } catch (DataAccessException | TransactionException exception) {
-            log.warn("키워드 집계 이벤트 저장에 실패해도 검색은 계속 진행합니다. keyword={}", keyword, exception);
+            log.warn("키워드 집계 이벤트 저장에 실패해도 검색은 계속 진행합니다.", exception);
         }
     }
 }
