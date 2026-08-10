@@ -9,9 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,19 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private static final long REFRESH_TOKEN_COOKIE_MAX_AGE = 60L * 60L * 24L * 30L;
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
     private static final String REFRESH_TOKEN_HEADER_NAME = "X-Refresh-Token";
-    private static final String REFRESH_TOKEN_COOKIE_PATH = "/api/auth/refresh";
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final AuthCommandService authCommandService;
     private final AccountWithdrawalService accountWithdrawalService;
-
-    @Value("${auth.cookie.refresh.same-site:Strict}")
-    private String refreshTokenCookieSameSite;
-
-    @Value("${auth.cookie.refresh.secure:false}")
-    private boolean refreshTokenCookieSecure;
+    private final RefreshTokenCookieFactory refreshTokenCookieFactory;
 
     @PostMapping("/refresh")
     public ResponseEntity<RestResponse<Map<String, Object>>> refresh(
@@ -51,7 +43,7 @@ public class AuthController {
 
         response.setHeader(
             HttpHeaders.SET_COOKIE,
-            createRefreshTokenCookie(result.refreshToken()).toString()
+            refreshTokenCookieFactory.create(result.refreshToken(), REFRESH_TOKEN_COOKIE_MAX_AGE).toString()
         );
 
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, createRefreshResponse(result)));
@@ -65,7 +57,7 @@ public class AuthController {
     ) {
         authCommandService.logout(refreshTokenCookie, extractAccessToken(authorization));
 
-        response.setHeader(HttpHeaders.SET_COOKIE, createLogoutCookie().toString());
+        response.setHeader(HttpHeaders.SET_COOKIE, refreshTokenCookieFactory.clear().toString());
         return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
     }
 
@@ -75,7 +67,7 @@ public class AuthController {
         HttpServletResponse response
     ) {
         accountWithdrawalService.withdraw(extractAccessToken(authorization));
-        response.setHeader(HttpHeaders.SET_COOKIE, createLogoutCookie().toString());
+        response.setHeader(HttpHeaders.SET_COOKIE, refreshTokenCookieFactory.clear().toString());
         return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
     }
 
@@ -86,26 +78,6 @@ public class AuthController {
         body.put("email", result.email());
         body.put("accessToken", result.accessToken());
         return body;
-    }
-
-    private ResponseCookie createRefreshTokenCookie(String refreshToken) {
-        return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
-            .httpOnly(true)
-            .secure(refreshTokenCookieSecure)
-            .path(REFRESH_TOKEN_COOKIE_PATH)
-            .maxAge(REFRESH_TOKEN_COOKIE_MAX_AGE)
-            .sameSite(refreshTokenCookieSameSite)
-            .build();
-    }
-
-    private ResponseCookie createLogoutCookie() {
-        return ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
-            .httpOnly(true)
-            .secure(refreshTokenCookieSecure)
-            .path(REFRESH_TOKEN_COOKIE_PATH)
-            .maxAge(0)
-            .sameSite(refreshTokenCookieSameSite)
-            .build();
     }
 
     private String resolveRefreshToken(String refreshTokenCookie, String refreshTokenHeader) {

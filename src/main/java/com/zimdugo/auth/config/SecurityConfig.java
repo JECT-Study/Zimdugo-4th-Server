@@ -39,6 +39,7 @@ public class SecurityConfig {
     private final OAuth2CallbackUrlCaptureFilter oAuth2CallbackUrlCaptureFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final AuthProperties authProperties;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -116,13 +117,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-            "https://zimdugo.com",
-            "https://www.zimdugo.com",
-            "https://zimdugo-web.vercel.app",
-            "http://localhost:3000",
-            "http://localhost:5173"
-        ));
+        config.setAllowedOrigins(authProperties.getCallback().getAllowedOrigins());
 
         config.setAllowedMethods(List.of(
             "GET",
