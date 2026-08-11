@@ -44,7 +44,7 @@ public class AccountWithdrawalService {
             throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
-        socialAccountUnlinkService.unlinkAll(userId);
+        SocialAccountUnlinkSummary unlinkSummary = socialAccountUnlinkService.unlinkAll(userId);
 
         user.anonymizeForWithdrawal();
         userStore.store(user);
@@ -52,6 +52,14 @@ public class AccountWithdrawalService {
         socialAccountStore.deleteAllByUserId(userId);
         socialProviderTokenRepository.deleteAllByUserId(userId);
         refreshTokenRepository.deleteAllByUserId(userId);
-        log.info("회원 탈퇴 처리가 완료되었습니다. userId={}", userId);
+        log.info(
+            "회원 탈퇴 처리가 완료되었습니다. userId={}, unlinkedCount={}, skippedUnsupportedProviderCount={}, "
+                + "skippedMissingTokenCount={}, failedExternalCount={}",
+            userId,
+            unlinkSummary.unlinkedCount(),
+            unlinkSummary.skippedUnsupportedProviderCount(),
+            unlinkSummary.skippedMissingTokenCount(),
+            unlinkSummary.failedExternalCount()
+        );
     }
 }

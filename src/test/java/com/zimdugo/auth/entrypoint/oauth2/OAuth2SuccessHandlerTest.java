@@ -3,6 +3,7 @@ package com.zimdugo.auth.entrypoint.oauth2;
 import com.zimdugo.auth.application.OAuth2LoginSessionResult;
 import com.zimdugo.auth.application.OAuth2LoginSessionService;
 import com.zimdugo.auth.application.OAuth2ProviderTokenService;
+import com.zimdugo.auth.entrypoint.RefreshTokenCookieFactory;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
@@ -28,16 +30,20 @@ class OAuth2SuccessHandlerTest {
             OAuth2CallbackUrlCookieManager.class
         );
         OAuth2ProviderTokenService providerTokenService = mock(OAuth2ProviderTokenService.class);
+        RefreshTokenCookieFactory refreshTokenCookieFactory = mock(RefreshTokenCookieFactory.class);
         OAuth2SuccessHandler handler = new OAuth2SuccessHandler(
             sessionService,
             callbackUrlCookieManager,
-            providerTokenService
+            providerTokenService,
+            refreshTokenCookieFactory
         );
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(callbackUrlCookieManager.resolveCallbackUrl(request)).thenReturn("zimdugo://login");
         when(sessionService.createSession(42L, "user@example.com", "USER"))
             .thenReturn(new OAuth2LoginSessionResult("refresh-token", Duration.ofDays(1), "sid"));
+        when(refreshTokenCookieFactory.create("refresh-token", Duration.ofDays(1)))
+            .thenReturn(ResponseCookie.from("refreshToken", "refresh-token").build());
         DefaultOAuth2User principal = new DefaultOAuth2User(
             List.of(new SimpleGrantedAuthority("ROLE_USER")),
             Map.of(

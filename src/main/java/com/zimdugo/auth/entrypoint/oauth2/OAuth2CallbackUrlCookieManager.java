@@ -1,5 +1,6 @@
 package com.zimdugo.auth.entrypoint.oauth2;
 
+import com.zimdugo.auth.config.AuthProperties;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,17 +10,17 @@ import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class OAuth2CallbackUrlCookieManager {
 
     private static final String CALLBACK_URL_PARAM = "callbackUrl";
@@ -28,27 +29,20 @@ public class OAuth2CallbackUrlCookieManager {
     private static final String SAME_SITE_POLICY = "Lax";
     private static final String RELATIVE_PATH_DEFAULT = "/";
 
-    @Value("${auth.callback.frontend-base-url:http://localhost:3000}")
-    private String frontendBaseUrl;
-
-    @Value("${auth.callback.allowed-origins:https://zimdugo.com,https://www.zimdugo.com,http://localhost:3000,http://localhost:5173}")
-    private String allowedOriginsProperty;
-
-    @Value("${auth.callback.cookie-secure:false}")
-    private boolean callbackCookieSecure;
+    private final AuthProperties authProperties;
 
     private Set<String> allowedOrigins;
 
     @PostConstruct
     void initializeAllowedOrigins() {
         this.allowedOrigins = new LinkedHashSet<>();
-        Arrays.stream(allowedOriginsProperty.split(","))
+        authProperties.getCallback().getAllowedOrigins().stream()
             .map(String::trim)
             .filter(v -> !v.isBlank())
             .map(this::extractOrigin)
             .forEach(allowedOrigins::add);
 
-        String frontendOrigin = extractOrigin(frontendBaseUrl);
+        String frontendOrigin = extractOrigin(authProperties.getCallback().getFrontendBaseUrl());
         if (frontendOrigin != null) {
             allowedOrigins.add(frontendOrigin);
         }
@@ -81,7 +75,7 @@ public class OAuth2CallbackUrlCookieManager {
     private void addCookie(HttpServletResponse response, String value, int maxAgeSeconds) {
         ResponseCookie cookie = ResponseCookie.from(CALLBACK_URL_COOKIE_NAME, encode(value))
             .httpOnly(true)
-            .secure(callbackCookieSecure)
+            .secure(authProperties.getCallback().isCookieSecure())
             .path("/")
             .maxAge(maxAgeSeconds)
             .sameSite(SAME_SITE_POLICY)
@@ -107,7 +101,7 @@ public class OAuth2CallbackUrlCookieManager {
 
         String origin = extractOrigin(trimmed);
         if (origin == null || !allowedOrigins.contains(origin)) {
-            log.warn("안전하지 않은 callbackUrl이 감지되었습니다. 기본값으로 대체합니다.");
+            log.warn("허용되지 않은 callbackUrl이 감지되었습니다. 기본값으로 대체합니다.");
             return toFrontendUrl(RELATIVE_PATH_DEFAULT);
         }
 
@@ -128,6 +122,7 @@ public class OAuth2CallbackUrlCookieManager {
     }
 
     private String toFrontendUrl(String path) {
+        String frontendBaseUrl = authProperties.getCallback().getFrontendBaseUrl();
         String base = frontendBaseUrl;
         if (frontendBaseUrl.endsWith("/")) {
             base = frontendBaseUrl.substring(0, frontendBaseUrl.length() - 1);

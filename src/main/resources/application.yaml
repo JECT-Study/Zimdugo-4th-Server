@@ -15,15 +15,15 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:dummy-google-client-id}
-            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-google-client-secret}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope:
               - profile
               - email
 
           naver:
-            client-id: ${NAVER_CLIENT_ID:dummy-naver-client-id}
-            client-secret: ${NAVER_CLIENT_SECRET:dummy-naver-client-secret}
+            client-id: ${NAVER_CLIENT_ID}
+            client-secret: ${NAVER_CLIENT_SECRET}
             client-name: Naver
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
@@ -33,8 +33,8 @@ spring:
               - profile_image
 
           kakao:
-            client-id: ${KAKAO_CLIENT_ID:dummy-kakao-client-id}
-            client-secret: ${KAKAO_CLIENT_SECRET:dummy-kakao-client-secret}
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
             client-authentication-method: client_secret_post
             client-name: Kakao
             authorization-grant-type: authorization_code
@@ -64,7 +64,7 @@ jwt:
 kakao:
   local:
     base-url: https://dapi.kakao.com
-    rest-api-key: ${KAKAO_CLIENT_ID:dummy-kakao-rest-api-key}
+    rest-api-key: ${KAKAO_CLIENT_ID}
     connect-timeout-millis: 1500
     read-timeout-millis: 2000
 

@@ -3,6 +3,7 @@ package com.zimdugo.auth.entrypoint.oauth2;
 import com.zimdugo.auth.application.OAuth2LoginSessionResult;
 import com.zimdugo.auth.application.OAuth2LoginSessionService;
 import com.zimdugo.auth.application.OAuth2ProviderTokenService;
+import com.zimdugo.auth.entrypoint.RefreshTokenCookieFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -10,9 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -24,18 +23,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    private static final String REFRESH_COOKIE_PATH = "/api/auth/refresh";
-
     private final OAuth2LoginSessionService loginSessionService;
     private final OAuth2CallbackUrlCookieManager callbackUrlCookieManager;
     private final OAuth2ProviderTokenService providerTokenService;
-
-    @Value("${auth.cookie.refresh.same-site:Strict}")
-    private String refreshTokenCookieSameSite;
-
-    @Value("${auth.cookie.refresh.secure:false}")
-    private boolean refreshTokenCookieSecure;
+    private final RefreshTokenCookieFactory refreshTokenCookieFactory;
 
     @Override
     public void onAuthenticationSuccess(
@@ -64,15 +55,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         OAuth2LoginSessionResult session = loginSessionService.createSession(userId, email, role);
 
-        ResponseCookie rtCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, session.refreshToken())
-            .httpOnly(true)
-            .secure(refreshTokenCookieSecure)
-            .path(REFRESH_COOKIE_PATH)
-            .maxAge(session.refreshTokenTtl())
-            .sameSite(refreshTokenCookieSameSite)
-            .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
+        response.addHeader(
+            HttpHeaders.SET_COOKIE,
+            refreshTokenCookieFactory.create(session.refreshToken(), session.refreshTokenTtl()).toString()
+        );
         callbackUrlCookieManager.clearCallbackUrl(response);
 
         log.info("OAuth 로그인이 성공했습니다. userId={}, sid={}, callbackUrl={}", userId, session.sid(), callbackUrl);
