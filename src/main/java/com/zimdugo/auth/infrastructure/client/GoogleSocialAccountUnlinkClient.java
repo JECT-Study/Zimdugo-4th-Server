@@ -42,7 +42,7 @@ public class GoogleSocialAccountUnlinkClient implements SocialAccountUnlinkClien
                 .retrieve()
                 .toBodilessEntity();
         } catch (RestClientException exception) {
-            log.error("구글 연동 해제에 실패했습니다. userId={}", socialAccount.getUser().getId(), exception);
+            log.error("구글 소셜 연동 해제에 실패했습니다. userId={}", socialAccount.getUser().getId(), exception);
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR, exception);
         }
     }

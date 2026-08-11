@@ -52,7 +52,7 @@ public class NaverSocialAccountUnlinkClient implements SocialAccountUnlinkClient
                 .retrieve()
                 .body(NaverTokenResponse.class);
         } catch (RestClientException exception) {
-            log.error("네이버 연동 해제에 실패했습니다. userId={}", socialAccount.getUser().getId(), exception);
+            log.error("네이버 소셜 연동 해제에 실패했습니다. userId={}", socialAccount.getUser().getId(), exception);
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR, exception);
         }
     }
