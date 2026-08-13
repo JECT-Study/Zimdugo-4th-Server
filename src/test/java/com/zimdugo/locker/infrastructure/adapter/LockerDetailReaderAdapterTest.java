@@ -47,6 +47,26 @@ class LockerDetailReaderAdapterTest {
     }
 
     @Test
+    @DisplayName("실시간 데이터가 있으면 잔여 수량을 도메인에 포함한다")
+    void convertsRealtimeAvailabilityToDomain() {
+        LockerDetailQueryProjection projection = projection();
+        LocalDateTime fetchedAt = LocalDateTime.of(2026, 8, 13, 10, 0);
+        given(projection.getSmallAvailableCount()).willReturn(3);
+        given(projection.getMediumAvailableCount()).willReturn(2);
+        given(projection.getLargeAvailableCount()).willReturn(1);
+        given(projection.getRealtimeFetchedAt()).willReturn(fetchedAt);
+        given(lockerRepository.findDetailById(10L, null, "ko")).willReturn(Optional.of(projection));
+
+        LockerDetail result = lockerDetailReaderAdapter.readById(10L).orElseThrow();
+
+        assertThat(result.realtimeAvailability()).isNotNull();
+        assertThat(result.realtimeAvailability().smallAvailableCount()).isEqualTo(3);
+        assertThat(result.realtimeAvailability().mediumAvailableCount()).isEqualTo(2);
+        assertThat(result.realtimeAvailability().largeAvailableCount()).isEqualTo(1);
+        assertThat(result.realtimeAvailability().fetchedAt()).isEqualTo(fetchedAt);
+    }
+
+    @Test
     @DisplayName("상세정보가 없는 보관함이면 빈 결과를 반환한다")
     void returnsEmptyWhenDetailDoesNotExist() {
         given(lockerRepository.findDetailById(999L, null, "ko")).willReturn(Optional.empty());

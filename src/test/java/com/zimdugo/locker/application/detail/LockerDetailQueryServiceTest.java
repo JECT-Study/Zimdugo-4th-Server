@@ -84,32 +84,32 @@ class LockerDetailQueryServiceTest {
     }
 
     private LockerDetail detail(boolean isFavorite, boolean isAccurateVoted, boolean isInaccurateVoted) {
-        return new LockerDetail(
-            10L,
-            "신촌역 보관함",
-            "서울 서대문구",
-            37.55,
-            126.93,
-            101L,
-            "신촌역",
-            LockerType.SUBWAY_STATION,
-            IndoorOutdoorType.INDOOR,
-            "UNDERGROUND",
-            -1,
-            1000,
-            3000,
-            Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
-            "개찰구 옆",
-            LocalTime.of(9, 0),
-            LocalTime.of(22, 0),
-            "https://cdn.example.com/locker.jpg",
-            10,
-            2,
-            LocalDateTime.of(2026, 6, 1, 12, 0),
-            LocalDateTime.of(2026, 6, 7, 12, 0),
-            isFavorite,
-            isAccurateVoted,
-            isInaccurateVoted
-        );
+        return LockerDetail.builder()
+            .lockerId(10L)
+            .lockerName("신촌역 보관함")
+            .roadAddress("서울 서대문구")
+            .latitude(37.55)
+            .longitude(126.93)
+            .placeId(101L)
+            .placeName("신촌역")
+            .lockerType(LockerType.SUBWAY_STATION)
+            .indoorOutdoorType(IndoorOutdoorType.INDOOR)
+            .groundLevelType("UNDERGROUND")
+            .floor(-1)
+            .minPrice(1000)
+            .maxPrice(3000)
+            .lockerSizes(Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE))
+            .detailInfo("개찰구 옆")
+            .startTime(LocalTime.of(9, 0))
+            .endTime(LocalTime.of(22, 0))
+            .imageUrl("https://cdn.example.com/locker.jpg")
+            .accurateVoteCount(10)
+            .inaccurateVoteCount(2)
+            .createdAt(LocalDateTime.of(2026, 6, 1, 12, 0))
+            .updatedAt(LocalDateTime.of(2026, 6, 7, 12, 0))
+            .isFavorite(isFavorite)
+            .isAccurateVoted(isAccurateVoted)
+            .isInaccurateVoted(isInaccurateVoted)
+            .build();
     }
 }

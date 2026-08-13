@@ -35,7 +35,8 @@ public record LockerDetail(
     LocalDateTime updatedAt,
     boolean isFavorite,
     boolean isAccurateVoted,
-    boolean isInaccurateVoted
+    boolean isInaccurateVoted,
+    LockerRealtimeAvailability realtimeAvailability
 ) {
 
     public LockerDetail voteCorrect() {

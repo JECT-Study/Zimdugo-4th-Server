@@ -29,4 +29,8 @@ public interface LockerDetailQueryProjection {
     Boolean getIsFavorite();
     Boolean getIsAccurateVoted();
     Boolean getIsInaccurateVoted();
+    Integer getSmallAvailableCount();
+    Integer getMediumAvailableCount();
+    Integer getLargeAvailableCount();
+    LocalDateTime getRealtimeFetchedAt();
 }
