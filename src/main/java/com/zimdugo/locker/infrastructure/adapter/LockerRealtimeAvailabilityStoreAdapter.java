@@ -32,9 +32,7 @@ public class LockerRealtimeAvailabilityStoreAdapter implements LockerRealtimeAva
         if (snapshots.isEmpty()) {
             return 0;
         }
-        Set<String> externalLockerIds = snapshots.stream()
-            .map(LockerRealtimeAvailabilitySnapshot::externalLockerId)
-            .collect(Collectors.toUnmodifiableSet());
+        Set<String> externalLockerIds = validatedExternalLockerIds(snapshots);
         Set<String> mappedExternalLockerIds = mappingRepository.findByExternalLockerIdIn(externalLockerIds).stream()
             .map(mapping -> mapping.getExternalLockerId())
             .collect(Collectors.toUnmodifiableSet());
@@ -55,6 +53,18 @@ public class LockerRealtimeAvailabilityStoreAdapter implements LockerRealtimeAva
             availabilityRepository.saveAll(newAvailabilities);
         }
         return availabilities.size();
+    }
+
+    private Set<String> validatedExternalLockerIds(
+        Collection<LockerRealtimeAvailabilitySnapshot> snapshots
+    ) {
+        Set<String> externalLockerIds = snapshots.stream()
+            .map(LockerRealtimeAvailabilitySnapshot::externalLockerId)
+            .collect(Collectors.toUnmodifiableSet());
+        if (externalLockerIds.size() != snapshots.size()) {
+            throw new IllegalArgumentException("Duplicate external locker ID");
+        }
+        return externalLockerIds;
     }
 
     private LockerRealtimeAvailabilityEntity availability(

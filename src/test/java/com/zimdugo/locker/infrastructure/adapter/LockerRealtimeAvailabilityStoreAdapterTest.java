@@ -1,6 +1,7 @@
 package com.zimdugo.locker.infrastructure.adapter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -84,6 +85,19 @@ class LockerRealtimeAvailabilityStoreAdapterTest {
 
         assertThat(savedCount).isZero();
         verifyNoInteractions(availabilityRepository);
+    }
+
+    @Test
+    void rejectsDuplicateExternalLockerIdsBeforeAccessingPersistence() {
+        LockerRealtimeAvailabilitySnapshot first = snapshot("TL1", 3, 2, 1);
+        LockerRealtimeAvailabilitySnapshot duplicate = snapshot("TL1", 6, 5, 4);
+
+        assertThatThrownBy(() -> adapter.saveMapped(
+            List.of(first, duplicate),
+            LocalDateTime.of(2026, 8, 13, 10, 0)
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        verifyNoInteractions(mappingRepository, availabilityRepository);
     }
 
     private LockerRealtimeAvailabilitySnapshot snapshot(

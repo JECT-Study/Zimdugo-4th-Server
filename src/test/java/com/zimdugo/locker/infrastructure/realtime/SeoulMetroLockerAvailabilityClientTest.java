@@ -5,30 +5,40 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.realtime.LockerRealtimeAvailabilitySnapshot;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 class SeoulMetroLockerAvailabilityClientTest {
 
+    private RestClient.Builder restClientBuilder;
+    private MockRestServiceServer server;
+
+    @BeforeEach
+    void setUp() {
+        restClientBuilder = RestClient.builder().baseUrl("https://openapi.seoul.go.kr:8088");
+        server = MockRestServiceServer.bindTo(restClientBuilder).build();
+    }
+
     @Test
     void readsLockerAvailabilityFromCurrentSeoulOpenApiResponse() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://openapi.seoul.go.kr:8088");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/1/1000/"))
             .andRespond(withSuccess(responseJson(), MediaType.APPLICATION_JSON));
-        SeoulMetroLockerAvailabilityClient client = new SeoulMetroLockerAvailabilityClient(
-            builder.build(), new ObjectMapper(), "test-key"
-        );
 
-        List<LockerRealtimeAvailabilitySnapshot> lockers = client.fetchAll();
+        List<LockerRealtimeAvailabilitySnapshot> lockers = client().fetchAll();
 
         assertThat(lockers).containsExactly(new LockerRealtimeAvailabilitySnapshot(
             "TL124_DETAIL", 12, 2, 0
@@ -38,8 +48,6 @@ class SeoulMetroLockerAvailabilityClientTest {
 
     @Test
     void rejectsProviderErrorResponse() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://openapi.seoul.go.kr:8088");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/1/1000/"))
             .andRespond(withSuccess("""
@@ -49,11 +57,8 @@ class SeoulMetroLockerAvailabilityClientTest {
                   }
                 }
                 """, MediaType.APPLICATION_JSON));
-        SeoulMetroLockerAvailabilityClient client = new SeoulMetroLockerAvailabilityClient(
-            builder.build(), new ObjectMapper(), "test-key"
-        );
 
-        assertThatThrownBy(client::fetchAll)
+        assertThatThrownBy(client()::fetchAll)
             .isInstanceOfSatisfying(BusinessException.class, exception ->
                 assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.EXTERNAL_API_ERROR));
         server.verify();
@@ -61,8 +66,6 @@ class SeoulMetroLockerAvailabilityClientTest {
 
     @Test
     void rejectsMalformedAvailabilityCount() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://openapi.seoul.go.kr:8088");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/1/1000/"))
             .andRespond(withSuccess("""
@@ -83,11 +86,8 @@ class SeoulMetroLockerAvailabilityClientTest {
                   }
                 }
                 """, MediaType.APPLICATION_JSON));
-        SeoulMetroLockerAvailabilityClient client = new SeoulMetroLockerAvailabilityClient(
-            builder.build(), new ObjectMapper(), "test-key"
-        );
 
-        assertThatThrownBy(client::fetchAll)
+        assertThatThrownBy(client()::fetchAll)
             .isInstanceOfSatisfying(BusinessException.class, exception ->
                 assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.EXTERNAL_API_ERROR));
         server.verify();
@@ -95,19 +95,14 @@ class SeoulMetroLockerAvailabilityClientTest {
 
     @Test
     void readsEveryPageReportedByTheProvider() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://openapi.seoul.go.kr:8088");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/1/1/"))
             .andRespond(withSuccess(pageResponseJson("TL1", 1, 2, 3, 2), MediaType.APPLICATION_JSON));
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/2/2/"))
             .andRespond(withSuccess(pageResponseJson("TL2", 4, 5, 6, 2), MediaType.APPLICATION_JSON));
-        SeoulMetroLockerAvailabilityClient client = new SeoulMetroLockerAvailabilityClient(
-            builder.build(), new ObjectMapper(), "test-key", 1
-        );
 
-        assertThat(client.fetchAll()).containsExactly(
+        assertThat(client(1).fetchAll()).containsExactly(
             new LockerRealtimeAvailabilitySnapshot("TL1", 1, 2, 3),
             new LockerRealtimeAvailabilitySnapshot("TL2", 4, 5, 6)
         );
@@ -116,55 +111,56 @@ class SeoulMetroLockerAvailabilityClientTest {
 
     @Test
     void rejectsIncompletePage() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://openapi.seoul.go.kr:8088");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/1/2/"))
             .andRespond(withSuccess(pageResponseJson("TL1", 1, 2, 3, 3), MediaType.APPLICATION_JSON));
-        SeoulMetroLockerAvailabilityClient client = new SeoulMetroLockerAvailabilityClient(
-            builder.build(), new ObjectMapper(), "test-key", 2
-        );
 
-        assertExternalApiError(client);
+        assertExternalApiError(client(2));
         server.verify();
     }
 
     @Test
     void rejectsDuplicateLockerIdAcrossPages() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://openapi.seoul.go.kr:8088");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/1/1/"))
             .andRespond(withSuccess(pageResponseJson("TL1", 1, 2, 3, 2), MediaType.APPLICATION_JSON));
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/2/2/"))
             .andRespond(withSuccess(pageResponseJson("TL1", 4, 5, 6, 2), MediaType.APPLICATION_JSON));
-        SeoulMetroLockerAvailabilityClient client = new SeoulMetroLockerAvailabilityClient(
-            builder.build(), new ObjectMapper(), "test-key", 1
-        );
 
-        assertExternalApiError(client);
+        assertExternalApiError(client(1));
         server.verify();
     }
 
     @Test
     void doesNotRetainApiKeyInTransportFailure() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://openapi.seoul.go.kr:8088");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/secret-test-key/json/getFcLckr/1/1000/"))
             .andRespond(withServerError());
-        SeoulMetroLockerAvailabilityClient client = new SeoulMetroLockerAvailabilityClient(
-            builder.build(), new ObjectMapper(), "secret-test-key"
-        );
+        SeoulMetroLockerAvailabilityClient client = client("secret-test-key");
+        Logger logger = (Logger) LoggerFactory.getLogger(SeoulMetroLockerAvailabilityClient.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
 
-        assertThatThrownBy(client::fetchAll)
-            .isInstanceOfSatisfying(BusinessException.class, exception -> {
-                assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.EXTERNAL_API_ERROR);
-                assertThat(exception.getCause()).isNull();
-                assertThat(exception).hasMessageNotContaining("secret-test-key");
+        try {
+            assertThatThrownBy(client::fetchAll)
+                .isInstanceOfSatisfying(BusinessException.class, exception -> {
+                    assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.EXTERNAL_API_ERROR);
+                    assertThat(exception.getCause()).isNull();
+                    assertThat(exception).hasMessageNotContaining("secret-test-key");
+                });
+            assertThat(appender.list).singleElement().satisfies(event -> {
+                assertThat(event.getLevel()).isEqualTo(Level.WARN);
+                assertThat(event.getFormattedMessage())
+                    .contains("reason=InternalServerError")
+                    .doesNotContain("secret-test-key");
+                assertThat(event.getThrowableProxy()).isNull();
             });
-        server.verify();
+            server.verify();
+        } finally {
+            logger.detachAppender(appender);
+        }
     }
 
     private String responseJson() {
@@ -225,5 +221,21 @@ class SeoulMetroLockerAvailabilityClientTest {
         assertThatThrownBy(client::fetchAll)
             .isInstanceOfSatisfying(BusinessException.class, exception ->
                 assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.EXTERNAL_API_ERROR));
+    }
+
+    private SeoulMetroLockerAvailabilityClient client() {
+        return client("test-key");
+    }
+
+    private SeoulMetroLockerAvailabilityClient client(String apiKey) {
+        return new SeoulMetroLockerAvailabilityClient(
+            restClientBuilder.build(), new ObjectMapper(), apiKey
+        );
+    }
+
+    private SeoulMetroLockerAvailabilityClient client(int pageSize) {
+        return new SeoulMetroLockerAvailabilityClient(
+            restClientBuilder.build(), new ObjectMapper(), "test-key", pageSize
+        );
     }
 }

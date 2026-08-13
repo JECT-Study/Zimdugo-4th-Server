@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+@Slf4j
 public class SeoulMetroLockerAvailabilityClient implements LockerRealtimeAvailabilityProvider {
 
     private static final int PAGE_SIZE = 1000;
@@ -58,7 +60,11 @@ public class SeoulMetroLockerAvailabilityClient implements LockerRealtimeAvailab
                 throw externalApiError();
             }
             return lockers;
-        } catch (RestClientException | IOException ignored) {
+        } catch (RestClientException | IOException exception) {
+            log.warn(
+                "서울교통공사 보관함 실시간 상태 조회에 실패했습니다. reason={}",
+                exception.getClass().getSimpleName()
+            );
             throw externalApiError();
         }
     }
