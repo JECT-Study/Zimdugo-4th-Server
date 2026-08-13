@@ -75,3 +75,7 @@ storage:
 admin:
   notice-image:
     max-pixel-count: 50000000
+
+seoul-metro:
+  locker-api:
+    api-key: test-seoul-metro-api-key
