@@ -5,8 +5,10 @@ import com.zimdugo.locker.application.result.detail.LockerDetailResult;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Set;
+import lombok.Builder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder
 public record LockerDetailResponse(
     Long lockerId,
     String lockerName,
@@ -32,35 +34,37 @@ public record LockerDetailResponse(
     LocalDateTime updatedAt,
     boolean isFavorite,
     boolean isAccurateVoted,
-    boolean isInaccurateVoted
+    boolean isInaccurateVoted,
+    LockerRealtimeAvailabilityResponse realtimeAvailability
 ) {
     public static LockerDetailResponse from(LockerDetailResult result) {
-        return new LockerDetailResponse(
-            result.lockerId(),
-            result.lockerName(),
-            result.roadAddress(),
-            result.latitude(),
-            result.longitude(),
-            result.placeId(),
-            result.placeName(),
-            result.lockerType(),
-            result.indoorOutdoorType(),
-            result.groundLevelType(),
-            result.floor(),
-            result.minPrice(),
-            result.maxPrice(),
-            result.lockerSizes(),
-            result.detailInfo(),
-            result.startTime(),
-            result.endTime(),
-            result.imageUrl(),
-            result.accurateVoteCount(),
-            result.inaccurateVoteCount(),
-            result.createdAt(),
-            result.updatedAt(),
-            result.isFavorite(),
-            result.isAccurateVoted(),
-            result.isInaccurateVoted()
-        );
+        return LockerDetailResponse.builder()
+            .lockerId(result.lockerId())
+            .lockerName(result.lockerName())
+            .roadAddress(result.roadAddress())
+            .latitude(result.latitude())
+            .longitude(result.longitude())
+            .placeId(result.placeId())
+            .placeName(result.placeName())
+            .lockerType(result.lockerType())
+            .indoorOutdoorType(result.indoorOutdoorType())
+            .groundLevelType(result.groundLevelType())
+            .floor(result.floor())
+            .minPrice(result.minPrice())
+            .maxPrice(result.maxPrice())
+            .lockerSizes(result.lockerSizes())
+            .detailInfo(result.detailInfo())
+            .startTime(result.startTime())
+            .endTime(result.endTime())
+            .imageUrl(result.imageUrl())
+            .accurateVoteCount(result.accurateVoteCount())
+            .inaccurateVoteCount(result.inaccurateVoteCount())
+            .createdAt(result.createdAt())
+            .updatedAt(result.updatedAt())
+            .isFavorite(result.isFavorite())
+            .isAccurateVoted(result.isAccurateVoted())
+            .isInaccurateVoted(result.isInaccurateVoted())
+            .realtimeAvailability(LockerRealtimeAvailabilityResponse.from(result.realtimeAvailability()))
+            .build();
     }
 }

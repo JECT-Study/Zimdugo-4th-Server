@@ -2,6 +2,7 @@ package com.zimdugo.locker.infrastructure.adapter;
 
 import com.zimdugo.locker.domain.detail.LockerDetail;
 import com.zimdugo.locker.domain.detail.LockerDetailReader;
+import com.zimdugo.locker.domain.detail.LockerRealtimeAvailability;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
@@ -28,32 +29,45 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
     }
 
     private LockerDetail toDomain(LockerDetailQueryProjection projection) {
-        return new LockerDetail(
-            projection.getLockerId(),
-            projection.getLockerName(),
-            projection.getRoadAddress(),
-            projection.getLatitude(),
-            projection.getLongitude(),
-            projection.getPlaceId(),
-            projection.getPlaceName(),
-            LockerType.valueOf(projection.getLockerType()),
-            IndoorOutdoorType.valueOf(projection.getIndoorOutdoorType()),
-            projection.getGroundLevelType(),
-            projection.getFloor(),
-            projection.getMinPrice(),
-            projection.getMaxPrice(),
-            parseLockerSizes(projection.getLockerSizes()),
-            projection.getDetailInfo(),
-            projection.getStartTime(),
-            projection.getEndTime(),
-            projection.getImageUrl(),
-            projection.getAccurateVoteCount(),
-            projection.getInaccurateVoteCount(),
-            projection.getCreatedAt(),
-            projection.getUpdatedAt(),
-            Boolean.TRUE.equals(projection.getIsFavorite()),
-            Boolean.TRUE.equals(projection.getIsAccurateVoted()),
-            Boolean.TRUE.equals(projection.getIsInaccurateVoted())
+        return LockerDetail.builder()
+            .lockerId(projection.getLockerId())
+            .lockerName(projection.getLockerName())
+            .roadAddress(projection.getRoadAddress())
+            .latitude(projection.getLatitude())
+            .longitude(projection.getLongitude())
+            .placeId(projection.getPlaceId())
+            .placeName(projection.getPlaceName())
+            .lockerType(LockerType.valueOf(projection.getLockerType()))
+            .indoorOutdoorType(IndoorOutdoorType.valueOf(projection.getIndoorOutdoorType()))
+            .groundLevelType(projection.getGroundLevelType())
+            .floor(projection.getFloor())
+            .minPrice(projection.getMinPrice())
+            .maxPrice(projection.getMaxPrice())
+            .lockerSizes(parseLockerSizes(projection.getLockerSizes()))
+            .detailInfo(projection.getDetailInfo())
+            .startTime(projection.getStartTime())
+            .endTime(projection.getEndTime())
+            .imageUrl(projection.getImageUrl())
+            .accurateVoteCount(projection.getAccurateVoteCount())
+            .inaccurateVoteCount(projection.getInaccurateVoteCount())
+            .createdAt(projection.getCreatedAt())
+            .updatedAt(projection.getUpdatedAt())
+            .isFavorite(Boolean.TRUE.equals(projection.getIsFavorite()))
+            .isAccurateVoted(Boolean.TRUE.equals(projection.getIsAccurateVoted()))
+            .isInaccurateVoted(Boolean.TRUE.equals(projection.getIsInaccurateVoted()))
+            .realtimeAvailability(realtimeAvailability(projection))
+            .build();
+    }
+
+    private LockerRealtimeAvailability realtimeAvailability(LockerDetailQueryProjection projection) {
+        if (projection.getRealtimeFetchedAt() == null) {
+            return null;
+        }
+        return new LockerRealtimeAvailability(
+            projection.getSmallAvailableCount(),
+            projection.getMediumAvailableCount(),
+            projection.getLargeAvailableCount(),
+            projection.getRealtimeFetchedAt()
         );
     }
 

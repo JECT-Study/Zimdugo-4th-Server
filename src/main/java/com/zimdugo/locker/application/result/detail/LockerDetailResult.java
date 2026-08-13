@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Builder;
 
+@Builder
 public record LockerDetailResult(
     Long lockerId,
     String lockerName,
@@ -31,22 +33,43 @@ public record LockerDetailResult(
     LocalDateTime updatedAt,
     boolean isFavorite,
     boolean isAccurateVoted,
-    boolean isInaccurateVoted
+    boolean isInaccurateVoted,
+    LockerRealtimeAvailabilityResult realtimeAvailability
 ) {
     public static LockerDetailResult from(LockerDetail detail) {
-        Set<String> sizes = detail.lockerSizes().stream()
+        return LockerDetailResult.builder()
+            .lockerId(detail.lockerId())
+            .lockerName(detail.lockerName())
+            .roadAddress(detail.roadAddress())
+            .latitude(detail.latitude())
+            .longitude(detail.longitude())
+            .placeId(detail.placeId())
+            .placeName(detail.placeName())
+            .lockerType(detail.lockerType().name())
+            .indoorOutdoorType(detail.indoorOutdoorType().name())
+            .groundLevelType(detail.groundLevelType())
+            .floor(detail.floor())
+            .minPrice(detail.minPrice())
+            .maxPrice(detail.maxPrice())
+            .lockerSizes(lockerSizes(detail))
+            .detailInfo(detail.detailInfo())
+            .startTime(detail.startTime())
+            .endTime(detail.endTime())
+            .imageUrl(detail.imageUrl())
+            .accurateVoteCount(detail.accurateVoteCount())
+            .inaccurateVoteCount(detail.inaccurateVoteCount())
+            .createdAt(detail.createdAt())
+            .updatedAt(detail.updatedAt())
+            .isFavorite(detail.isFavorite())
+            .isAccurateVoted(detail.isAccurateVoted())
+            .isInaccurateVoted(detail.isInaccurateVoted())
+            .realtimeAvailability(LockerRealtimeAvailabilityResult.from(detail.realtimeAvailability()))
+            .build();
+    }
+
+    private static Set<String> lockerSizes(LockerDetail detail) {
+        return detail.lockerSizes().stream()
             .map(Enum::name)
             .collect(Collectors.toUnmodifiableSet());
-
-        return new LockerDetailResult(
-            detail.lockerId(), detail.lockerName(), detail.roadAddress(),
-            detail.latitude(), detail.longitude(), detail.placeId(), detail.placeName(),
-            detail.lockerType().name(), detail.indoorOutdoorType().name(), detail.groundLevelType(),
-            detail.floor(), detail.minPrice(), detail.maxPrice(), sizes, detail.detailInfo(),
-            detail.startTime(), detail.endTime(), detail.imageUrl(),
-            detail.accurateVoteCount(), detail.inaccurateVoteCount(),
-            detail.createdAt(), detail.updatedAt(),
-            detail.isFavorite(), detail.isAccurateVoted(), detail.isInaccurateVoted()
-        );
     }
 }

@@ -108,13 +108,29 @@ class LockerVoteCommandServiceTest {
     }
 
     private LockerDetail createLockerDetail(Long lockerId, int accurateVoteCount, int inaccurateVoteCount) {
-        return new LockerDetail(
-            lockerId, "보관함", "주소", 37.5, 127.0, 1L, "장소",
-            LockerType.ETC, IndoorOutdoorType.INDOOR, "1", 1, 1000, 2000,
-            Set.of(LockerSizeType.SMALL), "정보", LocalTime.of(9, 0), LocalTime.of(22, 0),
-            "image.jpg", accurateVoteCount, inaccurateVoteCount,
-            LocalDateTime.now(), LocalDateTime.now(),
-            false, false, false
-        );
+        return LockerDetail.builder()
+            .lockerId(lockerId)
+            .lockerName("보관함")
+            .roadAddress("주소")
+            .latitude(37.5)
+            .longitude(127.0)
+            .placeId(1L)
+            .placeName("장소")
+            .lockerType(LockerType.ETC)
+            .indoorOutdoorType(IndoorOutdoorType.INDOOR)
+            .groundLevelType("1")
+            .floor(1)
+            .minPrice(1000)
+            .maxPrice(2000)
+            .lockerSizes(Set.of(LockerSizeType.SMALL))
+            .detailInfo("정보")
+            .startTime(LocalTime.of(9, 0))
+            .endTime(LocalTime.of(22, 0))
+            .imageUrl("image.jpg")
+            .accurateVoteCount(accurateVoteCount)
+            .inaccurateVoteCount(inaccurateVoteCount)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build();
     }
 }

@@ -311,11 +311,25 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
                 SELECT 1 FROM locker_votes lv 
                 WHERE lv.locker_id = l.id AND lv.user_id = :userId AND lv.vote_type = 'INCORRECT'
             ) THEN true ELSE false END) AS isInaccurateVoted
+            ,ra.small_available_count AS smallAvailableCount
+            ,ra.medium_available_count AS mediumAvailableCount
+            ,ra.large_available_count AS largeAvailableCount
+            ,ra.fetched_at AS realtimeFetchedAt
         FROM lockers l
         JOIN locker_details ld ON ld.locker_id = l.id
         LEFT JOIN places p ON p.id = l.place_id
         LEFT JOIN locker_translations lt ON lt.locker_id = l.id AND lt.language_code = :languageCode
         LEFT JOIN place_translations pt ON pt.place_id = p.id AND pt.language_code = :languageCode
+        LEFT JOIN (
+            SELECT rm.locker_id,
+                   SUM(ra.small_available_count) AS small_available_count,
+                   SUM(ra.medium_available_count) AS medium_available_count,
+                   SUM(ra.large_available_count) AS large_available_count,
+                   MAX(ra.fetched_at) AS fetched_at
+            FROM locker_realtime_mappings rm
+            JOIN locker_realtime_availabilities ra ON ra.external_locker_id = rm.external_locker_id
+            GROUP BY rm.locker_id
+        ) ra ON ra.locker_id = l.id
         WHERE l.id = :lockerId
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
