@@ -2,6 +2,11 @@ spring:
   application:
     name: zimdugo-be
 
+  task:
+    scheduling:
+      pool:
+        size: ${TASK_SCHEDULING_POOL_SIZE:2}
+
   servlet:
     multipart:
       max-file-size: ${ADMIN_NOTICE_IMAGE_MAX_FILE_SIZE:10MB}
@@ -106,3 +111,11 @@ translation:
 search:
   keyword-aggregation:
     fixed-delay-millis: ${SEARCH_KEYWORD_AGGREGATION_FIXED_DELAY_MILLIS:10000}
+
+seoul-metro:
+  locker-api:
+    base-url: ${SEOUL_METRO_LOCKER_API_BASE_URL:http://openapi.seoul.go.kr:8088}
+    api-key: ${SEOUL_METRO_LOCKER_API_KEY}
+    connect-timeout-millis: ${SEOUL_METRO_LOCKER_API_CONNECT_TIMEOUT_MILLIS:1500}
+    read-timeout-millis: ${SEOUL_METRO_LOCKER_API_READ_TIMEOUT_MILLIS:15000}
+    sync-fixed-delay-millis: ${SEOUL_METRO_LOCKER_API_SYNC_FIXED_DELAY_MILLIS:300000}
