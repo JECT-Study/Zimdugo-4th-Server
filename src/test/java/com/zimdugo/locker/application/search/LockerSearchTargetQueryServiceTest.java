@@ -31,11 +31,11 @@ class LockerSearchTargetQueryServiceTest {
             new LockerSearchTargetAssembler()
         );
         LockerSearchFilter filter = LockerSearchFilter.empty();
-        given(candidateReader.search(37.55, 126.93, "신촌", filter)).willReturn(
+        given(candidateReader.search(37.55, 126.93, "신촌", filter, 50)).willReturn(
             LockerSearchCandidateResult.name(List.of(candidate()))
         );
 
-        List<LockerSearchTarget> targets = service.findTargets(37.55, 126.93, "신촌", filter);
+        List<LockerSearchTarget> targets = service.findTargets(37.55, 126.93, "신촌", filter, 50);
 
         assertThat(targets).singleElement().satisfies(target -> {
             assertThat(target.type()).isEqualTo(LockerItemType.LOCKER);

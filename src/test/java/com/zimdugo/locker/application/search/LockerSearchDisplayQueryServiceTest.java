@@ -37,7 +37,7 @@ class LockerSearchDisplayQueryServiceTest {
     @Test
     void enrichesAPlaceTargetWithFilteredLockersAndFavorites() {
         LockerSearchFilter filter = LockerSearchFilter.empty();
-        given(targetQueryService.findTargets(37.55, 126.93, "신촌", filter)).willReturn(List.of(placeTarget()));
+        given(targetQueryService.findTargets(37.55, 126.93, "신촌", filter, 43)).willReturn(List.of(placeTarget()));
         given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
         given(placeLockerReader.readByPlaceIds(37.55, 126.93, List.of(100L), filter, "ko")).willReturn(
             Map.of(100L, List.of(placeLocker()))
@@ -47,7 +47,8 @@ class LockerSearchDisplayQueryServiceTest {
             targetQueryService,
             placeLockerReader,
             favoriteLockerReader,
-            currentRequestLanguage
+            currentRequestLanguage,
+            43
         );
 
         var items = service.getDisplayableItems(1L, 37.55, 126.93, "신촌", filter);
@@ -64,14 +65,15 @@ class LockerSearchDisplayQueryServiceTest {
     @Test
     void removesAPlaceTargetWhenNoLockerMatchesTheFilter() {
         LockerSearchFilter filter = LockerSearchFilter.empty();
-        given(targetQueryService.findTargets(37.55, 126.93, "신촌", filter)).willReturn(List.of(placeTarget()));
+        given(targetQueryService.findTargets(37.55, 126.93, "신촌", filter, 43)).willReturn(List.of(placeTarget()));
         given(currentRequestLanguage.resolve()).willReturn(SupportedLanguage.KOREAN);
         given(placeLockerReader.readByPlaceIds(37.55, 126.93, List.of(100L), filter, "ko")).willReturn(Map.of());
         LockerSearchDisplayQueryService service = new LockerSearchDisplayQueryService(
             targetQueryService,
             placeLockerReader,
             favoriteLockerReader,
-            currentRequestLanguage
+            currentRequestLanguage,
+            43
         );
 
         var items = service.getDisplayableItems(null, 37.55, 126.93, "신촌", filter);
