@@ -23,7 +23,8 @@ public class LockerSearchTargetQueryService {
         double latitude,
         double longitude,
         String keyword,
-        LockerSearchFilter filter
+        LockerSearchFilter filter,
+        int limit
     ) {
         LocationValidator.validate(latitude, longitude);
         LockerSearchFilter effectiveFilter = filter == null ? LockerSearchFilter.empty() : filter;
@@ -31,7 +32,8 @@ public class LockerSearchTargetQueryService {
             latitude,
             longitude,
             keyword,
-            effectiveFilter
+            effectiveFilter,
+            limit
         );
         if (candidateResult.candidates().isEmpty()) {
             return List.of();

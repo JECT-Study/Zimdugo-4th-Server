@@ -36,8 +36,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidateReader {
 
-    private static final int MAX_FETCH_SIZE = 200;
-
     private static final float PLACE_AUTO_BOOST = 5.0F;
     private static final float LOCKER_AUTO_BOOST = 4.0F;
     private static final float PLACE_DECOMPOSED_BOOST = 3.5F;
@@ -60,7 +58,8 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
         double latitude,
         double longitude,
         String keyword,
-        LockerSearchFilter filter
+        LockerSearchFilter filter,
+        int limit
     ) {
         String normalizedKeyword = normalizeKeyword(keyword);
         if (normalizedKeyword.isBlank()) {
@@ -69,12 +68,11 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
 
         SupportedLanguage requestedLanguage = currentRequestLanguage.resolve();
 
-        int fetchSize = MAX_FETCH_SIZE;
         NativeQuery nameQuery = buildSearchQuery(
             buildFilteredQuery(buildNameQuery(normalizedKeyword), filter),
             latitude,
             longitude,
-            fetchSize
+            limit
         );
         SearchHits<LockerSuggestDocument> nameHits =
             elasticsearchOperations.search(nameQuery, LockerSuggestDocument.class);
@@ -87,7 +85,7 @@ public class LockerSearchCandidateReaderAdapter implements LockerSearchCandidate
             buildFilteredQuery(buildAddressQuery(normalizedKeyword), filter),
             latitude,
             longitude,
-            fetchSize
+            limit
         );
         SearchHits<LockerSuggestDocument> addressHits =
             elasticsearchOperations.search(addressQuery, LockerSuggestDocument.class);

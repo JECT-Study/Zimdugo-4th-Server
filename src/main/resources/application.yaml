@@ -109,6 +109,8 @@ translation:
     read-timeout-millis: ${GEMINI_READ_TIMEOUT_MILLIS:30000}
 
 search:
+  suggest-limit: ${SEARCH_SUGGEST_LIMIT:20}
+  result-limit: ${SEARCH_RESULT_LIMIT:50}
   keyword-aggregation:
     fixed-delay-millis: ${SEARCH_KEYWORD_AGGREGATION_FIXED_DELAY_MILLIS:10000}
 
