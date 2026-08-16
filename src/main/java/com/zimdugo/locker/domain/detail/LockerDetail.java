@@ -6,6 +6,7 @@ import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.locker.domain.vote.LockerVoteType;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
 import lombok.Builder;
 
@@ -29,6 +30,7 @@ public record LockerDetail(
     LocalTime startTime,
     LocalTime endTime,
     String imageUrl,
+    List<String> imageUrls,
     int accurateVoteCount,
     int inaccurateVoteCount,
     LocalDateTime createdAt,

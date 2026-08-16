@@ -3,10 +3,14 @@ package com.zimdugo.locker.infrastructure.adapter;
 import com.zimdugo.locker.domain.detail.LockerDetail;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerImageEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerImageRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.projection.LockerDetailQueryProjection;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +29,9 @@ class LockerDetailReaderAdapterTest {
 
     @Mock
     private LockerRepository lockerRepository;
+
+    @Mock
+    private LockerImageRepository lockerImageRepository;
 
     @InjectMocks
     private LockerDetailReaderAdapter lockerDetailReaderAdapter;
@@ -74,6 +81,25 @@ class LockerDetailReaderAdapterTest {
         Optional<LockerDetail> result = lockerDetailReaderAdapter.readById(999L);
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("상세 조회에 등록 순서대로 모든 이미지를 포함한다")
+    void includesAllImagesInOrder() {
+        LockerDetailQueryProjection projection = projection();
+        given(lockerRepository.findDetailById(10L, null, "ko")).willReturn(Optional.of(projection));
+        given(lockerImageRepository.findByLockerIdOrderByListOrderAsc(10L)).willReturn(List.of(
+            LockerImageEntity.of(new LockerEntity("보관함", "서울", 37.5, 127.0), "https://cdn.example.com/first.jpg", 0),
+            LockerImageEntity.of(new LockerEntity("보관함", "서울", 37.5, 127.0), "https://cdn.example.com/second.jpg", 1)
+        ));
+
+        LockerDetail result = lockerDetailReaderAdapter.readById(10L).orElseThrow();
+
+        assertThat(result.imageUrls()).containsExactly(
+            "https://cdn.example.com/first.jpg",
+            "https://cdn.example.com/second.jpg"
+        );
+        assertThat(result.imageUrl()).isEqualTo("https://cdn.example.com/first.jpg");
     }
 
     private LockerDetailQueryProjection projection() {
