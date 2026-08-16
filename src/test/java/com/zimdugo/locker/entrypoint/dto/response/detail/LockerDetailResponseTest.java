@@ -8,6 +8,7 @@ import com.zimdugo.common.config.JacksonConfig;
 import com.zimdugo.locker.application.result.detail.LockerDetailResult;
 import com.zimdugo.locker.application.result.detail.LockerRealtimeAvailabilityResult;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class LockerDetailResponseTest {
@@ -42,5 +43,19 @@ class LockerDetailResponseTest {
         JsonNode json = objectMapper.valueToTree(LockerDetailResponse.from(result));
 
         assertThat(json.has("realtimeAvailability")).isFalse();
+    }
+
+    @Test
+    void serializesAllImagesAndKeepsFirstImageForCompatibility() {
+        LockerDetailResult result = LockerDetailResult.builder()
+            .lockerId(10L)
+            .imageUrls(List.of("https://cdn.example.com/first.jpg", "https://cdn.example.com/second.jpg"))
+            .build();
+
+        JsonNode json = objectMapper.valueToTree(LockerDetailResponse.from(result));
+
+        assertThat(json.at("/imageUrls/0").textValue()).isEqualTo("https://cdn.example.com/first.jpg");
+        assertThat(json.at("/imageUrls/1").textValue()).isEqualTo("https://cdn.example.com/second.jpg");
+        assertThat(json.at("/imageUrl").textValue()).isEqualTo("https://cdn.example.com/first.jpg");
     }
 }
