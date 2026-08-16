@@ -83,8 +83,10 @@
                 <dt>투표</dt><dd th:text="'정확 ' + ${locker.accurateVoteCount()} + ' / 부정확 ' + ${locker.inaccurateVoteCount()}">-</dd>
                 <dt>상세</dt><dd th:text="${locker.detailInfo() ?: '-'}">-</dd>
             </dl>
-            <img th:if="${locker.imageUrl() != null}" th:src="${locker.imageUrl()}" class="locker-image" alt="보관함 이미지">
-            <div th:unless="${locker.imageUrl() != null}" class="empty-image">
+            <div th:if="${!locker.imageUrls().isEmpty()}" class="image-list">
+                <img th:each="imageUrl : ${locker.imageUrls()}" th:src="${imageUrl}" class="locker-image" alt="보관함 이미지">
+            </div>
+            <div th:unless="${!locker.imageUrls().isEmpty()}" class="empty-image">
                 <i class="fa-regular fa-image"></i>
             </div>
         </section>

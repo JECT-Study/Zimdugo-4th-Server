@@ -91,6 +91,24 @@ class AdminLockerServiceTest {
     }
 
     @Test
+    void updatesLockerImagesInSubmittedOrder() {
+        LockerEntity locker = new LockerEntity("기존", "서울", 37.5, 127.0);
+        LockerDetailEntity detail = detail(locker);
+        when(lockerRepository.findById(1L)).thenReturn(Optional.of(locker));
+        when(lockerDetailRepository.findByLockerId(1L)).thenReturn(Optional.of(detail));
+
+        service.updateLocker(1L, commandWithImageUrls(List.of(
+            "https://cdn.example.com/first.jpg",
+            "https://cdn.example.com/second.jpg"
+        )));
+
+        assertThat(locker.getImages())
+            .extracting(image -> image.getImageUrl())
+            .containsExactly("https://cdn.example.com/first.jpg", "https://cdn.example.com/second.jpg");
+        assertThat(detail.getImageUrl()).isEqualTo("https://cdn.example.com/first.jpg");
+    }
+
+    @Test
     void approveRequiresAllTargetLanguageTranslations() {
         LockerEntity locker = new LockerEntity("서울역 보관함", "서울", 37.5, 127.0);
         when(lockerRepository.findById(1L)).thenReturn(Optional.of(locker));
@@ -251,7 +269,28 @@ class AdminLockerServiceTest {
             "1번 출구 옆",
             LocalTime.of(9, 0),
             LocalTime.of(22, 0),
-            "https://cdn.example.com/locker.jpg"
+            List.of("https://cdn.example.com/locker.jpg")
+        );
+    }
+
+    private AdminLockerCommand commandWithImageUrls(List<String> imageUrls) {
+        return new AdminLockerCommand(
+            "서울역 보관함",
+            "서울 중구 세종대로",
+            37.5,
+            127.0,
+            null,
+            LockerType.SUBWAY_STATION,
+            IndoorOutdoorType.INDOOR,
+            null,
+            null,
+            1000,
+            3000,
+            Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
+            "1번 출구 옆",
+            LocalTime.of(9, 0),
+            LocalTime.of(22, 0),
+            imageUrls
         );
     }
 }

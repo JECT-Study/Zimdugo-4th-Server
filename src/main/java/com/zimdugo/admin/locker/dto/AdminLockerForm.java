@@ -1,6 +1,5 @@
 package com.zimdugo.admin.locker.dto;
 
-import com.zimdugo.admin.locker.dto.AdminLockerDetailResult;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
@@ -14,6 +13,7 @@ import java.time.LocalTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -62,10 +62,11 @@ public class AdminLockerForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
     private LocalTime endTime;
 
-    @Size(max = 500)
-    private String imageUrl;
+    private List<String> imageUrls = List.of();
 
-    private MultipartFile imageFile;
+    private List<String> deletedImageUrls = List.of();
+
+    private List<MultipartFile> imageFiles = List.of();
 
     public static AdminLockerForm from(AdminLockerDetailResult result) {
         AdminLockerForm form = new AdminLockerForm();
@@ -84,7 +85,7 @@ public class AdminLockerForm {
         form.detailInfo = result.detailInfo();
         form.startTime = result.startTime();
         form.endTime = result.endTime();
-        form.imageUrl = result.imageUrl();
+        form.imageUrls = List.copyOf(result.imageUrls());
         return form;
     }
 
@@ -105,7 +106,7 @@ public class AdminLockerForm {
             trimmedToNull(detailInfo),
             startTime,
             endTime,
-            trimmedToNull(imageUrl)
+            retainedImageUrls()
         );
     }
 
@@ -238,19 +239,34 @@ public class AdminLockerForm {
         this.endTime = endTime;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public List<String> getImageUrls() {
+        return imageUrls;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 
-    public MultipartFile getImageFile() {
-        return imageFile;
+    public List<String> getDeletedImageUrls() {
+        return deletedImageUrls;
     }
 
-    public void setImageFile(MultipartFile imageFile) {
-        this.imageFile = imageFile;
+    public void setDeletedImageUrls(List<String> deletedImageUrls) {
+        this.deletedImageUrls = deletedImageUrls;
+    }
+
+    public List<MultipartFile> getImageFiles() {
+        return imageFiles;
+    }
+
+    public void setImageFiles(List<MultipartFile> imageFiles) {
+        this.imageFiles = imageFiles;
+    }
+
+    public List<String> retainedImageUrls() {
+        List<String> deletedUrls = deletedImageUrls == null ? List.of() : deletedImageUrls;
+        return (imageUrls == null ? Stream.<String>empty() : imageUrls.stream())
+            .filter(imageUrl -> !deletedUrls.contains(imageUrl))
+            .toList();
     }
 }
