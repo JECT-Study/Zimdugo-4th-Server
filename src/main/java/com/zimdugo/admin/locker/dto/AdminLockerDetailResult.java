@@ -8,6 +8,7 @@ import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,7 @@ public record AdminLockerDetailResult(
     LocalTime startTime,
     LocalTime endTime,
     String imageUrl,
+    List<String> imageUrls,
     int accurateVoteCount,
     int inaccurateVoteCount
 ) {
@@ -56,6 +58,7 @@ public record AdminLockerDetailResult(
             detail.getStartTime(),
             detail.getEndTime(),
             detail.getImageUrl(),
+            locker.getImages().stream().map(image -> image.getImageUrl()).toList(),
             detail.getAccurateVoteCount(),
             detail.getInaccurateVoteCount()
         );

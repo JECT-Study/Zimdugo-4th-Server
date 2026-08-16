@@ -125,6 +125,7 @@ public class AdminLockerService {
             PublicationStatus.DRAFT
         ));
         LockerDetailEntity detail = getDetailEntity(id);
+        locker.replaceImages(command.imageUrls());
         detail.update(new LockerDetailUpdateValues(
             command.lockerType(),
             command.indoorOutdoorType(),
@@ -136,7 +137,7 @@ public class AdminLockerService {
             command.detailInfo(),
             command.startTime(),
             command.endTime(),
-            command.imageUrl()
+            command.firstImageUrl()
         ));
         publishChanged(id);
         return AdminLockerDetailResult.from(locker, detail);

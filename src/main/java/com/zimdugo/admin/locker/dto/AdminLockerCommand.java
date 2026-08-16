@@ -5,6 +5,7 @@ import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.locker.infrastructure.persistence.GroundLevelType;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
 
 public record AdminLockerCommand(
@@ -23,6 +24,9 @@ public record AdminLockerCommand(
     String detailInfo,
     LocalTime startTime,
     LocalTime endTime,
-    String imageUrl
+    List<String> imageUrls
 ) {
+    public String firstImageUrl() {
+        return imageUrls == null || imageUrls.isEmpty() ? null : imageUrls.getFirst();
+    }
 }
