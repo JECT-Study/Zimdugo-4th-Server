@@ -3,13 +3,17 @@ package com.zimdugo.locker.infrastructure.persistence;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "locker_realtime_mappings")
+@Table(
+    name = "locker_realtime_mappings",
+    indexes = @Index(name = "idx_locker_realtime_mappings_locker_id", columnList = "locker_id")
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LockerRealtimeMappingEntity {
