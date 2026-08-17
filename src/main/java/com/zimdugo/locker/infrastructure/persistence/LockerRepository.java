@@ -320,16 +320,15 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         LEFT JOIN places p ON p.id = l.place_id
         LEFT JOIN locker_translations lt ON lt.locker_id = l.id AND lt.language_code = :languageCode
         LEFT JOIN place_translations pt ON pt.place_id = p.id AND pt.language_code = :languageCode
-        LEFT JOIN (
-            SELECT rm.locker_id,
-                   SUM(ra.small_available_count) AS small_available_count,
+        LEFT JOIN LATERAL (
+            SELECT SUM(ra.small_available_count) AS small_available_count,
                    SUM(ra.medium_available_count) AS medium_available_count,
                    SUM(ra.large_available_count) AS large_available_count,
                    MAX(ra.fetched_at) AS fetched_at
             FROM locker_realtime_mappings rm
             JOIN locker_realtime_availabilities ra ON ra.external_locker_id = rm.external_locker_id
-            GROUP BY rm.locker_id
-        ) ra ON ra.locker_id = l.id
+            WHERE rm.locker_id = l.id
+        ) ra ON true
         WHERE l.id = :lockerId
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
@@ -352,18 +351,30 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         FROM lockers l
         JOIN places p ON p.id = l.place_id
         JOIN locker_details ld ON ld.locker_id = l.id
-        WHERE l.latitude BETWEEN :swLat AND :neLat
-          AND l.longitude BETWEEN :swLng AND :neLng
+        WHERE l.location && ST_MakeEnvelope(:swLng, :swLat, :neLng, :neLat, 4326)::geography
           AND l.place_id IS NOT NULL
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
+          AND (
+              :#{#filter.hasSizeTypes()} = false
+              OR string_to_array(ld.locker_size, ',') && string_to_array(:#{#filter.sizeTypes()}, ',')
+          )
+          AND (
+              :#{#filter.hasIndoorOutdoorTypes()} = false
+              OR ld.indoor_outdoor_type = ANY(string_to_array(:#{#filter.indoorOutdoorTypes()}, ','))
+          )
+          AND (
+              :#{#filter.hasLockerTypes()} = false
+              OR ld.locker_type = ANY(string_to_array(:#{#filter.lockerTypes()}, ','))
+          )
         ORDER BY l.id ASC
         """, nativeQuery = true)
     List<NearbyLockerPlaceQueryProjection> findLockersWithinBounds(
         @Param("swLat") double swLat,
         @Param("swLng") double swLng,
         @Param("neLat") double neLat,
-        @Param("neLng") double neLng
+        @Param("neLng") double neLng,
+        @Param("filter") LockerBoundsFilter filter
     );
 
     @Query(value = """

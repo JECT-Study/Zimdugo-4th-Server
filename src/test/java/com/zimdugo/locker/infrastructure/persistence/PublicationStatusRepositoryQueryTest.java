@@ -44,6 +44,12 @@ class PublicationStatusRepositoryQueryTest {
         assertQueryContains(FavoriteLockerRepository.class, "findFavoriteLockers", ACTIVE_LOCKER);
     }
 
+    @Test
+    @DisplayName("보관함 상세의 실시간 집계는 대상 보관함 매핑만 조회한다")
+    void lockerDetailRealtimeAggregationTargetsRequestedLocker() {
+        assertQueryContains(LockerRepository.class, "findDetailById", "WHERE rm.locker_id = l.id");
+    }
+
     private void assertQueryContains(Class<?> repository, String methodName, String... fragments) {
         Method method = Arrays.stream(repository.getDeclaredMethods())
             .filter(candidate -> candidate.getName().equals(methodName))

@@ -2,6 +2,7 @@ package com.zimdugo.locker.infrastructure.persistence;
 
 import com.zimdugo.common.config.JpaAuditingConfig;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
+import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
 import jakarta.persistence.EntityManager;
 import java.util.Set;
@@ -80,18 +81,64 @@ class PublicationStatusRepositoryTest {
             .isEmpty();
     }
 
+    @Test
+    void boundsQueryFiltersLockersBeforeReturningThem() {
+        PlaceEntity place = placeRepository.save(new PlaceEntity("공개 장소", 37.55, 126.97, "서울 중구"));
+        LockerEntity matchingLocker = saveLocker(
+            new LockerEntity("대상", "서울 중구", 37.550, 126.970, place),
+            LockerType.SUBWAY_STATION,
+            IndoorOutdoorType.INDOOR,
+            Set.of(LockerSizeType.LARGE)
+        );
+        saveLocker(
+            new LockerEntity("크기 불일치", "서울 중구", 37.551, 126.971, place),
+            LockerType.SUBWAY_STATION,
+            IndoorOutdoorType.INDOOR,
+            Set.of(LockerSizeType.MEDIUM)
+        );
+        saveLocker(
+            new LockerEntity("실내외 불일치", "서울 중구", 37.552, 126.972, place),
+            LockerType.SUBWAY_STATION,
+            IndoorOutdoorType.OUTDOOR,
+            Set.of(LockerSizeType.LARGE)
+        );
+        entityManager.flush();
+        entityManager.createNativeQuery("""
+            UPDATE lockers
+            SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+            """).executeUpdate();
+        entityManager.clear();
+
+        assertThat(lockerRepository.findLockersWithinBounds(
+            37.54,
+            126.96,
+            37.56,
+            126.98,
+            new LockerBoundsFilter(true, "LARGE", true, "INDOOR", true, "SUBWAY_STATION")
+        )).extracting(projection -> projection.getLockerId()).containsExactly(matchingLocker.getId());
+    }
+
     private LockerEntity saveLocker(LockerEntity locker) {
+        return saveLocker(locker, LockerType.ETC, IndoorOutdoorType.INDOOR, Set.of());
+    }
+
+    private LockerEntity saveLocker(
+        LockerEntity locker,
+        LockerType lockerType,
+        IndoorOutdoorType indoorOutdoorType,
+        Set<LockerSizeType> lockerSize
+    ) {
         LockerEntity savedLocker = lockerRepository.save(locker);
         lockerDetailRepository.save(new LockerDetailEntity(
             savedLocker,
             new LockerDetailUpdateValues(
-                LockerType.ETC,
-                IndoorOutdoorType.INDOOR,
+                lockerType,
+                indoorOutdoorType,
                 null,
                 null,
                 null,
                 null,
-                Set.of(),
+                lockerSize,
                 null,
                 null,
                 null,
