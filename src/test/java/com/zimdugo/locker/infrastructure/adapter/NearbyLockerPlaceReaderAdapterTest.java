@@ -40,7 +40,7 @@ class NearbyLockerPlaceReaderAdapterTest {
             new LockerBoundsFilter(true, "LARGE", true, "INDOOR", true, "SUBWAY_STATION")
         ))
             .willReturn(List.of(
-                projection(1L, 101L, "SMALL,LARGE", "INDOOR", "SUBWAY_STATION")
+                projection(1L, 101L, "INDOOR", "SUBWAY_STATION")
             ));
 
         LockerSearchFilter filter = new LockerSearchFilter(
@@ -64,7 +64,6 @@ class NearbyLockerPlaceReaderAdapterTest {
     private NearbyLockerPlaceQueryProjection projection(
         Long lockerId,
         Long placeId,
-        String lockerSize,
         String indoorOutdoorType,
         String lockerType
     ) {
@@ -99,10 +98,6 @@ class NearbyLockerPlaceReaderAdapterTest {
                 return indoorOutdoorType;
             }
 
-            @Override
-            public String getLockerSize() {
-                return lockerSize;
-            }
         };
     }
 }

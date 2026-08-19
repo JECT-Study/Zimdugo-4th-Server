@@ -9,7 +9,8 @@ import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.locker.infrastructure.persistence.LockerImageRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.projection.LockerDetailQueryProjection;
-import java.util.Arrays;
+import com.zimdugo.locker.infrastructure.projection.LockerSizeTypeQueryProjection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -28,12 +29,13 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
 
     @Override
     public Optional<LockerDetail> readById(Long lockerId, Long userId, String languageCode) {
-        return lockerRepository.findDetailById(lockerId, userId, languageCode).map(this::toDomain);
+        return lockerRepository.findDetailById(lockerId, userId, languageCode)
+            .map(projection -> toDomain(projection, findLockerSizes(List.of(projection.getLockerId()))));
     }
 
-    private LockerDetail toDomain(LockerDetailQueryProjection projection) {
+    private LockerDetail toDomain(LockerDetailQueryProjection projection, Set<LockerSizeType> lockerSizes) {
         List<String> imageUrls = findImageUrls(projection);
-        return detailBuilder(projection)
+        return detailBuilder(projection, lockerSizes)
             .imageUrl(imageUrls.isEmpty() ? null : imageUrls.getFirst())
             .imageUrls(imageUrls)
             .isFavorite(Boolean.TRUE.equals(projection.getIsFavorite()))
@@ -43,7 +45,10 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
             .build();
     }
 
-    private LockerDetail.LockerDetailBuilder detailBuilder(LockerDetailQueryProjection projection) {
+    private LockerDetail.LockerDetailBuilder detailBuilder(
+        LockerDetailQueryProjection projection,
+        Set<LockerSizeType> lockerSizes
+    ) {
         return LockerDetail.builder()
             .lockerId(projection.getLockerId())
             .lockerName(projection.getLockerName())
@@ -58,7 +63,7 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
             .floor(projection.getFloor())
             .minPrice(projection.getMinPrice())
             .maxPrice(projection.getMaxPrice())
-            .lockerSizes(parseLockerSizes(projection.getLockerSizes()))
+            .lockerSizes(lockerSizes)
             .detailInfo(projection.getDetailInfo())
             .startTime(projection.getStartTime()).endTime(projection.getEndTime())
             .accurateVoteCount(projection.getAccurateVoteCount())
@@ -90,12 +95,10 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
         );
     }
 
-    private Set<LockerSizeType> parseLockerSizes(String lockerSizes) {
-        if (lockerSizes == null || lockerSizes.isBlank()) {
-            return Set.of();
-        }
-        return Arrays.stream(lockerSizes.split(","))
+    private Set<LockerSizeType> findLockerSizes(List<Long> lockerIds) {
+        return lockerRepository.findLockerSizeTypesByLockerIds(lockerIds).stream()
+            .map(LockerSizeTypeQueryProjection::getSizeType)
             .map(LockerSizeType::from)
-            .collect(Collectors.toUnmodifiableSet());
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(LockerSizeType.class)));
     }
 }
