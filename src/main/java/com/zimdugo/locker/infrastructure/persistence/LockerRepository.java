@@ -7,6 +7,7 @@ import com.zimdugo.locker.infrastructure.projection.LockerDetailQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerPlaceLockerQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerSeoQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
+import com.zimdugo.locker.infrastructure.projection.LockerSizeTypeQueryProjection;
 import com.zimdugo.locker.infrastructure.projection.NearbyLockerPlaceQueryProjection;
 import java.util.List;
 import java.util.Optional;
@@ -290,7 +291,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             ld.floor AS floor,
             ld.min_price AS minPrice,
             ld.max_price AS maxPrice,
-            ld.locker_size AS lockerSizes,
             COALESCE(lt.detail_info, ld.detail_info) AS detailInfo,
             ld.start_time AS startTime,
             ld.end_time AS endTime,
@@ -346,8 +346,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             ST_X(l.location::geometry) AS lockerLongitude,
             l.place_id AS placeId,
             ld.locker_type AS lockerType,
-            ld.indoor_outdoor_type AS indoorOutdoorType,
-            ld.locker_size AS lockerSize
+            ld.indoor_outdoor_type AS indoorOutdoorType
         FROM lockers l
         JOIN places p ON p.id = l.place_id
         JOIN locker_details ld ON ld.locker_id = l.id
@@ -357,7 +356,8 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
           AND p.publication_status = 'ACTIVE'
           AND (
               :#{#filter.hasSizeTypes()} = false
-              OR string_to_array(ld.locker_size, ',') && string_to_array(:#{#filter.sizeTypes()}, ',')
+              OR EXISTS (SELECT 1 FROM locker_size_types lst WHERE lst.locker_id = l.id
+                         AND lst.size_type = ANY(string_to_array(:#{#filter.sizeTypes()}, ',')))
           )
           AND (
               :#{#filter.hasIndoorOutdoorTypes()} = false
@@ -386,7 +386,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             ST_X(l.location::geometry) AS lockerLongitude,
             ld.locker_type AS lockerType,
             ld.indoor_outdoor_type AS indoorOutdoorType,
-            ld.locker_size AS lockerSize,
             ld.min_price AS minPrice,
             ld.updated_at AS updatedAt,
             p.id AS placeId,
@@ -410,7 +409,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             ST_X(l.location::geometry) AS lockerLongitude,
             ld.locker_type AS lockerType,
             ld.indoor_outdoor_type AS indoorOutdoorType,
-            ld.locker_size AS lockerSize,
             ld.min_price AS minPrice,
             ld.updated_at AS updatedAt,
             p.id AS placeId,
@@ -450,7 +448,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             COALESCE(lt.road_address, l.road_address) AS roadAddress,
             ld.locker_type AS lockerType,
             ld.indoor_outdoor_type AS indoorOutdoorType,
-            ld.locker_size AS lockerSize,
             ld.min_price AS minPrice,
             ST_Y(l.location::geometry) AS lockerLatitude,
             ST_X(l.location::geometry) AS lockerLongitude,
@@ -471,6 +468,16 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("longitude") double longitude,
         @Param("placeIds") List<Long> placeIds,
         @Param("languageCode") String languageCode
+    );
+
+    @Query(value = """
+        SELECT locker_id AS lockerId, size_type AS sizeType
+        FROM locker_size_types
+        WHERE locker_id IN :lockerIds
+        ORDER BY locker_id ASC, size_type ASC
+        """, nativeQuery = true)
+    List<LockerSizeTypeQueryProjection> findLockerSizeTypesByLockerIds(
+        @Param("lockerIds") List<Long> lockerIds
     );
 
     @Query(value = """
