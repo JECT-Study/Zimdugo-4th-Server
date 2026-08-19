@@ -9,7 +9,6 @@ public interface LockerPlaceLockerQueryProjection {
     String getRoadAddress();
     String getLockerType();
     String getIndoorOutdoorType();
-    String getLockerSize();
     Integer getMinPrice();
     double getLockerLatitude();
     double getLockerLongitude();

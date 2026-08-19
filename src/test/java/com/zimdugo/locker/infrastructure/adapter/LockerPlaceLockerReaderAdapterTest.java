@@ -7,6 +7,7 @@ import com.zimdugo.locker.domain.place.LockerPlaceLocker;
 import com.zimdugo.locker.domain.search.LockerSearchFilter;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.projection.LockerPlaceLockerQueryProjection;
+import com.zimdugo.locker.infrastructure.projection.LockerSizeTypeQueryProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +38,18 @@ class LockerPlaceLockerReaderAdapterTest {
     @DisplayName("PLACE 하위 보관함에도 복합 필터를 적용한다")
     void filtersPlaceLockers() {
         List<LockerPlaceLockerQueryProjection> projections = List.of(
-            projection(10L, "Translated locker 10", "SMALL,LARGE", "INDOOR", "SUBWAY_STATION"),
-            projection(11L, "Translated locker 11", "MEDIUM", "INDOOR", "SUBWAY_STATION"),
-            projection(12L, "Translated locker 12", "LARGE", "OUTDOOR", "SUBWAY_STATION")
+            projection(10L, "Translated locker 10", "INDOOR", "SUBWAY_STATION"),
+            projection(11L, "Translated locker 11", "INDOOR", "SUBWAY_STATION"),
+            projection(12L, "Translated locker 12", "OUTDOOR", "SUBWAY_STATION")
         );
         given(lockerRepository.findByPlaceIds(37.55, 126.93, List.of(101L), "ko"))
             .willReturn(projections);
+        LockerSizeTypeQueryProjection small = sizeType(10L, "SMALL");
+        LockerSizeTypeQueryProjection large = sizeType(10L, "LARGE");
+        LockerSizeTypeQueryProjection medium = sizeType(11L, "MEDIUM");
+        LockerSizeTypeQueryProjection outdoorLarge = sizeType(12L, "LARGE");
+        given(lockerRepository.findLockerSizeTypesByLockerIds(List.of(10L, 11L, 12L)))
+            .willReturn(List.of(small, large, medium, outdoorLarge));
 
         LockerSearchFilter filter = new LockerSearchFilter(
             Set.of(LockerSizeType.LARGE),
@@ -67,7 +74,6 @@ class LockerPlaceLockerReaderAdapterTest {
     private LockerPlaceLockerQueryProjection projection(
         Long lockerId,
         String lockerName,
-        String lockerSize,
         String indoorOutdoorType,
         String lockerType
     ) {
@@ -81,12 +87,18 @@ class LockerPlaceLockerReaderAdapterTest {
         given(projection.getRoadAddress()).willReturn("Translated address");
         given(projection.getLockerType()).willReturn(lockerType);
         given(projection.getIndoorOutdoorType()).willReturn(indoorOutdoorType);
-        given(projection.getLockerSize()).willReturn(lockerSize);
         given(projection.getMinPrice()).willReturn(1000);
         given(projection.getLockerLatitude()).willReturn(37.55);
         given(projection.getLockerLongitude()).willReturn(126.93);
         given(projection.getDistanceMeters()).willReturn(100.0);
         given(projection.getUpdatedAt()).willReturn(LocalDateTime.of(2026, 6, 7, 12, 0));
+        return projection;
+    }
+
+    private LockerSizeTypeQueryProjection sizeType(Long lockerId, String sizeType) {
+        LockerSizeTypeQueryProjection projection = Mockito.mock(LockerSizeTypeQueryProjection.class);
+        given(projection.getLockerId()).willReturn(lockerId);
+        given(projection.getSizeType()).willReturn(sizeType);
         return projection;
     }
 }

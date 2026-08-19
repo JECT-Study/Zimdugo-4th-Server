@@ -109,13 +109,54 @@ class PublicationStatusRepositoryTest {
             """).executeUpdate();
         entityManager.clear();
 
-        assertThat(lockerRepository.findLockersWithinBounds(
+        var results = lockerRepository.findLockersWithinBounds(
             37.54,
             126.96,
             37.56,
             126.98,
             new LockerBoundsFilter(true, "LARGE", true, "INDOOR", true, "SUBWAY_STATION")
-        )).extracting(projection -> projection.getLockerId()).containsExactly(matchingLocker.getId());
+        );
+
+        assertThat(results).extracting(projection -> projection.getLockerId()).containsExactly(matchingLocker.getId());
+    }
+
+    @Test
+    void lockerDetailStoresEachLockerSizeInNormalizedTable() {
+        LockerEntity locker = lockerRepository.save(new LockerEntity(
+            "크기 정규화 대상",
+            "서울 중구",
+            37.55,
+            126.97
+        ));
+        lockerDetailRepository.save(new LockerDetailEntity(
+            locker,
+            new LockerDetailUpdateValues(
+                LockerType.ETC,
+                IndoorOutdoorType.INDOOR,
+                null,
+                null,
+                null,
+                null,
+                Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
+                null,
+                null,
+                null,
+                null
+            )
+        ));
+        entityManager.flush();
+
+        @SuppressWarnings("unchecked")
+        var sizeTypes = entityManager.createNativeQuery("""
+            SELECT size_type
+            FROM locker_size_types
+            WHERE locker_id = :lockerId
+            ORDER BY size_type
+            """)
+            .setParameter("lockerId", locker.getId())
+            .getResultList();
+
+        assertThat(sizeTypes).containsExactly("LARGE", "SMALL");
     }
 
     private LockerEntity saveLocker(LockerEntity locker) {

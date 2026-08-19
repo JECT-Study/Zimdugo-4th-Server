@@ -2,20 +2,17 @@ package com.zimdugo.locker.infrastructure.search;
 
 import com.zimdugo.common.i18n.SearchTextNormalizer;
 import com.zimdugo.common.util.HangulUtils;
-import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.infrastructure.persistence.LockerAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationEntity;
 import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -209,7 +206,7 @@ public final class LockerSuggestDocumentMapper {
             .roadAddress(p.getRoadAddress()).roadAddressDecomposed(HangulUtils.decompose(p.getRoadAddress()))
             .searchAddresses(addrs).searchAddressesDecomposed(decompose(addrs))
             .lockerType(p.getLockerType()).indoorOutdoorType(p.getIndoorOutdoorType())
-            .lockerSize(parseLockerSizes(p.getLockerSize()))
+            .lockerSize(dh.getLockerSizeTypes().getOrDefault(p.getLockerId(), List.of()))
             .minPrice(p.getMinPrice()).updatedAt(p.getUpdatedAt());
 
         return fillPlaceAndTranslations(builder, ctx, pNames);
@@ -255,15 +252,4 @@ public final class LockerSuggestDocumentMapper {
         return values.stream().map(HangulUtils::decompose).toList();
     }
 
-    private static List<String> parseLockerSizes(String lockerSizes) {
-        if (lockerSizes == null || lockerSizes.isBlank()) {
-            return List.of();
-        }
-        return Arrays.stream(lockerSizes.split(","))
-            .map(LockerSizeType::from)
-            .filter(Objects::nonNull)
-            .map(Enum::name)
-            .distinct()
-            .toList();
-    }
 }
