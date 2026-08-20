@@ -24,15 +24,17 @@ public record LockerIssueReportCreateRequest(
     )
     @NotNull
     @NotBlank
-    @Pattern(
-        regexp = "PRICE_ERROR|NO_LONGER_OPERATING|SIZE_ERROR|OPERATING_HOURS_ERROR|WRONG_LOCATION|IMAGE_ERROR|CATEGORY_ERROR|OTHER"
-    )
+    @Pattern(regexp = REPORT_TYPE_PATTERN)
     String reportType,
 
     @Schema(description = "상세 내용", example = "운영 시간이 실제와 다릅니다.")
     @Size(max = 1000)
     String detail
 ) {
+    private static final String REPORT_TYPE_PATTERN =
+        "PRICE_ERROR|NO_LONGER_OPERATING|SIZE_ERROR|OPERATING_HOURS_ERROR|"
+            + "WRONG_LOCATION|IMAGE_ERROR|CATEGORY_ERROR|OTHER";
+
     public LockerIssueReportCreateCommand toCommand(Long lockerId) {
         return new LockerIssueReportCreateCommand(lockerId, reportType, detail);
     }
