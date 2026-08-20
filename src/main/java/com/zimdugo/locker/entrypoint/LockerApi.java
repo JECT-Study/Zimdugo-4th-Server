@@ -2,10 +2,12 @@ package com.zimdugo.locker.entrypoint;
 
 import com.zimdugo.common.security.NullableCurrentUser;
 import com.zimdugo.core.response.RestResponse;
+import com.zimdugo.locker.entrypoint.dto.request.issue.LockerIssueReportCreateRequest;
 import com.zimdugo.locker.entrypoint.dto.request.search.LockerSearchRequest;
 import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
 import com.zimdugo.locker.entrypoint.dto.request.pin.LockerPinRequest;
 import com.zimdugo.locker.entrypoint.dto.response.detail.LockerDetailResponse;
+import com.zimdugo.locker.entrypoint.dto.response.issue.LockerIssueReportCreateResponse;
 import com.zimdugo.locker.entrypoint.dto.response.search.LockerSearchResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
@@ -28,6 +30,8 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Locker", description = "보관함 조회 API")
@@ -47,6 +51,22 @@ public interface LockerApi {
     ResponseEntity<RestResponse<LockerDetailResponse>> getLockerDetail(
         @NullableCurrentUser Long userId,
         @PathVariable @Positive Long lockerId
+    );
+
+    @Operation(
+        summary = "보관함 신고 접수",
+        description = "기존 보관함에 대한 문제를 익명으로 신고한다."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "접수 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+        @ApiResponse(responseCode = "404", description = "존재하지 않는 보관함")
+    })
+    @SecurityRequirements
+    @PostMapping("/lockers/{lockerId}/issue-reports")
+    ResponseEntity<RestResponse<LockerIssueReportCreateResponse>> createLockerIssueReport(
+        @PathVariable @Positive Long lockerId,
+        @Valid @RequestBody LockerIssueReportCreateRequest request
     );
 
     @Operation(

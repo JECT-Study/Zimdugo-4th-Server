@@ -4,21 +4,25 @@ import com.zimdugo.common.security.NullableCurrentUser;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.locker.application.detail.LockerDetailQueryService;
+import com.zimdugo.locker.application.issue.LockerIssueReportCommandService;
 import com.zimdugo.locker.application.search.LockerSearchResultQueryService;
 import com.zimdugo.locker.application.pin.LockerPinQueryService;
 import com.zimdugo.locker.application.suggest.LockerSuggestQueryService;
 import com.zimdugo.locker.application.place.PlaceLockerQueryService;
 import com.zimdugo.locker.application.seo.LockerSeoQueryService;
 import com.zimdugo.locker.application.result.detail.LockerDetailResult;
+import com.zimdugo.locker.application.result.issue.LockerIssueReportCreateResult;
 import com.zimdugo.locker.application.result.search.LockerSearchResult;
 import com.zimdugo.locker.application.result.pin.LockerPinResult;
 import com.zimdugo.locker.application.result.place.PlaceLockerResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
 import com.zimdugo.locker.application.result.seo.LockerSeoResult;
+import com.zimdugo.locker.entrypoint.dto.request.issue.LockerIssueReportCreateRequest;
 import com.zimdugo.locker.entrypoint.dto.request.place.PlaceLockerRequest;
 import com.zimdugo.locker.entrypoint.dto.request.pin.LockerPinRequest;
 import com.zimdugo.locker.entrypoint.dto.request.search.LockerSearchRequest;
 import com.zimdugo.locker.entrypoint.dto.response.detail.LockerDetailResponse;
+import com.zimdugo.locker.entrypoint.dto.response.issue.LockerIssueReportCreateResponse;
 import com.zimdugo.locker.entrypoint.dto.response.pin.LockerPinResponse;
 import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
 import com.zimdugo.locker.entrypoint.dto.response.search.LockerSearchResponse;
@@ -41,6 +45,7 @@ public class LockerController implements LockerApi {
     private final LockerPinQueryService lockerPinQueryService;
     private final LockerSuggestQueryService lockerSuggestQueryService;
     private final LockerSearchResultQueryService lockerSearchResultQueryService;
+    private final LockerIssueReportCommandService lockerIssueReportCommandService;
     private final PlaceLockerQueryService placeLockerQueryService;
     private final LockerSeoQueryService lockerSeoQueryService;
 
@@ -51,6 +56,15 @@ public class LockerController implements LockerApi {
     ) {
         LockerDetailResult result = lockerDetailQueryService.getDetail(userId, lockerId);
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerDetailResponse.from(result)));
+    }
+
+    @Override
+    public ResponseEntity<RestResponse<LockerIssueReportCreateResponse>> createLockerIssueReport(
+        Long lockerId,
+        LockerIssueReportCreateRequest request
+    ) {
+        LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(request.toCommand(lockerId));
+        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerIssueReportCreateResponse.from(result)));
     }
 
     @Override
