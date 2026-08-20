@@ -328,18 +328,20 @@ class AdminDocumentServiceTest {
 
     @Test
     @DisplayName("문서 목록의 정렬 순서를 재배치하고 조회 시 listOrder ASC 및 createdAt DESC 순서로 정렬되어 반환된다")
-    void reorderDocumentsAndSort() {
+    void reorderDocumentsAndSort() throws InterruptedException {
         // given
         AdminDocument doc1 = adminDocumentRepository.save(AdminDocument.builder()
             .title("문서 1")
             .type(DocumentType.NOTICE)
             .active(true)
             .build());
+        Thread.sleep(10);
         AdminDocument doc2 = adminDocumentRepository.save(AdminDocument.builder()
             .title("문서 2")
             .type(DocumentType.NOTICE)
             .active(true)
             .build());
+        Thread.sleep(10);
         AdminDocument doc3 = adminDocumentRepository.save(AdminDocument.builder()
             .title("문서 3")
             .type(DocumentType.NOTICE)

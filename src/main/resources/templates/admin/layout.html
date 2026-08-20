@@ -137,11 +137,13 @@
             font-weight: 700;
             white-space: nowrap;
         }
+        .status-pending { background: #f3f4f6; color: #4b5563; }
+        .status-resolved { background: #ecfdf5; color: #047857; }
+        .status-rejected { background: #fef2f2; color: #b91c1c; }
         .status-submitted { background: #f3f4f6; color: #4b5563; }
         .status-translation-required { background: #fff7ed; color: #c2410c; }
         .status-ready-for-approval { background: #eef2ff; color: #4338ca; }
         .status-approved { background: #ecfdf5; color: #047857; }
-        .status-rejected { background: #fef2f2; color: #b91c1c; }
 
         /* ── Buttons ── */
         .btn {
@@ -242,6 +244,11 @@
             <li class="sidebar-menu-item" th:classappend="${activeMenu == 'locker-reports'} ? 'active'">
                 <a th:href="@{/admin/locker-reports}">
                     <i class="fa-solid fa-location-dot"></i> 보관함 제보
+                </a>
+            </li>
+            <li class="sidebar-menu-item" th:classappend="${activeMenu == 'locker-issue-reports'} ? 'active'">
+                <a th:href="@{/admin/locker-issue-reports}">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 보관함 신고
                 </a>
             </li>
         </ul>

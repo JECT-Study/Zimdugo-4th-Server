@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>보관함 신고 상세</title>
+</head>
+<body>
+<main>
+    <style>
+        .detail-grid { display: grid; grid-template-columns: 120px 1fr; gap: .8rem 1rem; }
+        .detail-grid dt { color: #737373; font-weight: 600; }
+        .detail-grid dd { margin: 0; word-break: break-word; }
+        .stack { display: grid; gap: 1rem; }
+        .muted { color: #737373; font-size: .82rem; }
+        .detail-actions { display: flex; gap: .65rem; justify-content: flex-end; margin-top: 1rem; }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="type-label">LOCKER ISSUE REPORT REVIEW</div>
+            <h1 th:text="'신고 #' + ${report.id} + ' 상세'">신고 상세</h1>
+        </div>
+        <a th:href="@{/admin/locker-issue-reports}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> 목록
+        </a>
+    </div>
+
+    <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+    <div class="stack">
+        <section class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                <strong>신고 정보</strong>
+                <span class="status-badge"
+                      th:classappend="${'status-' + #strings.toLowerCase(report.status.name())}"
+                      th:text="${report.status.displayName()}">
+                    접수
+                </span>
+            </div>
+            <dl class="detail-grid">
+                <dt>대상 보관함</dt><dd th:text="${report.lockerName}">보관함</dd>
+                <dt>보관함 ID</dt><dd th:text="${report.lockerId}">1</dd>
+                <dt>주소</dt><dd th:text="${report.lockerRoadAddress}">주소</dd>
+                <dt>신고 유형</dt><dd th:text="${report.reportType.name()}">WRONG_LOCATION</dd>
+                <dt>상세 내용</dt><dd th:text="${report.detail != null and !report.detail.isBlank()} ? ${report.detail} : '상세 내용 없음'">상세 내용</dd>
+                <dt>접수 일시</dt><dd th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2026-08-20 23:00:00</dd>
+                <dt>수정 일시</dt><dd th:text="${#temporals.format(report.updatedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-08-20 23:00:00</dd>
+            </dl>
+            <div class="detail-actions" th:if="${report.status.name() == 'PENDING'}">
+                <form th:action="@{/admin/locker-issue-reports/{id}/reject(id=${report.id})}"
+                      method="post"
+                      onsubmit="return confirm('이 신고를 반려 처리할까요?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa-solid fa-xmark"></i> 반려
+                    </button>
+                </form>
+                <form th:action="@{/admin/locker-issue-reports/{id}/resolve(id=${report.id})}"
+                      method="post"
+                      onsubmit="return confirm('이 신고를 처리 완료할까요?');">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-check"></i> 처리 완료
+                    </button>
+                </form>
+            </div>
+            <p class="muted" th:if="${report.status.name() != 'PENDING'}">
+                이미 처리된 신고입니다.
+            </p>
+        </section>
+    </div>
+</main>
+</body>
+</html>
