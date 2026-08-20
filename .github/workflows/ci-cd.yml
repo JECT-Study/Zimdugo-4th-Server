@@ -225,10 +225,8 @@ jobs:
       - name: Install deployment files
         run: |
           sudo install -d -m 755 /opt/zimdugo/docker/postgres/init
-          sudo install -d -m 755 /opt/zimdugo/scripts/db
           sudo install -m 644 docker-compose.deploy.yml /opt/zimdugo/docker-compose.deploy.yml
           sudo install -m 644 docker/postgres/init/01-postgis-init.sql /opt/zimdugo/docker/postgres/init/01-postgis-init.sql
-          sudo install -m 644 scripts/db/05-locker-issue-reports.sql /opt/zimdugo/scripts/db/05-locker-issue-reports.sql
           sudo install -m 644 docker/nginx/zimdugo-upload-size.conf /etc/nginx/conf.d/zimdugo-upload-size.conf
           sudo install -m 644 docker/nginx/zimdugo-api.conf /etc/nginx/sites-available/zimdugo-api
           sudo ln -sfn /etc/nginx/sites-available/zimdugo-api /etc/nginx/sites-enabled/zimdugo-api
@@ -307,13 +305,6 @@ jobs:
             cleanup_bootstrap
             trap - EXIT INT TERM
           fi
-
-      - name: Apply incremental schema scripts
-        run: |
-          cd /opt/zimdugo
-          docker compose -f docker-compose.deploy.yml exec -T postgres sh -c \
-            'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f "$1"' \
-            _ /opt/zimdugo/scripts/db/05-locker-issue-reports.sql
 
       - name: Start application and verify readiness
         run: |
