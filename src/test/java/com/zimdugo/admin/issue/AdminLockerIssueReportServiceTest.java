@@ -39,14 +39,14 @@ class AdminLockerIssueReportServiceTest {
     @Test
     @DisplayName("상태로 신고 목록을 필터링한다")
     void getReportsByStatus() {
-        LockerIssueReportEntity report = issueReport(
+        LockerIssueReportEntity report = issueReport(new IssueReportFixture(
             10L,
             1L,
             LockerIssueReportType.WRONG_LOCATION,
             "위치가 다릅니다.",
             LockerIssueReportStatus.PENDING,
             LocalDateTime.of(2026, 8, 20, 23, 30, 0)
-        );
+        ));
         LockerEntity locker = locker(1L, "서울역 보관함", "서울 중구 세종대로 1");
         given(lockerIssueReportRepository.findAllByStatusOrderByCreatedAtDesc(LockerIssueReportStatus.PENDING))
             .willReturn(List.of(report));
@@ -70,14 +70,14 @@ class AdminLockerIssueReportServiceTest {
     @Test
     @DisplayName("신고 상세를 조회한다")
     void getReport() {
-        LockerIssueReportEntity report = issueReport(
+        LockerIssueReportEntity report = issueReport(new IssueReportFixture(
             11L,
             2L,
             LockerIssueReportType.IMAGE_ERROR,
             "이미지가 실제와 다릅니다.",
             LockerIssueReportStatus.RESOLVED,
             LocalDateTime.of(2026, 8, 20, 23, 31, 0)
-        );
+        ));
         LockerEntity locker = locker(2L, "강남역 보관함", "서울 강남구 강남대로 2");
         given(lockerIssueReportRepository.findById(11L)).willReturn(Optional.of(report));
         given(lockerRepository.findById(2L)).willReturn(Optional.of(locker));
@@ -92,37 +92,30 @@ class AdminLockerIssueReportServiceTest {
     @Test
     @DisplayName("이미 처리된 신고는 다시 처리할 수 없다")
     void rejectAlreadyReviewedReport() {
-        LockerIssueReportEntity report = issueReport(
+        LockerIssueReportEntity report = issueReport(new IssueReportFixture(
             12L,
             3L,
             LockerIssueReportType.OTHER,
             null,
             LockerIssueReportStatus.REJECTED,
             LocalDateTime.of(2026, 8, 20, 23, 32, 0)
-        );
+        ));
         given(lockerIssueReportRepository.findById(12L)).willReturn(Optional.of(report));
 
         assertThatThrownBy(() -> adminLockerIssueReportService.resolve(12L))
             .isInstanceOf(BusinessException.class);
     }
 
-    private LockerIssueReportEntity issueReport(
-        Long id,
-        Long lockerId,
-        LockerIssueReportType type,
-        String detail,
-        LockerIssueReportStatus status,
-        LocalDateTime createdAt
-    ) {
+    private LockerIssueReportEntity issueReport(IssueReportFixture fixture) {
         LockerIssueReportEntity entity = LockerIssueReportEntity.builder()
-            .lockerId(lockerId)
-            .reportType(type)
-            .detail(detail)
-            .status(status)
+            .lockerId(fixture.lockerId())
+            .reportType(fixture.type())
+            .detail(fixture.detail())
+            .status(fixture.status())
             .build();
-        setField(entity, "id", id);
-        setField(entity, "createdAt", createdAt);
-        setField(entity, "updatedAt", createdAt);
+        setField(entity, "id", fixture.id());
+        setField(entity, "createdAt", fixture.createdAt());
+        setField(entity, "updatedAt", fixture.createdAt());
         return entity;
     }
 
@@ -140,5 +133,15 @@ class AdminLockerIssueReportServiceTest {
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException(exception);
         }
+    }
+
+    private record IssueReportFixture(
+        Long id,
+        Long lockerId,
+        LockerIssueReportType type,
+        String detail,
+        LockerIssueReportStatus status,
+        LocalDateTime createdAt
+    ) {
     }
 }
