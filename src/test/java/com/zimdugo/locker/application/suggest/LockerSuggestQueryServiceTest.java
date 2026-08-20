@@ -21,8 +21,11 @@ class LockerSuggestQueryServiceTest {
 
     @Test
     void projectsACommonSearchTargetIntoASuggestionItem() {
-        given(targetQueryService.findTargets(37.55, 126.93, "신촌", null)).willReturn(List.of(target()));
-        LockerSuggestQueryService service = new LockerSuggestQueryService(targetQueryService);
+        given(targetQueryService.findTargets(37.55, 126.93, "신촌", null, 17)).willReturn(List.of(target()));
+        LockerSuggestQueryService service = new LockerSuggestQueryService(
+            targetQueryService,
+            17
+        );
 
         var result = service.getSuggestions(37.55, 126.93, "신촌");
 

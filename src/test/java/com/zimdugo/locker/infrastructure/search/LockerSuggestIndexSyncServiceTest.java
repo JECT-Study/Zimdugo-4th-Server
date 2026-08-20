@@ -13,6 +13,7 @@ import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationRepository;
 import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
+import com.zimdugo.locker.infrastructure.projection.LockerSizeTypeQueryProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -128,6 +129,11 @@ class LockerSuggestIndexSyncServiceTest {
         lenient().when(lockerAliasRepository.findByLockerIdIn(any())).thenReturn(List.of());
         lenient().when(placeTranslationRepository.findByPlaceIdIn(any())).thenReturn(List.of());
         lenient().when(placeAliasRepository.findByPlaceIdIn(any())).thenReturn(List.of());
+        LockerSizeTypeQueryProjection small = lockerSizeType("SMALL");
+        LockerSizeTypeQueryProjection medium = lockerSizeType("MEDIUM");
+        LockerSizeTypeQueryProjection large = lockerSizeType("LARGE");
+        lenient().when(lockerRepository.findLockerSizeTypesByLockerIds(any()))
+            .thenReturn(List.of(small, medium, large));
     }
 
     @Test
@@ -379,12 +385,18 @@ class LockerSuggestIndexSyncServiceTest {
         given(projection.getLockerLongitude()).willReturn(126.923);
         given(projection.getLockerType()).willReturn("SUBWAY_STATION");
         given(projection.getIndoorOutdoorType()).willReturn("INDOOR");
-        given(projection.getLockerSize()).willReturn(" SMALL ,MEDIUM,LARGE,SMALL");
         given(projection.getMinPrice()).willReturn(1000);
         given(projection.getUpdatedAt()).willReturn(LocalDateTime.of(2026, 6, 11, 12, 0));
         given(projection.getPlaceId()).willReturn(101L);
         given(projection.getPlaceName()).willReturn("신촌역 1번 출구");
         given(projection.getPlaceRoadAddress()).willReturn("서울 신촌로");
+        return projection;
+    }
+
+    private LockerSizeTypeQueryProjection lockerSizeType(String sizeType) {
+        LockerSizeTypeQueryProjection projection = mock(LockerSizeTypeQueryProjection.class);
+        lenient().when(projection.getLockerId()).thenReturn(10L);
+        lenient().when(projection.getSizeType()).thenReturn(sizeType);
         return projection;
     }
 

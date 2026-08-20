@@ -6,6 +6,7 @@ import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.locker.domain.locker.NearbyLocker;
 import com.zimdugo.locker.domain.search.LockerSearchFilter;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerBoundsFilter;
 import com.zimdugo.locker.infrastructure.projection.NearbyLockerPlaceQueryProjection;
 import java.util.List;
 import java.util.Set;
@@ -29,13 +30,17 @@ class NearbyLockerPlaceReaderAdapterTest {
     private NearbyLockerPlaceReaderAdapter nearbyLockerPlaceReaderAdapter;
 
     @Test
-    @DisplayName("bounds 핀 조회에도 복합 필터를 적용한다")
-    void filtersNearbyLockersWithinBounds() {
-        given(lockerRepository.findLockersWithinBounds(37.54, 126.92, 37.56, 126.94))
+    @DisplayName("bounds 핀 조회 필터를 SQL 파라미터로 전달한다")
+    void passesNearbyLockerFilterToRepository() {
+        given(lockerRepository.findLockersWithinBounds(
+            37.54,
+            126.92,
+            37.56,
+            126.94,
+            new LockerBoundsFilter(true, "LARGE", true, "INDOOR", true, "SUBWAY_STATION")
+        ))
             .willReturn(List.of(
-                projection(1L, 101L, "SMALL,LARGE", "INDOOR", "SUBWAY_STATION"),
-                projection(2L, 101L, "MEDIUM", "INDOOR", "SUBWAY_STATION"),
-                projection(3L, 102L, "LARGE", "OUTDOOR", "SUBWAY_STATION")
+                projection(1L, 101L, "INDOOR", "SUBWAY_STATION")
             ));
 
         LockerSearchFilter filter = new LockerSearchFilter(
@@ -59,7 +64,6 @@ class NearbyLockerPlaceReaderAdapterTest {
     private NearbyLockerPlaceQueryProjection projection(
         Long lockerId,
         Long placeId,
-        String lockerSize,
         String indoorOutdoorType,
         String lockerType
     ) {
@@ -94,10 +98,6 @@ class NearbyLockerPlaceReaderAdapterTest {
                 return indoorOutdoorType;
             }
 
-            @Override
-            public String getLockerSize() {
-                return lockerSize;
-            }
         };
     }
 }

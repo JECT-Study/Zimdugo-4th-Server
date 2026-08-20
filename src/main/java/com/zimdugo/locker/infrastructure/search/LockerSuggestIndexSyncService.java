@@ -8,6 +8,7 @@ import com.zimdugo.locker.infrastructure.persistence.PlaceAliasRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationRepository;
 import com.zimdugo.locker.infrastructure.persistence.PlaceTranslationRepository;
 import com.zimdugo.locker.infrastructure.projection.LockerSuggestIndexQueryProjection;
+import com.zimdugo.locker.infrastructure.projection.LockerSizeTypeQueryProjection;
 import com.zimdugo.locker.infrastructure.persistence.LockerAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceAliasEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
@@ -288,7 +289,23 @@ public class LockerSuggestIndexSyncService {
             placeAliasRepository.findByPlaceIdIn(placeIds).stream()
                 .collect(Collectors.groupingBy(pa -> pa.getPlace().getId()));
 
-        return new IndexSyncDataHolder(lockerTranslations, lockerAliases, placeTranslations, placeAliases);
+        Map<Long, List<String>> lockerSizeTypes = loadLockerSizeTypes(lockerIds);
+
+        return new IndexSyncDataHolder(
+            lockerTranslations,
+            lockerAliases,
+            placeTranslations,
+            placeAliases,
+            lockerSizeTypes
+        );
+    }
+
+    private Map<Long, List<String>> loadLockerSizeTypes(List<Long> lockerIds) {
+        return lockerRepository.findLockerSizeTypesByLockerIds(lockerIds).stream()
+            .collect(Collectors.groupingBy(
+                LockerSizeTypeQueryProjection::getLockerId,
+                Collectors.mapping(LockerSizeTypeQueryProjection::getSizeType, Collectors.toList())
+            ));
     }
 
     private List<LockerSuggestDocument> toDocuments(List<LockerSuggestIndexQueryProjection> projections) {

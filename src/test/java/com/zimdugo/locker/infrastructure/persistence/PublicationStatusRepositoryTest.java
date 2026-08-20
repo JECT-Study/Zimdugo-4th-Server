@@ -2,6 +2,7 @@ package com.zimdugo.locker.infrastructure.persistence;
 
 import com.zimdugo.common.config.JpaAuditingConfig;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
+import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
 import jakarta.persistence.EntityManager;
 import java.util.Set;
@@ -80,10 +81,55 @@ class PublicationStatusRepositoryTest {
             .isEmpty();
     }
 
-    private LockerEntity saveLocker(LockerEntity locker) {
-        LockerEntity savedLocker = lockerRepository.save(locker);
+    @Test
+    void boundsQueryFiltersLockersBeforeReturningThem() {
+        PlaceEntity place = placeRepository.save(new PlaceEntity("공개 장소", 37.55, 126.97, "서울 중구"));
+        LockerEntity matchingLocker = saveLocker(
+            new LockerEntity("대상", "서울 중구", 37.550, 126.970, place),
+            LockerType.SUBWAY_STATION,
+            IndoorOutdoorType.INDOOR,
+            Set.of(LockerSizeType.LARGE)
+        );
+        saveLocker(
+            new LockerEntity("크기 불일치", "서울 중구", 37.551, 126.971, place),
+            LockerType.SUBWAY_STATION,
+            IndoorOutdoorType.INDOOR,
+            Set.of(LockerSizeType.MEDIUM)
+        );
+        saveLocker(
+            new LockerEntity("실내외 불일치", "서울 중구", 37.552, 126.972, place),
+            LockerType.SUBWAY_STATION,
+            IndoorOutdoorType.OUTDOOR,
+            Set.of(LockerSizeType.LARGE)
+        );
+        entityManager.flush();
+        entityManager.createNativeQuery("""
+            UPDATE lockers
+            SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+            """).executeUpdate();
+        entityManager.clear();
+
+        var results = lockerRepository.findLockersWithinBounds(
+            37.54,
+            126.96,
+            37.56,
+            126.98,
+            new LockerBoundsFilter(true, "LARGE", true, "INDOOR", true, "SUBWAY_STATION")
+        );
+
+        assertThat(results).extracting(projection -> projection.getLockerId()).containsExactly(matchingLocker.getId());
+    }
+
+    @Test
+    void lockerDetailStoresEachLockerSizeInNormalizedTable() {
+        LockerEntity locker = lockerRepository.save(new LockerEntity(
+            "크기 정규화 대상",
+            "서울 중구",
+            37.55,
+            126.97
+        ));
         lockerDetailRepository.save(new LockerDetailEntity(
-            savedLocker,
+            locker,
             new LockerDetailUpdateValues(
                 LockerType.ETC,
                 IndoorOutdoorType.INDOOR,
@@ -91,7 +137,49 @@ class PublicationStatusRepositoryTest {
                 null,
                 null,
                 null,
-                Set.of(),
+                Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
+                null,
+                null,
+                null,
+                null
+            )
+        ));
+        entityManager.flush();
+
+        @SuppressWarnings("unchecked")
+        var sizeTypes = entityManager.createNativeQuery("""
+            SELECT size_type
+            FROM locker_size_types
+            WHERE locker_id = :lockerId
+            ORDER BY size_type
+            """)
+            .setParameter("lockerId", locker.getId())
+            .getResultList();
+
+        assertThat(sizeTypes).containsExactly("LARGE", "SMALL");
+    }
+
+    private LockerEntity saveLocker(LockerEntity locker) {
+        return saveLocker(locker, LockerType.ETC, IndoorOutdoorType.INDOOR, Set.of());
+    }
+
+    private LockerEntity saveLocker(
+        LockerEntity locker,
+        LockerType lockerType,
+        IndoorOutdoorType indoorOutdoorType,
+        Set<LockerSizeType> lockerSize
+    ) {
+        LockerEntity savedLocker = lockerRepository.save(locker);
+        lockerDetailRepository.save(new LockerDetailEntity(
+            savedLocker,
+            new LockerDetailUpdateValues(
+                lockerType,
+                indoorOutdoorType,
+                null,
+                null,
+                null,
+                null,
+                lockerSize,
                 null,
                 null,
                 null,

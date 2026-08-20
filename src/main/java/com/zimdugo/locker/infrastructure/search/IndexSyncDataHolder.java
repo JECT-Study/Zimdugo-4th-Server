@@ -16,4 +16,5 @@ public class IndexSyncDataHolder {
     private final Map<Long, List<LockerAliasEntity>> lockerAliases;
     private final Map<Long, List<PlaceTranslationEntity>> placeTranslations;
     private final Map<Long, List<PlaceAliasEntity>> placeAliases;
+    private final Map<Long, List<String>> lockerSizeTypes;
 }

@@ -1,6 +1,7 @@
 package com.zimdugo.locker.infrastructure.persistence;
 
 import com.zimdugo.locker.domain.publication.PublicationStatus;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,7 +12,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -49,6 +54,10 @@ public class LockerEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PublicationStatus publicationStatus = PublicationStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "locker", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("listOrder ASC")
+    private List<LockerImageEntity> images = new ArrayList<>();
 
     public LockerEntity(String name, String roadAddress, double latitude, double longitude) {
         this(name, roadAddress, latitude, longitude, null);
@@ -89,5 +98,15 @@ public class LockerEntity {
         this.longitude = values.longitude();
         this.place = values.place();
         this.publicationStatus = values.publicationStatus();
+    }
+
+    public void replaceImages(List<String> imageUrls) {
+        images.clear();
+        if (imageUrls == null) {
+            return;
+        }
+        for (int index = 0; index < imageUrls.size(); index++) {
+            images.add(LockerImageEntity.of(this, imageUrls.get(index), index));
+        }
     }
 }

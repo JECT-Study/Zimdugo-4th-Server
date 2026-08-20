@@ -17,7 +17,6 @@ public interface LockerDetailQueryProjection {
     Integer getFloor();
     Integer getMinPrice();
     Integer getMaxPrice();
-    String getLockerSizes();
     String getDetailInfo();
     LocalTime getStartTime();
     LocalTime getEndTime();

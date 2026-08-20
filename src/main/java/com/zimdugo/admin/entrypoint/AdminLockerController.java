@@ -15,6 +15,7 @@ import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.http.ResponseEntity;
@@ -84,7 +85,8 @@ public class AdminLockerController {
         }
 
         try {
-            adminLockerService.updateLocker(id, toCommandWithImage(form));
+            adminLockerService.updateLocker(id, toCommandWithImages(form));
+            imageStorage.deleteAll(orEmpty(form.getDeletedImageUrls()));
             return "redirect:/admin/lockers/" + id + "/translations";
         } catch (BusinessException exception) {
             bindingResult.reject("adminLocker", exception.getMessage());
@@ -100,9 +102,7 @@ public class AdminLockerController {
     ) {
         AdminLockerDetailResult locker = adminLockerService.getLocker(id);
         adminLockerService.deleteLocker(id);
-        if (locker.imageUrl() != null) {
-            imageStorage.deleteAll(List.of(locker.imageUrl()));
-        }
+        imageStorage.deleteAll(locker.imageUrls());
         redirectAttributes.addFlashAttribute("successMessage", "보관함을 삭제했습니다.");
         return "redirect:/admin/lockers";
     }
@@ -173,12 +173,15 @@ public class AdminLockerController {
         }
     }
 
-    private AdminLockerCommand toCommandWithImage(AdminLockerForm form) {
-        if (form.getImageFile() == null || form.getImageFile().isEmpty()) {
-            return form.toCommand();
-        }
-        String imageUrl = imageStorage.uploadAll(List.of(form.getImageFile())).getFirst();
-        form.setImageUrl(imageUrl);
+    private AdminLockerCommand toCommandWithImages(AdminLockerForm form) {
+        List<String> uploadedUrls = imageStorage.uploadAll(
+            orEmpty(form.getImageFiles()).stream().filter(file -> !file.isEmpty()).toList()
+        );
+        form.setImageUrls(Stream.concat(form.retainedImageUrls().stream(), uploadedUrls.stream()).toList());
         return form.toCommand();
+    }
+
+    private <T> List<T> orEmpty(List<T> values) {
+        return values == null ? List.of() : values;
     }
 }

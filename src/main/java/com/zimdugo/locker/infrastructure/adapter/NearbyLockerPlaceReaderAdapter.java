@@ -1,17 +1,12 @@
 package com.zimdugo.locker.infrastructure.adapter;
 
-import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
-import com.zimdugo.locker.domain.locker.LockerSizeType;
-import com.zimdugo.locker.domain.locker.LockerType;
 import com.zimdugo.locker.domain.locker.NearbyLocker;
 import com.zimdugo.locker.domain.locker.NearbyLockerPlaceReader;
 import com.zimdugo.locker.domain.search.LockerSearchFilter;
+import com.zimdugo.locker.infrastructure.persistence.LockerBoundsFilter;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.projection.NearbyLockerPlaceQueryProjection;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -35,35 +30,37 @@ public class NearbyLockerPlaceReaderAdapter implements NearbyLockerPlaceReader {
             swLat,
             swLng,
             neLat,
-            neLng
+            neLng,
+            toBoundsFilter(filter)
         );
         return nearbyLockers
             .stream()
-            .filter(projection -> matchesFilter(projection, filter))
             .map(NearbyLockerPlaceQueryProjection::toDomain)
             .toList();
     }
 
-    private boolean matchesFilter(
-        NearbyLockerPlaceQueryProjection projection,
-        LockerSearchFilter filter
-    ) {
-        if (filter == null || filter.isEmpty()) {
-            return true;
+    private String filterValues(Iterable<? extends Enum<?>> filterValues) {
+        if (filterValues == null) {
+            return "";
         }
-
-        LockerType lockerType = LockerType.valueOf(projection.getLockerType());
-        IndoorOutdoorType indoorOutdoorType = IndoorOutdoorType.valueOf(projection.getIndoorOutdoorType());
-        Set<LockerSizeType> lockerSizes = parseLockerSizes(projection.getLockerSize());
-        return filter.matches(lockerSizes, indoorOutdoorType, lockerType);
+        StringBuilder values = new StringBuilder();
+        for (Enum<?> filterValue : filterValues) {
+            if (!values.isEmpty()) {
+                values.append(',');
+            }
+            values.append(filterValue.name());
+        }
+        return values.toString();
     }
 
-    private Set<LockerSizeType> parseLockerSizes(String lockerSizes) {
-        if (lockerSizes == null || lockerSizes.isBlank()) {
-            return Set.of();
-        }
-        return Arrays.stream(lockerSizes.split(","))
-            .map(LockerSizeType::from)
-            .collect(Collectors.toUnmodifiableSet());
+    private LockerBoundsFilter toBoundsFilter(LockerSearchFilter filter) {
+        return new LockerBoundsFilter(
+            filter != null && !filter.sizeTypes().isEmpty(),
+            filterValues(filter == null ? null : filter.sizeTypes()),
+            filter != null && !filter.indoorOutdoorTypes().isEmpty(),
+            filterValues(filter == null ? null : filter.indoorOutdoorTypes()),
+            filter != null && !filter.lockerTypes().isEmpty(),
+            filterValues(filter == null ? null : filter.lockerTypes())
+        );
     }
 }

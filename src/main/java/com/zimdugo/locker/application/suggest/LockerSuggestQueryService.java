@@ -1,20 +1,27 @@
 package com.zimdugo.locker.application.suggest;
 
-import com.zimdugo.locker.application.search.LockerSearchTargetQueryService;
-
 import com.zimdugo.locker.application.result.suggest.LockerSuggestItemResult;
 import com.zimdugo.locker.application.result.suggest.LockerSuggestResult;
+import com.zimdugo.locker.application.search.LockerSearchTargetQueryService;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class LockerSuggestQueryService {
 
     private final LockerSearchTargetQueryService lockerSearchTargetQueryService;
+    private final int suggestLimit;
+
+    public LockerSuggestQueryService(
+        LockerSearchTargetQueryService lockerSearchTargetQueryService,
+        @Value("${search.suggest-limit}") int suggestLimit
+    ) {
+        this.lockerSearchTargetQueryService = lockerSearchTargetQueryService;
+        this.suggestLimit = suggestLimit;
+    }
 
     public LockerSuggestResult getSuggestions(
         double latitude,
@@ -25,7 +32,8 @@ public class LockerSuggestQueryService {
             latitude,
             longitude,
             keyword,
-            null
+            null,
+            suggestLimit
         ).stream().map(LockerSuggestItemResult::from).toList();
         if (items.isEmpty()) {
             return LockerSuggestResult.empty();

@@ -3,8 +3,9 @@ package com.zimdugo.locker.infrastructure.persistence;
 import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
@@ -19,6 +20,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -68,9 +70,11 @@ public class LockerDetailEntity {
     @Column
     private Integer maxPrice;
 
-    @Convert(converter = LockerSizeTypeConverter.class)
-    @Column(length = 100)
-    private Set<LockerSizeType> lockerSize;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "locker_size_types", joinColumns = @JoinColumn(name = "locker_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "size_type", nullable = false, length = 20)
+    private Set<LockerSizeType> lockerSize = EnumSet.noneOf(LockerSizeType.class);
 
     @Column(length = 2000)
     private String detailInfo;
@@ -115,7 +119,9 @@ public class LockerDetailEntity {
         this.floor = values.floor();
         this.minPrice = values.minPrice();
         this.maxPrice = values.maxPrice();
-        this.lockerSize = values.lockerSize();
+        this.lockerSize = values.lockerSize() == null || values.lockerSize().isEmpty()
+            ? EnumSet.noneOf(LockerSizeType.class)
+            : EnumSet.copyOf(values.lockerSize());
         this.detailInfo = values.detailInfo();
         this.startTime = values.startTime();
         this.endTime = values.endTime();

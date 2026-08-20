@@ -12,12 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class LockerSearchDisplayQueryService {
 
@@ -25,6 +24,21 @@ public class LockerSearchDisplayQueryService {
     private final LockerPlaceLockerReader lockerPlaceLockerReader;
     private final FavoriteLockerReader favoriteLockerReader;
     private final CurrentRequestLanguage currentRequestLanguage;
+    private final int resultLimit;
+
+    public LockerSearchDisplayQueryService(
+        LockerSearchTargetQueryService lockerSearchTargetQueryService,
+        LockerPlaceLockerReader lockerPlaceLockerReader,
+        FavoriteLockerReader favoriteLockerReader,
+        CurrentRequestLanguage currentRequestLanguage,
+        @Value("${search.result-limit}") int resultLimit
+    ) {
+        this.lockerSearchTargetQueryService = lockerSearchTargetQueryService;
+        this.lockerPlaceLockerReader = lockerPlaceLockerReader;
+        this.favoriteLockerReader = favoriteLockerReader;
+        this.currentRequestLanguage = currentRequestLanguage;
+        this.resultLimit = resultLimit;
+    }
 
     public List<LockerSearchItemResult> getDisplayableItems(
         Long userId,
@@ -38,7 +52,8 @@ public class LockerSearchDisplayQueryService {
             latitude,
             longitude,
             keyword,
-            effectiveFilter
+            effectiveFilter,
+            resultLimit
         );
         if (targets.isEmpty()) {
             return List.of();

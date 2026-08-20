@@ -8,8 +8,8 @@ import com.zimdugo.locker.domain.place.LockerPlaceLockerReader;
 import com.zimdugo.locker.domain.search.LockerSearchFilter;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.projection.LockerPlaceLockerQueryProjection;
+import com.zimdugo.locker.infrastructure.projection.LockerSizeTypeQueryProjection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +40,12 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
 
         List<LockerPlaceLockerQueryProjection> projections =
             findProjections(latitude, longitude, placeIds, languageCode);
+        Map<Long, Set<LockerSizeType>> lockerSizesByLockerId = findLockerSizes(projections);
         Map<Long, List<LockerPlaceLocker>> lockersByPlace = new LinkedHashMap<>();
         for (LockerPlaceLockerQueryProjection projection : projections) {
             LockerType lockerType = LockerType.valueOf(projection.getLockerType());
             IndoorOutdoorType indoorOutdoorType = IndoorOutdoorType.valueOf(projection.getIndoorOutdoorType());
-            Set<LockerSizeType> lockerSizes = parseLockerSizes(projection.getLockerSize());
+            Set<LockerSizeType> lockerSizes = lockerSizesByLockerId.getOrDefault(projection.getLockerId(), Set.of());
             if (!filter.matches(lockerSizes, indoorOutdoorType, lockerType)) {
                 continue;
             }
@@ -90,12 +91,15 @@ public class LockerPlaceLockerReaderAdapter implements LockerPlaceLockerReader {
         );
     }
 
-    private Set<LockerSizeType> parseLockerSizes(String lockerSizes) {
-        if (lockerSizes == null || lockerSizes.isBlank()) {
-            return Set.of();
-        }
-        return Arrays.stream(lockerSizes.split(","))
-            .map(LockerSizeType::from)
-            .collect(Collectors.toUnmodifiableSet());
+    private Map<Long, Set<LockerSizeType>> findLockerSizes(List<LockerPlaceLockerQueryProjection> projections) {
+        return lockerRepository.findLockerSizeTypesByLockerIds(
+            projections.stream().map(LockerPlaceLockerQueryProjection::getLockerId).toList()
+        ).stream().collect(Collectors.groupingBy(
+            LockerSizeTypeQueryProjection::getLockerId,
+            Collectors.mapping(
+                projection -> LockerSizeType.from(projection.getSizeType()),
+                Collectors.toUnmodifiableSet()
+            )
+        ));
     }
 }

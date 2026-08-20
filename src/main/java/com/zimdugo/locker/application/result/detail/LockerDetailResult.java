@@ -3,6 +3,7 @@ package com.zimdugo.locker.application.result.detail;
 import com.zimdugo.locker.domain.detail.LockerDetail;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -27,6 +28,7 @@ public record LockerDetailResult(
     LocalTime startTime,
     LocalTime endTime,
     String imageUrl,
+    List<String> imageUrls,
     int accurateVoteCount,
     int inaccurateVoteCount,
     LocalDateTime createdAt,
@@ -37,6 +39,10 @@ public record LockerDetailResult(
     LockerRealtimeAvailabilityResult realtimeAvailability
 ) {
     public static LockerDetailResult from(LockerDetail detail) {
+        return resultBuilder(detail).build();
+    }
+
+    private static LockerDetailResultBuilder resultBuilder(LockerDetail detail) {
         return LockerDetailResult.builder()
             .lockerId(detail.lockerId())
             .lockerName(detail.lockerName())
@@ -56,6 +62,7 @@ public record LockerDetailResult(
             .startTime(detail.startTime())
             .endTime(detail.endTime())
             .imageUrl(detail.imageUrl())
+            .imageUrls(imageUrls(detail))
             .accurateVoteCount(detail.accurateVoteCount())
             .inaccurateVoteCount(detail.inaccurateVoteCount())
             .createdAt(detail.createdAt())
@@ -63,13 +70,16 @@ public record LockerDetailResult(
             .isFavorite(detail.isFavorite())
             .isAccurateVoted(detail.isAccurateVoted())
             .isInaccurateVoted(detail.isInaccurateVoted())
-            .realtimeAvailability(LockerRealtimeAvailabilityResult.from(detail.realtimeAvailability()))
-            .build();
+            .realtimeAvailability(LockerRealtimeAvailabilityResult.from(detail.realtimeAvailability()));
     }
 
     private static Set<String> lockerSizes(LockerDetail detail) {
         return detail.lockerSizes().stream()
             .map(Enum::name)
             .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private static List<String> imageUrls(LockerDetail detail) {
+        return detail.imageUrls() == null ? List.of() : detail.imageUrls();
     }
 }

@@ -53,3 +53,13 @@ src/main/resources/application-private.yaml
 /docs/superpowers/
 
 AGENTS.md
+/scripts/db/05-locker-realtime-availability.sql
+/scripts/db/06-seed-seoul-metro-locker-mappings.sql
+/scripts/db/07-seed-seoul-metro-lockers.sql
+/outputs/seoul-metro-api-only-lockers.md
+/scripts/db/reference/seoul-metro-locker-mappings-before-split.sql
+/scripts/db/reference/seoul-metro-locker-translations.tsv
+/scripts/db/reference/seoul-metro-lockers-2026-08-10.csv
+/scripts/db/reference/seoul-metro-seeded-place-translations.tsv
+/scripts/db/reference/seoul-metro-station-place-translations.tsv
+/src/test/java/com/zimdugo/locker/infrastructure/persistence/SeoulMetroLockerSeedScriptTest.java
