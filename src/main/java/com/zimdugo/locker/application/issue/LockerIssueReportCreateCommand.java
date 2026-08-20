@@ -6,13 +6,13 @@ import com.zimdugo.locker.domain.issue.LockerIssueReportType;
 
 public record LockerIssueReportCreateCommand(
     Long lockerId,
-    LockerIssueReportType reportType,
+    String reportType,
     String detail
 ) {
     public LockerIssueReportCreateInfo toCreateInfo() {
         return new LockerIssueReportCreateInfo(
             lockerId,
-            reportType,
+            LockerIssueReportType.valueOf(reportType),
             detail,
             LockerIssueReportStatus.PENDING
         );

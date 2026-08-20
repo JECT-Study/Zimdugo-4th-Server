@@ -1,6 +1,5 @@
 package com.zimdugo.locker.entrypoint.dto.request.issue;
 
-import com.zimdugo.locker.domain.issue.LockerIssueReportType;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -34,7 +33,7 @@ class LockerIssueReportCreateRequestTest {
     @DisplayName("상세 내용은 없어도 된다")
     void detailIsOptional() {
         LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(
-            LockerIssueReportType.CATEGORY_ERROR,
+            "CATEGORY_ERROR",
             null
         );
 
@@ -47,7 +46,7 @@ class LockerIssueReportCreateRequestTest {
     @DisplayName("상세 내용은 최대 1000자까지 허용한다")
     void detailMaxLength() {
         LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(
-            LockerIssueReportType.OTHER,
+            "OTHER",
             "a".repeat(1001)
         );
 
@@ -59,15 +58,26 @@ class LockerIssueReportCreateRequestTest {
     @Test
     @DisplayName("명세에 정의된 신고 유형을 허용한다")
     void supportsSpecifiedReportTypes() {
-        assertThat(LockerIssueReportType.values()).containsExactly(
-            LockerIssueReportType.PRICE_ERROR,
-            LockerIssueReportType.NO_LONGER_OPERATING,
-            LockerIssueReportType.SIZE_ERROR,
-            LockerIssueReportType.OPERATING_HOURS_ERROR,
-            LockerIssueReportType.WRONG_LOCATION,
-            LockerIssueReportType.IMAGE_ERROR,
-            LockerIssueReportType.CATEGORY_ERROR,
-            LockerIssueReportType.OTHER
+        LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(
+            "OPERATING_HOURS_ERROR",
+            "운영 시간이 실제와 다릅니다."
         );
+
+        Set<ConstraintViolation<LockerIssueReportCreateRequest>> violations = validator.validate(request);
+
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    @DisplayName("명세에 없는 신고 유형은 허용하지 않는다")
+    void rejectsUnsupportedReportTypes() {
+        LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(
+            "INACCURATE_INFO",
+            "운영 시간이 실제와 다릅니다."
+        );
+
+        Set<ConstraintViolation<LockerIssueReportCreateRequest>> violations = validator.validate(request);
+
+        assertThat(violations).isNotEmpty();
     }
 }

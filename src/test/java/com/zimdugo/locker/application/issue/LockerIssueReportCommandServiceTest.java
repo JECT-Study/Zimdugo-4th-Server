@@ -37,7 +37,7 @@ class LockerIssueReportCommandServiceTest {
     void createIssueReport() {
         LockerIssueReportCreateCommand command = new LockerIssueReportCreateCommand(
             1L,
-            LockerIssueReportType.OPERATING_HOURS_ERROR,
+            "OPERATING_HOURS_ERROR",
             "운영 시간이 실제와 다릅니다."
         );
         LocalDateTime createdAt = LocalDateTime.of(2026, 8, 19, 20, 30, 15);
@@ -56,9 +56,9 @@ class LockerIssueReportCommandServiceTest {
 
         assertThat(result.reportId()).isEqualTo(10L);
         assertThat(result.lockerId()).isEqualTo(1L);
-        assertThat(result.reportType()).isEqualTo(LockerIssueReportType.OPERATING_HOURS_ERROR);
+        assertThat(result.reportType()).isEqualTo("OPERATING_HOURS_ERROR");
         assertThat(result.detail()).isEqualTo("운영 시간이 실제와 다릅니다.");
-        assertThat(result.status()).isEqualTo(LockerIssueReportStatus.PENDING);
+        assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.createdAt()).isEqualTo(createdAt);
         verify(lockerIssueReportStore).create(command.toCreateInfo());
     }
@@ -68,7 +68,7 @@ class LockerIssueReportCommandServiceTest {
     void failWhenLockerNotFound() {
         LockerIssueReportCreateCommand command = new LockerIssueReportCreateCommand(
             999L,
-            LockerIssueReportType.WRONG_LOCATION,
+            "WRONG_LOCATION",
             null
         );
         given(lockerReader.existsById(999L)).willReturn(false);
