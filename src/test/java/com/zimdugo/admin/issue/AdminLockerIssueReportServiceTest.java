@@ -53,11 +53,18 @@ class AdminLockerIssueReportServiceTest {
         given(lockerRepository.findAllById(List.of(1L))).willReturn(List.of(locker));
 
         List<AdminLockerIssueReportSummaryResult> result =
-            adminLockerIssueReportService.getReports(LockerIssueReportStatus.PENDING);
+            adminLockerIssueReportService.getReports(LockerIssueReportStatus.PENDING.name());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).lockerName()).isEqualTo("서울역 보관함");
         assertThat(result.get(0).status()).isEqualTo(LockerIssueReportStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 상태 필터는 예외가 발생한다")
+    void getReportsWithInvalidStatus() {
+        assertThatThrownBy(() -> adminLockerIssueReportService.getReports("INVALID"))
+            .isInstanceOf(BusinessException.class);
     }
 
     @Test

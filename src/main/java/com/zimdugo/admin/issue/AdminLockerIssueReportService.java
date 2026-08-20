@@ -1,6 +1,7 @@
 package com.zimdugo.admin.issue;
 
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportDetailResult;
+import com.zimdugo.admin.issue.dto.AdminLockerIssueReportStatusOption;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportSummaryResult;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
@@ -24,7 +25,14 @@ public class AdminLockerIssueReportService {
     private final LockerIssueReportRepository lockerIssueReportRepository;
     private final LockerRepository lockerRepository;
 
-    public List<AdminLockerIssueReportSummaryResult> getReports(LockerIssueReportStatus status) {
+    public List<AdminLockerIssueReportStatusOption> getStatusOptions() {
+        return java.util.Arrays.stream(LockerIssueReportStatus.values())
+            .map(status -> new AdminLockerIssueReportStatusOption(status.name(), status.displayName()))
+            .toList();
+    }
+
+    public List<AdminLockerIssueReportSummaryResult> getReports(String statusCode) {
+        LockerIssueReportStatus status = parseStatus(statusCode);
         List<LockerIssueReportEntity> reports = status == null
             ? lockerIssueReportRepository.findAllByOrderByCreatedAtDesc()
             : lockerIssueReportRepository.findAllByStatusOrderByCreatedAtDesc(status);
@@ -53,6 +61,17 @@ public class AdminLockerIssueReportService {
     @Transactional
     public void reject(Long reportId) {
         getEntity(reportId).reject();
+    }
+
+    private LockerIssueReportStatus parseStatus(String statusCode) {
+        if (statusCode == null || statusCode.isBlank()) {
+            return null;
+        }
+        try {
+            return LockerIssueReportStatus.valueOf(statusCode);
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException(ErrorCode.INVALID_PARAMETER_FORMAT);
+        }
     }
 
     private LockerIssueReportEntity getEntity(Long reportId) {

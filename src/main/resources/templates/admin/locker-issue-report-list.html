@@ -51,9 +51,9 @@
             </a>
             <a class="btn btn-secondary btn-sm"
                th:each="status : ${statuses}"
-               th:classappend="${selectedStatus == status} ? ' btn-primary'"
-               th:href="@{/admin/locker-issue-reports(status=${status.name()})}"
-               th:text="${status.displayName()}">
+               th:classappend="${selectedStatus == status.code} ? ' btn-primary'"
+               th:href="@{/admin/locker-issue-reports(status=${status.code})}"
+               th:text="${status.displayName}">
                 접수
             </a>
         </div>

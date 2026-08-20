@@ -2,7 +2,6 @@ package com.zimdugo.admin.entrypoint;
 
 import com.zimdugo.admin.issue.AdminLockerIssueReportService;
 import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,12 +21,12 @@ public class AdminLockerIssueReportController {
 
     @GetMapping
     public String list(
-        @RequestParam(name = "status", required = false) LockerIssueReportStatus status,
+        @RequestParam(name = "status", required = false) String status,
         Model model
     ) {
         model.addAttribute("reports", adminLockerIssueReportService.getReports(status));
         model.addAttribute("selectedStatus", status);
-        model.addAttribute("statuses", LockerIssueReportStatus.values());
+        model.addAttribute("statuses", adminLockerIssueReportService.getStatusOptions());
         model.addAttribute("activeMenu", "locker-issue-reports");
         return "admin/locker-issue-report-list";
     }
