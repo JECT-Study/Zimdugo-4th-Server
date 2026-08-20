@@ -2,6 +2,8 @@ package com.zimdugo.locker.infrastructure.persistence;
 
 import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
 import com.zimdugo.locker.domain.issue.LockerIssueReportType;
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -71,5 +73,21 @@ public class LockerIssueReportEntity {
     @PreUpdate
     void preUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public void resolve() {
+        validatePending();
+        this.status = LockerIssueReportStatus.RESOLVED;
+    }
+
+    public void reject() {
+        validatePending();
+        this.status = LockerIssueReportStatus.REJECTED;
+    }
+
+    private void validatePending() {
+        if (status != LockerIssueReportStatus.PENDING) {
+            throw new BusinessException(ErrorCode.LOCKER_ISSUE_REPORT_ALREADY_REVIEWED);
+        }
     }
 }
