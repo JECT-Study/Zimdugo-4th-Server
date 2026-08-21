@@ -65,7 +65,8 @@
                     <th>대상 보관함</th>
                     <th style="width: 180px;">신고 유형</th>
                     <th style="width: 130px;">상태</th>
-                    <th style="width: 160px;">등록일시</th>
+                    <th style="width: 160px;">접수일시</th>
+                    <th style="width: 160px;">처리일시</th>
                 </tr>
             </thead>
             <tbody>
@@ -96,6 +97,10 @@
                     </td>
                     <td class="muted" th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}">
                         2026-08-20 23:00
+                    </td>
+                    <td class="muted"
+                        th:text="${report.reviewedAt != null} ? ${#temporals.format(report.reviewedAt, 'yyyy-MM-dd HH:mm')} : '-'">
+                        2026-08-20 23:30
                     </td>
                 </tr>
             </tbody>

@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -60,13 +61,16 @@ public interface LockerApi {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "접수 성공"),
         @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
-        @ApiResponse(responseCode = "404", description = "존재하지 않는 보관함")
+        @ApiResponse(responseCode = "404", description = "존재하지 않는 보관함"),
+        @ApiResponse(responseCode = "409", description = "짧은 시간 내 동일 보관함 중복 신고"),
+        @ApiResponse(responseCode = "429", description = "짧은 시간 내 과도한 신고 시도")
     })
     @SecurityRequirements
     @PostMapping("/lockers/{lockerId}/issue-reports")
     ResponseEntity<RestResponse<LockerIssueReportCreateResponse>> createLockerIssueReport(
         @PathVariable @Positive Long lockerId,
-        @Valid @RequestBody LockerIssueReportCreateRequest request
+        @Valid @RequestBody LockerIssueReportCreateRequest request,
+        HttpServletRequest servletRequest
     );
 
     @Operation(

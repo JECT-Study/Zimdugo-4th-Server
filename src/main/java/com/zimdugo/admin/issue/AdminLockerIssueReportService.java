@@ -24,6 +24,7 @@ public class AdminLockerIssueReportService {
 
     private final LockerIssueReportRepository lockerIssueReportRepository;
     private final LockerRepository lockerRepository;
+    private static final int MAX_REVIEW_MEMO_LENGTH = 1000;
 
     public List<AdminLockerIssueReportStatusOption> getStatusOptions() {
         return java.util.Arrays.stream(LockerIssueReportStatus.values())
@@ -48,19 +49,18 @@ public class AdminLockerIssueReportService {
 
     public AdminLockerIssueReportDetailResult getReport(Long reportId) {
         LockerIssueReportEntity report = getEntity(reportId);
-        LockerEntity locker = lockerRepository.findById(report.getLockerId())
-            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
+        LockerEntity locker = lockerRepository.findById(report.getLockerId()).orElse(null);
         return toDetailResult(report, locker);
     }
 
     @Transactional
-    public void resolve(Long reportId) {
-        getEntity(reportId).resolve();
+    public void resolve(Long reportId, String reviewMemo, String reviewer) {
+        getEntity(reportId).resolve(reviewer, validateReviewMemo(reviewMemo));
     }
 
     @Transactional
-    public void reject(Long reportId) {
-        getEntity(reportId).reject();
+    public void reject(Long reportId, String reviewMemo, String reviewer) {
+        getEntity(reportId).reject(reviewer, validateReviewMemo(reviewMemo));
     }
 
     private LockerIssueReportStatus parseStatus(String statusCode) {
@@ -91,7 +91,8 @@ public class AdminLockerIssueReportService {
             report.getReportType(),
             report.getDetail(),
             report.getStatus(),
-            report.getCreatedAt()
+            report.getCreatedAt(),
+            report.getReviewedAt()
         );
     }
 
@@ -102,13 +103,28 @@ public class AdminLockerIssueReportService {
         return new AdminLockerIssueReportDetailResult(
             report.getId(),
             report.getLockerId(),
-            locker.getName(),
-            locker.getRoadAddress(),
+            locker == null ? "삭제된 보관함" : locker.getName(),
+            locker == null ? null : locker.getRoadAddress(),
             report.getReportType(),
             report.getDetail(),
             report.getStatus(),
             report.getCreatedAt(),
-            report.getUpdatedAt()
+            report.getUpdatedAt(),
+            report.getReviewedBy(),
+            report.getReviewNote(),
+            report.getReviewedAt(),
+            locker == null
         );
+    }
+
+    private String validateReviewMemo(String reviewMemo) {
+        if (reviewMemo == null) {
+            throw new BusinessException(ErrorCode.LOCKER_ISSUE_REPORT_REVIEW_MEMO_INVALID);
+        }
+        String normalizedReviewMemo = reviewMemo.trim();
+        if (normalizedReviewMemo.isEmpty() || normalizedReviewMemo.length() > MAX_REVIEW_MEMO_LENGTH) {
+            throw new BusinessException(ErrorCode.LOCKER_ISSUE_REPORT_REVIEW_MEMO_INVALID);
+        }
+        return normalizedReviewMemo;
     }
 }

@@ -137,7 +137,7 @@ class AdminLockerSummaryRepositoryTest {
     }
 
     @Test
-    void dependentRowsCanBeDeletedBeforePermanentlyDeletingLocker() {
+    void softDeleteHidesLockerFromRepositoryQueries() {
         LockerEntity locker = lockerRepository.save(
             new LockerEntity("삭제 대상", "서울 중구", 37.55, 126.97)
         );
@@ -179,15 +179,18 @@ class AdminLockerSummaryRepositoryTest {
         entityManager.clear();
         LockerEntity storedLocker = lockerRepository.findById(lockerId).orElseThrow();
 
-        lockerAliasRepository.deleteByLockerId(lockerId);
-        lockerTranslationRepository.deleteByLockerId(lockerId);
-        favoriteLockerRepository.deleteByLockerId(lockerId);
-        lockerVoteRepository.deleteByLockerId(lockerId);
-        lockerDetailRepository.deleteByLockerId(lockerId);
         lockerRepository.delete(storedLocker);
         entityManager.flush();
 
         assertThat(lockerRepository.findById(lockerId)).isEmpty();
+        assertThat(lockerRepository.findAdminSummaries(PageRequest.of(0, 20)).getContent()).isEmpty();
+        assertThat(lockerRepository.findAdminPlaceGroups(PageRequest.of(0, 20)).getContent()).isEmpty();
+        Number deletedRowCount = (Number) entityManager.createNativeQuery(
+            "SELECT COUNT(*) FROM lockers WHERE id = :lockerId AND deleted_at IS NOT NULL"
+        )
+            .setParameter("lockerId", lockerId)
+            .getSingleResult();
+        assertThat(deletedRowCount.longValue()).isEqualTo(1L);
     }
 
     private LockerEntity locker(String name, PlaceEntity place) {

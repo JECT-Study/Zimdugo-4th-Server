@@ -62,6 +62,7 @@ class VisitorInterceptorTest {
         )).thenReturn(true);
 
         assertThat(interceptor.preHandle(request, response, new Object())).isTrue();
+        assertThat(request.getAttribute("visitorId")).isEqualTo(VISITOR_ID);
 
         verify(eventPublisher).publishEvent(any(VisitorAccessEvent.class));
     }

@@ -7,7 +7,6 @@ public record LockerIssueReportCreateResult(
     Long reportId,
     Long lockerId,
     String reportType,
-    String detail,
     String status,
     LocalDateTime createdAt
 ) {
@@ -16,7 +15,6 @@ public record LockerIssueReportCreateResult(
             report.id(),
             report.lockerId(),
             report.reportType().name(),
-            report.detail(),
             report.status().name(),
             report.createdAt()
         );

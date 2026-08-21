@@ -22,6 +22,7 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
             JOIN lockers l ON l.id = fl.locker_id
             JOIN locker_details ld ON ld.locker_id = l.id
             WHERE fl.user_id = :userId
+              AND l.deleted_at IS NULL
               AND l.publication_status = 'ACTIVE'
             """,
         nativeQuery = true
@@ -73,6 +74,7 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
             JOIN locker_details ld ON ld.locker_id = l.id
             CROSS JOIN target
             WHERE fl.user_id = :userId
+              AND l.deleted_at IS NULL
               AND l.publication_status = 'ACTIVE'
             ORDER BY fl.created_at DESC, fl.id DESC
             """,
@@ -82,6 +84,7 @@ public interface FavoriteLockerRepository extends JpaRepository<FavoriteLockerEn
             JOIN lockers l ON l.id = fl.locker_id
             JOIN locker_details ld ON ld.locker_id = l.id
             WHERE fl.user_id = :userId
+              AND l.deleted_at IS NULL
               AND l.publication_status = 'ACTIVE'
             """,
         nativeQuery = true

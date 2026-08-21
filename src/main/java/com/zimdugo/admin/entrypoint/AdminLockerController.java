@@ -4,8 +4,8 @@ import com.zimdugo.admin.application.AdminLockerImageStorage;
 import com.zimdugo.admin.i18n.LockerContentI18nAdminService;
 import com.zimdugo.admin.locker.AdminLockerService;
 import com.zimdugo.admin.locker.dto.AdminLockerCommand;
+import com.zimdugo.admin.locker.dto.AdminLockerDeleteResult;
 import com.zimdugo.admin.locker.dto.AdminLockerForm;
-import com.zimdugo.admin.locker.dto.AdminLockerDetailResult;
 import com.zimdugo.admin.locker.dto.AdminLockerTranslationForm;
 import com.zimdugo.admin.translation.dto.AdminTranslationDraftResult;
 import com.zimdugo.common.i18n.SupportedLanguage;
@@ -60,15 +60,25 @@ public class AdminLockerController {
     }
 
     @GetMapping("/{id}")
-    public String detail(@PathVariable(name = "id") Long id, Model model) {
+    public String detail(
+        @PathVariable(name = "id") Long id,
+        @RequestParam(name = "returnTo", required = false) String returnTo,
+        Model model
+    ) {
         model.addAttribute("locker", adminLockerService.getLocker(id));
+        model.addAttribute("returnTo", sanitizeReturnTo(returnTo));
         return "admin/locker-detail";
     }
 
     @GetMapping("/{id}/edit")
-    public String updateForm(@PathVariable(name = "id") Long id, Model model) {
+    public String updateForm(
+        @PathVariable(name = "id") Long id,
+        @RequestParam(name = "returnTo", required = false) String returnTo,
+        Model model
+    ) {
         model.addAttribute("form", AdminLockerForm.from(adminLockerService.getLocker(id)));
         model.addAttribute("lockerId", id);
+        model.addAttribute("returnTo", sanitizeReturnTo(returnTo));
         return "admin/locker-form";
     }
 
@@ -76,11 +86,13 @@ public class AdminLockerController {
     public String update(
         @PathVariable(name = "id") Long id,
         @ModelAttribute("form") @Valid AdminLockerForm form,
+        @RequestParam(name = "returnTo", required = false) String returnTo,
         BindingResult bindingResult,
         Model model
     ) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("lockerId", id);
+            model.addAttribute("returnTo", sanitizeReturnTo(returnTo));
             return "admin/locker-form";
         }
 
@@ -91,6 +103,7 @@ public class AdminLockerController {
         } catch (BusinessException exception) {
             bindingResult.reject("adminLocker", exception.getMessage());
             model.addAttribute("lockerId", id);
+            model.addAttribute("returnTo", sanitizeReturnTo(returnTo));
             return "admin/locker-form";
         }
     }
@@ -98,12 +111,15 @@ public class AdminLockerController {
     @PostMapping("/{id}/delete")
     public String delete(
         @PathVariable(name = "id") Long id,
+        @RequestParam(name = "returnTo", required = false) String returnTo,
         RedirectAttributes redirectAttributes
     ) {
-        AdminLockerDetailResult locker = adminLockerService.getLocker(id);
-        adminLockerService.deleteLocker(id);
-        imageStorage.deleteAll(locker.imageUrls());
-        redirectAttributes.addFlashAttribute("successMessage", "보관함을 삭제했습니다.");
+        AdminLockerDeleteResult result = adminLockerService.deleteLocker(id);
+        redirectAttributes.addFlashAttribute("successMessage", result.message());
+        String sanitizedReturnTo = sanitizeReturnTo(returnTo);
+        if (hasText(sanitizedReturnTo)) {
+            return "redirect:" + sanitizedReturnTo;
+        }
         return "redirect:/admin/lockers";
     }
 
@@ -183,5 +199,19 @@ public class AdminLockerController {
 
     private <T> List<T> orEmpty(List<T> values) {
         return values == null ? List.of() : values;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private String sanitizeReturnTo(String returnTo) {
+        if (!hasText(returnTo)) {
+            return null;
+        }
+        if (returnTo.startsWith("/admin/locker-issue-reports/")) {
+            return returnTo;
+        }
+        return null;
     }
 }

@@ -2,6 +2,7 @@ package com.zimdugo.admin.entrypoint;
 
 import com.zimdugo.admin.issue.AdminLockerIssueReportService;
 import com.zimdugo.core.exception.BusinessException;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -41,10 +42,12 @@ public class AdminLockerIssueReportController {
     @PostMapping("/{id}/resolve")
     public String resolve(
         @PathVariable(name = "id") Long id,
+        @RequestParam(name = "reviewMemo") String reviewMemo,
+        Principal principal,
         RedirectAttributes redirectAttributes
     ) {
         try {
-            adminLockerIssueReportService.resolve(id);
+            adminLockerIssueReportService.resolve(id, reviewMemo, principal.getName());
             redirectAttributes.addFlashAttribute("successMessage", "신고를 처리 완료했습니다.");
         } catch (BusinessException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
@@ -55,10 +58,12 @@ public class AdminLockerIssueReportController {
     @PostMapping("/{id}/reject")
     public String reject(
         @PathVariable(name = "id") Long id,
+        @RequestParam(name = "reviewMemo") String reviewMemo,
+        Principal principal,
         RedirectAttributes redirectAttributes
     ) {
         try {
-            adminLockerIssueReportService.reject(id);
+            adminLockerIssueReportService.reject(id, reviewMemo, principal.getName());
             redirectAttributes.addFlashAttribute("successMessage", "신고를 반려 처리했습니다.");
         } catch (BusinessException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());

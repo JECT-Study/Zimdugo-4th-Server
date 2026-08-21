@@ -12,6 +12,7 @@ public record AdminLockerIssueReportSummaryResult(
     LockerIssueReportType reportType,
     String detail,
     LockerIssueReportStatus status,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    LocalDateTime reviewedAt
 ) {
 }

@@ -12,19 +12,44 @@
         .stack { display: grid; gap: 1rem; }
         .muted { color: #737373; font-size: .82rem; }
         .detail-actions { display: flex; gap: .65rem; justify-content: flex-end; margin-top: 1rem; }
+        .alert-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .form-input {
+            width: 100%;
+            border: 1px solid #d4d4d4;
+            border-radius: 6px;
+            padding: .65rem .75rem;
+            font: inherit;
+            font-size: .85rem;
+            resize: vertical;
+        }
     </style>
+
+    <th:block th:with="returnTo=@{/admin/locker-issue-reports/{id}(id=${report.id})}">
 
     <div class="page-header">
         <div>
             <div class="type-label">LOCKER ISSUE REPORT REVIEW</div>
             <h1 th:text="'신고 #' + ${report.id} + ' 상세'">신고 상세</h1>
         </div>
-        <a th:href="@{/admin/locker-issue-reports}" class="btn btn-secondary">
-            <i class="fa-solid fa-arrow-left"></i> 목록
-        </a>
+        <div style="display:flex; gap:.65rem; flex-wrap:wrap;">
+            <a th:if="${!report.lockerDeleted}"
+               th:href="@{/admin/lockers/{id}(id=${report.lockerId}, returnTo=${returnTo})}"
+               class="btn btn-secondary">
+                대상 보관함 보기
+            </a>
+            <a th:if="${!report.lockerDeleted}"
+               th:href="@{/admin/lockers/{id}/edit(id=${report.lockerId}, returnTo=${returnTo})}"
+               class="btn btn-secondary">
+                보관함 수정
+            </a>
+            <a th:href="@{/admin/locker-issue-reports}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> 목록
+            </a>
+        </div>
     </div>
 
     <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
     <div class="stack">
         <section class="card">
@@ -44,11 +69,25 @@
                 <dt>상세 내용</dt><dd th:text="${report.detail != null and !report.detail.isBlank()} ? ${report.detail} : '상세 내용 없음'">상세 내용</dd>
                 <dt>접수 일시</dt><dd th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2026-08-20 23:00:00</dd>
                 <dt>수정 일시</dt><dd th:text="${#temporals.format(report.updatedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-08-20 23:00:00</dd>
+                <th:block th:if="${report.reviewedAt != null}">
+                    <dt>처리자</dt><dd th:text="${report.reviewedBy}">admin</dd>
+                    <dt>처리 일시</dt><dd th:text="${#temporals.format(report.reviewedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-08-20 23:00:00</dd>
+                    <dt>처리 메모</dt><dd th:text="${report.reviewNote}">처리 메모</dd>
+                </th:block>
             </dl>
             <div class="detail-actions" th:if="${report.status.name() == 'PENDING'}">
                 <form th:action="@{/admin/locker-issue-reports/{id}/reject(id=${report.id})}"
                       method="post"
                       onsubmit="return confirm('이 신고를 반려 처리할까요?');">
+                    <label class="muted" for="rejectReviewMemo" style="display:block; margin-bottom:.4rem;">반려 메모</label>
+                    <textarea id="rejectReviewMemo"
+                              name="reviewMemo"
+                              class="form-input"
+                              rows="4"
+                              maxlength="1000"
+                              required
+                              placeholder="중복, 정보 부족, 확인 결과 등 반려 사유를 입력해 주세요."
+                              style="min-width: 320px; margin-bottom:.75rem;"></textarea>
                     <button type="submit" class="btn btn-danger">
                         <i class="fa-solid fa-xmark"></i> 반려
                     </button>
@@ -56,6 +95,15 @@
                 <form th:action="@{/admin/locker-issue-reports/{id}/resolve(id=${report.id})}"
                       method="post"
                       onsubmit="return confirm('이 신고를 처리 완료할까요?');">
+                    <label class="muted" for="resolveReviewMemo" style="display:block; margin-bottom:.4rem;">처리 메모</label>
+                    <textarea id="resolveReviewMemo"
+                              name="reviewMemo"
+                              class="form-input"
+                              rows="4"
+                              maxlength="1000"
+                              required
+                              placeholder="어떤 내용을 확인하고 어떤 조치를 했는지 입력해 주세요."
+                              style="min-width: 320px; margin-bottom:.75rem;"></textarea>
                     <button type="submit" class="btn btn-primary">
                         <i class="fa-solid fa-check"></i> 처리 완료
                     </button>
@@ -66,6 +114,7 @@
             </p>
         </section>
     </div>
+    </th:block>
 </main>
 </body>
 </html>

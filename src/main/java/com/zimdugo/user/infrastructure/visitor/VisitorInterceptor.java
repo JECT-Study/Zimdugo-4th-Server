@@ -25,6 +25,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class VisitorInterceptor implements HandlerInterceptor {
 
     private static final String VISITOR_COOKIE_NAME = "visitorId";
+    private static final String VISITOR_ID_ATTRIBUTE = "visitorId";
     private static final Duration COOKIE_MAX_AGE = Duration.ofDays(365);
     private static final Duration VISIT_CACHE_TTL = Duration.ofDays(1);
 
@@ -40,6 +41,7 @@ public class VisitorInterceptor implements HandlerInterceptor {
         Object handler
     ) {
         String visitorId = getOrCreateVisitorId(request, response);
+        request.setAttribute(VISITOR_ID_ATTRIBUTE, visitorId);
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDate date = now.toLocalDate();
 

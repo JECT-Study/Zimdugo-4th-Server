@@ -29,10 +29,13 @@
             <h1 th:text="${locker.name()}">보관함 상세</h1>
         </div>
         <div class="toolbar">
-            <a th:href="@{/admin/lockers}" class="btn btn-secondary">
+            <a th:if="${returnTo != null and !returnTo.isBlank()}" th:href="${returnTo}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> 신고 상세로
+            </a>
+            <a th:unless="${returnTo != null and !returnTo.isBlank()}" th:href="@{/admin/lockers}" class="btn btn-secondary">
                 <i class="fa-solid fa-arrow-left"></i> 목록
             </a>
-            <a th:href="@{/admin/lockers/{id}/edit(id=${locker.id()})}" class="btn btn-secondary">
+            <a th:href="@{/admin/lockers/{id}/edit(id=${locker.id()}, returnTo=${returnTo})}" class="btn btn-secondary">
                 <i class="fa-solid fa-pen"></i> 수정
             </a>
             <a th:if="${locker.publicationStatus().name() != 'ACTIVE'}"
@@ -43,6 +46,7 @@
             <form th:action="@{/admin/lockers/{id}/delete(id=${locker.id()})}"
                   method="post"
                   onsubmit="return confirm('정말 삭제하시겠습니까? 삭제한 보관함은 복구할 수 없습니다.');">
+                <input type="hidden" name="returnTo" th:value="${returnTo}">
                 <button type="submit" class="btn btn-danger">
                     <i class="fa-solid fa-trash-can"></i> 삭제
                 </button>

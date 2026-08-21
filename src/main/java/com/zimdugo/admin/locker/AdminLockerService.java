@@ -2,6 +2,7 @@ package com.zimdugo.admin.locker;
 
 import com.zimdugo.admin.i18n.LockerContentI18nChangedEvent;
 import com.zimdugo.admin.locker.dto.AdminLockerCommand;
+import com.zimdugo.admin.locker.dto.AdminLockerDeleteResult;
 import com.zimdugo.admin.locker.dto.AdminLockerDetailResult;
 import com.zimdugo.admin.locker.dto.AdminLockerDisplay;
 import com.zimdugo.admin.locker.dto.AdminLockerOption;
@@ -24,6 +25,7 @@ import com.zimdugo.locker.infrastructure.persistence.LockerDetailEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailUpdateValues;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationRepository;
@@ -61,6 +63,7 @@ public class AdminLockerService {
     private final LockerTranslationRepository lockerTranslationRepository;
     private final FavoriteLockerRepository favoriteLockerRepository;
     private final LockerVoteRepository lockerVoteRepository;
+    private final LockerIssueReportRepository lockerIssueReportRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final LockerReportTranslationDraftGenerator draftGenerator;
 
@@ -144,15 +147,11 @@ public class AdminLockerService {
     }
 
     @Transactional
-    public void deleteLocker(Long id) {
+    public AdminLockerDeleteResult deleteLocker(Long id) {
         LockerEntity locker = getLockerEntity(id);
-        lockerAliasRepository.deleteByLockerId(id);
-        lockerTranslationRepository.deleteByLockerId(id);
-        favoriteLockerRepository.deleteByLockerId(id);
-        lockerVoteRepository.deleteByLockerId(id);
-        lockerDetailRepository.deleteByLockerId(id);
         lockerRepository.delete(locker);
         publishChanged(id);
+        return AdminLockerDeleteResult.softDeletedResult();
     }
 
     @Transactional
