@@ -149,19 +149,9 @@ public class AdminLockerService {
     @Transactional
     public AdminLockerDeleteResult deleteLocker(Long id) {
         LockerEntity locker = getLockerEntity(id);
-        if (lockerIssueReportRepository.existsByLockerId(id)) {
-            locker.deactivate();
-            publishChanged(id);
-            return AdminLockerDeleteResult.deactivatedWithIssueReportsResult();
-        }
-        lockerAliasRepository.deleteByLockerId(id);
-        lockerTranslationRepository.deleteByLockerId(id);
-        favoriteLockerRepository.deleteByLockerId(id);
-        lockerVoteRepository.deleteByLockerId(id);
-        lockerDetailRepository.deleteByLockerId(id);
         lockerRepository.delete(locker);
         publishChanged(id);
-        return AdminLockerDeleteResult.deletedResult();
+        return AdminLockerDeleteResult.softDeletedResult();
     }
 
     @Transactional

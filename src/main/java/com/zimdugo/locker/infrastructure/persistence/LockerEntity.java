@@ -15,15 +15,20 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.locationtech.jts.geom.Point;
 
 @Entity
 @Table(name = "lockers")
+@SQLDelete(sql = "UPDATE lockers SET deleted_at = NOW(), publication_status = 'DRAFT' WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LockerEntity {
@@ -54,6 +59,9 @@ public class LockerEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PublicationStatus publicationStatus = PublicationStatus.ACTIVE;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "locker", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("listOrder ASC")

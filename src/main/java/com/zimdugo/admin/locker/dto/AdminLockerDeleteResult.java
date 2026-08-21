@@ -1,17 +1,13 @@
 package com.zimdugo.admin.locker.dto;
 
 public record AdminLockerDeleteResult(
-    boolean hardDeleted,
+    boolean softDeleted,
     String message
 ) {
-    public static AdminLockerDeleteResult deletedResult() {
-        return new AdminLockerDeleteResult(true, "보관함을 삭제했습니다.");
-    }
-
-    public static AdminLockerDeleteResult deactivatedWithIssueReportsResult() {
+    public static AdminLockerDeleteResult softDeletedResult() {
         return new AdminLockerDeleteResult(
-            false,
-            "신고 이력이 있는 보관함은 삭제하지 않고 비공개 처리했습니다."
+            true,
+            "보관함을 삭제 처리했습니다. 신고 이력 보존을 위해 데이터는 soft delete로 유지됩니다."
         );
     }
 }

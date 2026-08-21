@@ -22,5 +22,8 @@ ALTER TABLE locker_issue_reports
 ALTER TABLE locker_issue_reports
     ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;
 
+ALTER TABLE lockers
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
+
 CREATE INDEX IF NOT EXISTS idx_locker_issue_reports_locker_id
     ON locker_issue_reports (locker_id);
