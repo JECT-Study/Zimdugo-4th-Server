@@ -57,14 +57,18 @@ class LockerIssueReportCommandServiceTest {
         given(lockerReader.existsById(1L)).willReturn(true);
         given(lockerIssueReportStore.create(command.toCreateInfo())).willReturn(savedReport);
 
-        LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(command, "visitor-1");
+        LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(
+            command,
+            "visitor-1",
+            "127.0.0.1"
+        );
 
         assertThat(result.reportId()).isEqualTo(10L);
         assertThat(result.lockerId()).isEqualTo(1L);
         assertThat(result.reportType()).isEqualTo("OPERATING_HOURS_ERROR");
         assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.createdAt()).isEqualTo(createdAt);
-        verify(lockerIssueReportDuplicateGuard).checkAndReserve(1L, "visitor-1");
+        verify(lockerIssueReportDuplicateGuard).checkAndReserve(1L, "visitor-1", "127.0.0.1");
         verify(lockerIssueReportStore).create(command.toCreateInfo());
     }
 
@@ -78,7 +82,7 @@ class LockerIssueReportCommandServiceTest {
         );
         given(lockerReader.existsById(999L)).willReturn(false);
 
-        assertThatThrownBy(() -> lockerIssueReportCommandService.create(command, "visitor-1"))
+        assertThatThrownBy(() -> lockerIssueReportCommandService.create(command, "visitor-1", "127.0.0.1"))
             .isInstanceOf(BusinessException.class);
     }
 
@@ -95,9 +99,9 @@ class LockerIssueReportCommandServiceTest {
             com.zimdugo.core.exception.ErrorCode.LOCKER_ISSUE_REPORT_DUPLICATED
         ))
             .given(lockerIssueReportDuplicateGuard)
-            .checkAndReserve(1L, "visitor-1");
+            .checkAndReserve(1L, "visitor-1", "127.0.0.1");
 
-        assertThatThrownBy(() -> lockerIssueReportCommandService.create(command, "visitor-1"))
+        assertThatThrownBy(() -> lockerIssueReportCommandService.create(command, "visitor-1", "127.0.0.1"))
             .isInstanceOf(BusinessException.class);
     }
 }

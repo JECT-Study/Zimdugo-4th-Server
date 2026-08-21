@@ -61,7 +61,9 @@ public interface LockerApi {
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "접수 성공"),
         @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
-        @ApiResponse(responseCode = "404", description = "존재하지 않는 보관함")
+        @ApiResponse(responseCode = "404", description = "존재하지 않는 보관함"),
+        @ApiResponse(responseCode = "409", description = "짧은 시간 내 동일 보관함 중복 신고"),
+        @ApiResponse(responseCode = "429", description = "짧은 시간 내 과도한 신고 시도")
     })
     @SecurityRequirements
     @PostMapping("/lockers/{lockerId}/issue-reports")

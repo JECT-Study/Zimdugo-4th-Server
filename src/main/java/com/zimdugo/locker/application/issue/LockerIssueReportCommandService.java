@@ -24,13 +24,18 @@ public class LockerIssueReportCommandService {
     @Transactional
     public LockerIssueReportCreateResult create(
         LockerIssueReportCreateCommand command,
-        String reporterIdentifier
+        String reporterIdentifier,
+        String clientIpAddress
     ) {
         if (!lockerReader.existsById(command.lockerId())) {
             throw new BusinessException(ErrorCode.LOCKER_NOT_FOUND);
         }
 
-        lockerIssueReportDuplicateGuard.checkAndReserve(command.lockerId(), reporterIdentifier);
+        lockerIssueReportDuplicateGuard.checkAndReserve(
+            command.lockerId(),
+            reporterIdentifier,
+            clientIpAddress
+        );
         SavedLockerIssueReport report = lockerIssueReportStore.create(command.toCreateInfo());
         log.info(
             "보관함 신고 생성 완료. lockerId={}, reportId={}, reportType={}",

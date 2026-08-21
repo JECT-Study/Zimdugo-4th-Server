@@ -67,7 +67,8 @@ public class LockerController implements LockerApi {
     ) {
         LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(
             request.toCommand(lockerId),
-            (String) servletRequest.getAttribute("visitorId")
+            (String) servletRequest.getAttribute("visitorId"),
+            resolveClientIp(servletRequest)
         );
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerIssueReportCreateResponse.from(result)));
     }
@@ -118,5 +119,19 @@ public class LockerController implements LockerApi {
     public ResponseEntity<RestResponse<LockerSeoListResponse>> getLockerSeoList() {
         List<LockerSeoResult> result = lockerSeoQueryService.getSeoList();
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerSeoListResponse.from(result)));
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+
+        return request.getRemoteAddr();
     }
 }
