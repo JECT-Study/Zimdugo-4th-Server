@@ -34,7 +34,7 @@ class LockerIssueReportCreateRequestTest {
     void detailIsOptional() {
         LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(
             "CATEGORY_ERROR",
-            null
+            ""
         );
 
         Set<ConstraintViolation<LockerIssueReportCreateRequest>> violations = validator.validate(request);
@@ -74,6 +74,19 @@ class LockerIssueReportCreateRequestTest {
         LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(
             "INACCURATE_INFO",
             "운영 시간이 실제와 다릅니다."
+        );
+
+        Set<ConstraintViolation<LockerIssueReportCreateRequest>> violations = validator.validate(request);
+
+        assertThat(violations).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("기타 신고는 상세 내용이 필수다")
+    void otherRequiresDetail() {
+        LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(
+            "OTHER",
+            " "
         );
 
         Set<ConstraintViolation<LockerIssueReportCreateRequest>> violations = validator.validate(request);

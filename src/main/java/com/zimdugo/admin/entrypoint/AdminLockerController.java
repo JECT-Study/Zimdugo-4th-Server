@@ -4,6 +4,7 @@ import com.zimdugo.admin.application.AdminLockerImageStorage;
 import com.zimdugo.admin.i18n.LockerContentI18nAdminService;
 import com.zimdugo.admin.locker.AdminLockerService;
 import com.zimdugo.admin.locker.dto.AdminLockerCommand;
+import com.zimdugo.admin.locker.dto.AdminLockerDeleteResult;
 import com.zimdugo.admin.locker.dto.AdminLockerForm;
 import com.zimdugo.admin.locker.dto.AdminLockerDetailResult;
 import com.zimdugo.admin.locker.dto.AdminLockerTranslationForm;
@@ -101,9 +102,11 @@ public class AdminLockerController {
         RedirectAttributes redirectAttributes
     ) {
         AdminLockerDetailResult locker = adminLockerService.getLocker(id);
-        adminLockerService.deleteLocker(id);
-        imageStorage.deleteAll(locker.imageUrls());
-        redirectAttributes.addFlashAttribute("successMessage", "보관함을 삭제했습니다.");
+        AdminLockerDeleteResult result = adminLockerService.deleteLocker(id);
+        if (result.hardDeleted()) {
+            imageStorage.deleteAll(locker.imageUrls());
+        }
+        redirectAttributes.addFlashAttribute("successMessage", result.message());
         return "redirect:/admin/lockers";
     }
 

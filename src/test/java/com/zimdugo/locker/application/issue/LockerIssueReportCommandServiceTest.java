@@ -1,6 +1,7 @@
 package com.zimdugo.locker.application.issue;
 
 import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.locker.domain.issue.LockerIssueReportDuplicateGuard;
 import com.zimdugo.locker.application.result.issue.LockerIssueReportCreateResult;
 import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
 import com.zimdugo.locker.domain.issue.LockerIssueReportStore;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,6 +27,9 @@ class LockerIssueReportCommandServiceTest {
 
     @Mock
     private LockerReader lockerReader;
+
+    @Mock
+    private LockerIssueReportDuplicateGuard lockerIssueReportDuplicateGuard;
 
     @Mock
     private LockerIssueReportStore lockerIssueReportStore;
@@ -52,14 +57,14 @@ class LockerIssueReportCommandServiceTest {
         given(lockerReader.existsById(1L)).willReturn(true);
         given(lockerIssueReportStore.create(command.toCreateInfo())).willReturn(savedReport);
 
-        LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(command);
+        LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(command, "visitor-1");
 
         assertThat(result.reportId()).isEqualTo(10L);
         assertThat(result.lockerId()).isEqualTo(1L);
         assertThat(result.reportType()).isEqualTo("OPERATING_HOURS_ERROR");
-        assertThat(result.detail()).isEqualTo("운영 시간이 실제와 다릅니다.");
         assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.createdAt()).isEqualTo(createdAt);
+        verify(lockerIssueReportDuplicateGuard).checkAndReserve(1L, "visitor-1");
         verify(lockerIssueReportStore).create(command.toCreateInfo());
     }
 
@@ -73,7 +78,26 @@ class LockerIssueReportCommandServiceTest {
         );
         given(lockerReader.existsById(999L)).willReturn(false);
 
-        assertThatThrownBy(() -> lockerIssueReportCommandService.create(command))
+        assertThatThrownBy(() -> lockerIssueReportCommandService.create(command, "visitor-1"))
+            .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("동일한 방문자가 짧은 시간 내 같은 보관함을 반복 신고하면 생성에 실패한다")
+    void failWhenDuplicateIssueReport() {
+        LockerIssueReportCreateCommand command = new LockerIssueReportCreateCommand(
+            1L,
+            "WRONG_LOCATION",
+            "위치가 다릅니다."
+        );
+        given(lockerReader.existsById(1L)).willReturn(true);
+        willThrow(new BusinessException(
+            com.zimdugo.core.exception.ErrorCode.LOCKER_ISSUE_REPORT_DUPLICATED
+        ))
+            .given(lockerIssueReportDuplicateGuard)
+            .checkAndReserve(1L, "visitor-1");
+
+        assertThatThrownBy(() -> lockerIssueReportCommandService.create(command, "visitor-1"))
             .isInstanceOf(BusinessException.class);
     }
 }

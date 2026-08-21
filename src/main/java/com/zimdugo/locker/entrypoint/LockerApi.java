@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -66,7 +67,8 @@ public interface LockerApi {
     @PostMapping("/lockers/{lockerId}/issue-reports")
     ResponseEntity<RestResponse<LockerIssueReportCreateResponse>> createLockerIssueReport(
         @PathVariable @Positive Long lockerId,
-        @Valid @RequestBody LockerIssueReportCreateRequest request
+        @Valid @RequestBody LockerIssueReportCreateRequest request,
+        HttpServletRequest servletRequest
     );
 
     @Operation(

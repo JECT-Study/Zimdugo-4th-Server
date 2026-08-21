@@ -19,9 +19,17 @@
             <div class="type-label">LOCKER ISSUE REPORT REVIEW</div>
             <h1 th:text="'신고 #' + ${report.id} + ' 상세'">신고 상세</h1>
         </div>
-        <a th:href="@{/admin/locker-issue-reports}" class="btn btn-secondary">
-            <i class="fa-solid fa-arrow-left"></i> 목록
-        </a>
+        <div style="display:flex; gap:.65rem; flex-wrap:wrap;">
+            <a th:href="@{/admin/lockers/{id}(id=${report.lockerId})}" class="btn btn-secondary">
+                대상 보관함 보기
+            </a>
+            <a th:href="@{/admin/lockers/{id}/edit(id=${report.lockerId})}" class="btn btn-secondary">
+                보관함 수정
+            </a>
+            <a th:href="@{/admin/locker-issue-reports}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> 목록
+            </a>
+        </div>
     </div>
 
     <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>

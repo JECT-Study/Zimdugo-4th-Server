@@ -11,8 +11,6 @@ public record LockerIssueReportCreateResponse(
     Long lockerId,
     @Schema(description = "신고 유형", example = "OPERATING_HOURS_ERROR")
     String reportType,
-    @Schema(description = "상세 신고 내용", example = "실제로는 오후 10시에 영업이 종료됩니다.")
-    String detail,
     @Schema(description = "신고 처리 상태", example = "PENDING")
     String status,
     @Schema(description = "신고 접수 일시", example = "2026-08-19T20:30:15")
@@ -23,7 +21,6 @@ public record LockerIssueReportCreateResponse(
             result.reportId(),
             result.lockerId(),
             result.reportType(),
-            result.detail(),
             result.status(),
             result.createdAt()
         );

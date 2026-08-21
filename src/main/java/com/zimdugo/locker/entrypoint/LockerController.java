@@ -28,6 +28,7 @@ import com.zimdugo.locker.entrypoint.dto.response.place.PlaceLockerResponse;
 import com.zimdugo.locker.entrypoint.dto.response.search.LockerSearchResponse;
 import com.zimdugo.locker.entrypoint.dto.response.suggest.LockerSuggestResponse;
 import com.zimdugo.locker.entrypoint.dto.response.seo.LockerSeoListResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -61,9 +62,13 @@ public class LockerController implements LockerApi {
     @Override
     public ResponseEntity<RestResponse<LockerIssueReportCreateResponse>> createLockerIssueReport(
         Long lockerId,
-        LockerIssueReportCreateRequest request
+        LockerIssueReportCreateRequest request,
+        HttpServletRequest servletRequest
     ) {
-        LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(request.toCommand(lockerId));
+        LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(
+            request.toCommand(lockerId),
+            (String) servletRequest.getAttribute("visitorId")
+        );
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerIssueReportCreateResponse.from(result)));
     }
 

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.zimdugo.admin.i18n.LockerContentI18nChangedEvent;
 import com.zimdugo.admin.locker.dto.AdminLockerCommand;
+import com.zimdugo.admin.locker.dto.AdminLockerDeleteResult;
 import com.zimdugo.admin.locker.dto.AdminLockerOption;
 import com.zimdugo.admin.locker.dto.AdminLockerSummaryResult;
 import com.zimdugo.admin.translation.LockerReportTranslationDraftGenerator;
@@ -25,6 +26,7 @@ import com.zimdugo.locker.infrastructure.persistence.LockerDetailEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerDetailUpdateValues;
 import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerTranslationRepository;
@@ -51,6 +53,7 @@ class AdminLockerServiceTest {
     private LockerTranslationRepository lockerTranslationRepository;
     private FavoriteLockerRepository favoriteLockerRepository;
     private LockerVoteRepository lockerVoteRepository;
+    private LockerIssueReportRepository lockerIssueReportRepository;
     private ApplicationEventPublisher eventPublisher;
     private AdminLockerService service;
 
@@ -62,6 +65,7 @@ class AdminLockerServiceTest {
         lockerTranslationRepository = mock(LockerTranslationRepository.class);
         favoriteLockerRepository = mock(FavoriteLockerRepository.class);
         lockerVoteRepository = mock(LockerVoteRepository.class);
+        lockerIssueReportRepository = mock(LockerIssueReportRepository.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
         service = new AdminLockerService(
             lockerRepository,
@@ -71,6 +75,7 @@ class AdminLockerServiceTest {
             lockerTranslationRepository,
             favoriteLockerRepository,
             lockerVoteRepository,
+            lockerIssueReportRepository,
             eventPublisher,
             mock(LockerReportTranslationDraftGenerator.class)
         );
@@ -141,8 +146,9 @@ class AdminLockerServiceTest {
     void permanentlyDeletesLockerAndDependentDataBeforePublishingIndexChange() {
         LockerEntity locker = new LockerEntity("서울역 보관함", "서울", 37.5, 127.0);
         when(lockerRepository.findById(1L)).thenReturn(Optional.of(locker));
+        when(lockerIssueReportRepository.existsByLockerId(1L)).thenReturn(false);
 
-        service.deleteLocker(1L);
+        AdminLockerDeleteResult result = service.deleteLocker(1L);
 
         InOrder deletionOrder = inOrder(
             lockerAliasRepository,
@@ -158,6 +164,20 @@ class AdminLockerServiceTest {
         deletionOrder.verify(lockerVoteRepository).deleteByLockerId(1L);
         deletionOrder.verify(lockerDetailRepository).deleteByLockerId(1L);
         deletionOrder.verify(lockerRepository).delete(locker);
+        verify(eventPublisher).publishEvent(LockerContentI18nChangedEvent.locker(1L));
+        assertThat(result.hardDeleted()).isTrue();
+    }
+
+    @Test
+    void deactivatesLockerInsteadOfDeletingWhenIssueReportsExist() {
+        LockerEntity locker = new LockerEntity("서울역 보관함", "서울", 37.5, 127.0);
+        when(lockerRepository.findById(1L)).thenReturn(Optional.of(locker));
+        when(lockerIssueReportRepository.existsByLockerId(1L)).thenReturn(true);
+
+        AdminLockerDeleteResult result = service.deleteLocker(1L);
+
+        assertThat(locker.getPublicationStatus()).isEqualTo(PublicationStatus.DRAFT);
+        assertThat(result.hardDeleted()).isFalse();
         verify(eventPublisher).publishEvent(LockerContentI18nChangedEvent.locker(1L));
     }
 
