@@ -24,16 +24,22 @@
         }
     </style>
 
+    <th:block th:with="returnTo=@{/admin/locker-issue-reports/{id}(id=${report.id})}">
+
     <div class="page-header">
         <div>
             <div class="type-label">LOCKER ISSUE REPORT REVIEW</div>
             <h1 th:text="'신고 #' + ${report.id} + ' 상세'">신고 상세</h1>
         </div>
         <div style="display:flex; gap:.65rem; flex-wrap:wrap;">
-            <a th:if="${!report.lockerDeleted}" th:href="@{/admin/lockers/{id}(id=${report.lockerId})}" class="btn btn-secondary">
+            <a th:if="${!report.lockerDeleted}"
+               th:href="@{/admin/lockers/{id}(id=${report.lockerId}, returnTo=${returnTo})}"
+               class="btn btn-secondary">
                 대상 보관함 보기
             </a>
-            <a th:if="${!report.lockerDeleted}" th:href="@{/admin/lockers/{id}/edit(id=${report.lockerId})}" class="btn btn-secondary">
+            <a th:if="${!report.lockerDeleted}"
+               th:href="@{/admin/lockers/{id}/edit(id=${report.lockerId}, returnTo=${returnTo})}"
+               class="btn btn-secondary">
                 보관함 수정
             </a>
             <a th:href="@{/admin/locker-issue-reports}" class="btn btn-secondary">
@@ -108,6 +114,7 @@
             </p>
         </section>
     </div>
+    </th:block>
 </main>
 </body>
 </html>

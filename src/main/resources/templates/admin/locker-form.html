@@ -35,7 +35,10 @@
 
     <div class="page-header">
         <h1 class="page-title">물품보관함 수정</h1>
-        <a th:href="@{/admin/lockers}" class="btn btn-secondary">
+        <a th:if="${returnTo != null and !returnTo.isBlank()}" th:href="${returnTo}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> 신고 상세로
+        </a>
+        <a th:unless="${returnTo != null and !returnTo.isBlank()}" th:href="@{/admin/lockers}" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> 목록
         </a>
     </div>
@@ -45,6 +48,7 @@
           th:object="${form}"
           method="post"
           enctype="multipart/form-data">
+        <input type="hidden" name="returnTo" th:value="${returnTo}">
         <div class="global-errors" th:if="${#fields.hasGlobalErrors()}">
             <div th:each="error : ${#fields.globalErrors()}" th:text="${error}">오류</div>
         </div>
@@ -166,7 +170,8 @@
         </div>
 
         <div class="form-actions">
-            <a th:href="@{/admin/lockers}" class="btn btn-secondary">취소</a>
+            <a th:if="${returnTo != null and !returnTo.isBlank()}" th:href="${returnTo}" class="btn btn-secondary">취소</a>
+            <a th:unless="${returnTo != null and !returnTo.isBlank()}" th:href="@{/admin/lockers}" class="btn btn-secondary">취소</a>
             <button type="submit" class="btn btn-primary">
                 <i class="fa-solid fa-floppy-disk"></i> 저장
             </button>
