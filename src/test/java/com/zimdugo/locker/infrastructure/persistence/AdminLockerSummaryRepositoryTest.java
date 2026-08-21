@@ -185,6 +185,12 @@ class AdminLockerSummaryRepositoryTest {
         assertThat(lockerRepository.findById(lockerId)).isEmpty();
         assertThat(lockerRepository.findAdminSummaries(PageRequest.of(0, 20)).getContent()).isEmpty();
         assertThat(lockerRepository.findAdminPlaceGroups(PageRequest.of(0, 20)).getContent()).isEmpty();
+        Number deletedRowCount = (Number) entityManager.createNativeQuery(
+            "SELECT COUNT(*) FROM lockers WHERE id = :lockerId AND deleted_at IS NOT NULL"
+        )
+            .setParameter("lockerId", lockerId)
+            .getSingleResult();
+        assertThat(deletedRowCount.longValue()).isEqualTo(1L);
     }
 
     private LockerEntity locker(String name, PlaceEntity place) {
