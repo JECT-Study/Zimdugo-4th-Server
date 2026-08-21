@@ -53,6 +53,30 @@ class RedisLockerIssueReportDuplicateGuardTest {
     }
 
     @Test
+    @DisplayName("다른 방문자는 같은 IP여도 동일 보관함 신고를 할 수 있다")
+    void allowsDuplicateReportForDifferentVisitorOnSameIp() {
+        when(valueOperations.setIfAbsent(
+            eq("locker-issue-report:duplicate:visitor:1:visitor-1"),
+            eq("reported"),
+            eq(Duration.ofMinutes(10))
+        )).thenReturn(true);
+        when(valueOperations.setIfAbsent(
+            eq("locker-issue-report:duplicate:visitor:1:visitor-2"),
+            eq("reported"),
+            eq(Duration.ofMinutes(10))
+        )).thenReturn(true);
+        when(valueOperations.increment(eq(hourlyKey("visitor", "visitor-1")))).thenReturn(1L);
+        when(valueOperations.increment(eq(hourlyKey("visitor", "visitor-2")))).thenReturn(1L);
+        when(valueOperations.increment(eq(hourlyKey("ip", hashedIp("127.0.0.1")))))
+            .thenReturn(1L, 2L);
+
+        assertThatCode(() -> guard.checkAndReserve(1L, "visitor-1", "127.0.0.1"))
+            .doesNotThrowAnyException();
+        assertThatCode(() -> guard.checkAndReserve(1L, "visitor-2", "127.0.0.1"))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     @DisplayName("짧은 시간 내 동일 보관함 반복 신고는 막는다")
     void blocksDuplicateReport() {
         when(valueOperations.setIfAbsent(
@@ -79,12 +103,29 @@ class RedisLockerIssueReportDuplicateGuardTest {
     @Test
     @DisplayName("IP 기준 시간당 신고 횟수를 초과하면 막는다")
     void blocksIpRateLimit() {
-        when(valueOperations.setIfAbsent(anyString(), eq("reported"), eq(Duration.ofMinutes(10))))
+        when(valueOperations.setIfAbsent(
+            eq("locker-issue-report:duplicate:visitor:1:visitor-1"),
+            eq("reported"),
+            eq(Duration.ofMinutes(10))
+        ))
             .thenReturn(true);
         when(valueOperations.increment(eq(hourlyKey("visitor", "visitor-1")))).thenReturn(1L);
         when(valueOperations.increment(eq(hourlyKey("ip", hashedIp("127.0.0.1"))))).thenReturn(21L);
 
         assertThatThrownBy(() -> guard.checkAndReserve(1L, "visitor-1", "127.0.0.1"))
+            .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("방문자 식별자가 없으면 IP 기준으로 동일 보관함 중복 신고를 막는다")
+    void blocksDuplicateReportByIpWhenVisitorIdentifierMissing() {
+        when(valueOperations.setIfAbsent(
+            eq("locker-issue-report:duplicate:ip:1:" + hashedIp("127.0.0.1")),
+            eq("reported"),
+            eq(Duration.ofMinutes(10))
+        )).thenReturn(false);
+
+        assertThatThrownBy(() -> guard.checkAndReserve(1L, null, "127.0.0.1"))
             .isInstanceOf(BusinessException.class);
     }
 

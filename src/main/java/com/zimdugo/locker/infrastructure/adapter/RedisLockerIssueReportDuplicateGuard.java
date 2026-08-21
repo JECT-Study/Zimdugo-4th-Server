@@ -39,10 +39,11 @@ public class RedisLockerIssueReportDuplicateGuard implements LockerIssueReportDu
         if (hasVisitorIdentifier) {
             reserveDuplicate(duplicateKey("visitor", lockerId, reporterIdentifier));
             enforceRateLimit(hourlyKey("visitor", reporterIdentifier), VISITOR_RATE_LIMIT_TTL, VISITOR_REPORT_LIMIT);
+        } else if (ipHash != null) {
+            reserveDuplicate(duplicateKey("ip", lockerId, ipHash));
         }
 
         if (ipHash != null) {
-            reserveDuplicate(duplicateKey("ip", lockerId, ipHash));
             enforceRateLimit(hourlyKey("ip", ipHash), IP_RATE_LIMIT_TTL, IP_REPORT_LIMIT);
         }
     }
