@@ -62,7 +62,7 @@ public enum ErrorCode implements BaseCode {
     LOCKER_ISSUE_REPORT_ALREADY_REVIEWED("LOCKER-409-2", "이미 처리된 보관함 신고입니다.", HttpStatus.CONFLICT),
     LOCKER_ISSUE_REPORT_DUPLICATED("LOCKER-409-3", "동일한 보관함 신고는 잠시 후 다시 접수해 주세요.", HttpStatus.CONFLICT),
     LOCKER_ISSUE_REPORT_REVIEW_MEMO_INVALID(
-        "LOCKER-400-5",
+        "LOCKER-400-8",
         "처리 메모는 1자 이상 1000자 이하로 입력해 주세요.",
         HttpStatus.BAD_REQUEST
     ),
