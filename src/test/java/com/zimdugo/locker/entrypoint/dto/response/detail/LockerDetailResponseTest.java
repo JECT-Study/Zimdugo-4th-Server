@@ -58,4 +58,16 @@ class LockerDetailResponseTest {
         assertThat(json.at("/imageUrls/1").textValue()).isEqualTo("https://cdn.example.com/second.jpg");
         assertThat(json.at("/imageUrl").textValue()).isEqualTo("https://cdn.example.com/first.jpg");
     }
+
+    @Test
+    void serializesDistanceFromRequestedLocation() {
+        LockerDetailResult result = LockerDetailResult.builder()
+            .lockerId(10L)
+            .distanceMeters(42L)
+            .build();
+
+        JsonNode json = objectMapper.valueToTree(LockerDetailResponse.from(result));
+
+        assertThat(json.at("/distanceMeters").longValue()).isEqualTo(42L);
+    }
 }

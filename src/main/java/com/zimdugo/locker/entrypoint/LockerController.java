@@ -52,9 +52,11 @@ public class LockerController implements LockerApi {
     @Override
     public ResponseEntity<RestResponse<LockerDetailResponse>> getLockerDetail(
         @NullableCurrentUser Long userId,
-        Long lockerId
+        Long lockerId,
+        double latitude,
+        double longitude
     ) {
-        LockerDetailResult result = lockerDetailQueryService.getDetail(userId, lockerId);
+        LockerDetailResult result = lockerDetailQueryService.getDetail(userId, lockerId, latitude, longitude);
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, LockerDetailResponse.from(result)));
     }
 

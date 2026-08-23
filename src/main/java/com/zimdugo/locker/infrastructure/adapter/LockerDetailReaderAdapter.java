@@ -28,8 +28,14 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
     private final LockerImageRepository lockerImageRepository;
 
     @Override
-    public Optional<LockerDetail> readById(Long lockerId, Long userId, String languageCode) {
-        return lockerRepository.findDetailById(lockerId, userId, languageCode)
+    public Optional<LockerDetail> readById(
+        Long lockerId,
+        Long userId,
+        String languageCode,
+        double latitude,
+        double longitude
+    ) {
+        return lockerRepository.findDetailById(lockerId, userId, languageCode, latitude, longitude)
             .map(projection -> toDomain(projection, findLockerSizes(List.of(projection.getLockerId()))));
     }
 
@@ -55,6 +61,7 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
             .roadAddress(projection.getRoadAddress())
             .latitude(projection.getLatitude())
             .longitude(projection.getLongitude())
+            .distanceMeters((long) projection.getDistanceMeters())
             .placeId(projection.getPlaceId())
             .placeName(projection.getPlaceName())
             .lockerType(LockerType.valueOf(projection.getLockerType()))

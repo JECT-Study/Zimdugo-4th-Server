@@ -69,11 +69,11 @@ class PublicationStatusRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(lockerRepository.findDetailById(activeLocker.getId(), 999L, "ko"))
+        assertThat(lockerRepository.findDetailById(activeLocker.getId(), 999L, "ko", 37.5, 127.0))
             .isPresent();
-        assertThat(lockerRepository.findDetailById(draftLocker.getId(), 999L, "ko"))
+        assertThat(lockerRepository.findDetailById(draftLocker.getId(), 999L, "ko", 37.5, 127.0))
             .isEmpty();
-        assertThat(lockerRepository.findDetailById(lockerAtDraftPlace.getId(), 999L, "ko"))
+        assertThat(lockerRepository.findDetailById(lockerAtDraftPlace.getId(), 999L, "ko", 37.5, 127.0))
             .isEmpty();
         assertThat(placeRepository.findPlaceDetailById(activePlace.getId(), "ko"))
             .isPresent();

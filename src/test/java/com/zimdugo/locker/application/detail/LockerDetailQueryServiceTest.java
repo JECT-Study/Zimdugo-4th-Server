@@ -46,14 +46,16 @@ class LockerDetailQueryServiceTest {
     @Test
     @DisplayName("비로그인 사용자가 보관함 상세정보를 조회하면 즐겨찾기 및 투표 상태가 false로 반환된다")
     void returnsDetailForGuest() {
-        given(lockerDetailReader.readById(10L, null, "ko")).willReturn(Optional.of(detail(false, false, false)));
+        given(lockerDetailReader.readById(10L, null, "ko", 37.55, 126.93))
+            .willReturn(Optional.of(detail(false, false, false)));
 
-        LockerDetailResult result = lockerDetailQueryService.getDetail(null, 10L);
+        LockerDetailResult result = lockerDetailQueryService.getDetail(null, 10L, 37.55, 126.93);
 
         assertThat(result.lockerId()).isEqualTo(10L);
         assertThat(result.lockerName()).isEqualTo("신촌역 보관함");
         assertThat(result.placeId()).isEqualTo(101L);
         assertThat(result.lockerType()).isEqualTo("SUBWAY_STATION");
+        assertThat(result.distanceMeters()).isEqualTo(120L);
         assertThat(result.isFavorite()).isFalse();
         assertThat(result.isAccurateVoted()).isFalse();
         assertThat(result.isInaccurateVoted()).isFalse();
@@ -62,9 +64,10 @@ class LockerDetailQueryServiceTest {
     @Test
     @DisplayName("로그인 사용자가 보관함 상세정보를 조회하면 즐겨찾기 및 본인의 투표 여부를 포함해 반환한다")
     void returnsDetailForUser() {
-        given(lockerDetailReader.readById(10L, 1L, "ko")).willReturn(Optional.of(detail(true, true, false)));
+        given(lockerDetailReader.readById(10L, 1L, "ko", 37.55, 126.93))
+            .willReturn(Optional.of(detail(true, true, false)));
 
-        LockerDetailResult result = lockerDetailQueryService.getDetail(1L, 10L);
+        LockerDetailResult result = lockerDetailQueryService.getDetail(1L, 10L, 37.55, 126.93);
 
         assertThat(result.lockerId()).isEqualTo(10L);
         assertThat(result.isFavorite()).isTrue();
@@ -75,9 +78,9 @@ class LockerDetailQueryServiceTest {
     @Test
     @DisplayName("존재하지 않는 보관함이면 404 예외를 발생시킨다")
     void throwsWhenLockerDoesNotExist() {
-        given(lockerDetailReader.readById(999L, null, "ko")).willReturn(Optional.empty());
+        given(lockerDetailReader.readById(999L, null, "ko", 37.55, 126.93)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> lockerDetailQueryService.getDetail(null, 999L))
+        assertThatThrownBy(() -> lockerDetailQueryService.getDetail(null, 999L, 37.55, 126.93))
             .isInstanceOf(BusinessException.class)
             .extracting("errorCode")
             .isEqualTo(ErrorCode.LOCKER_NOT_FOUND);
@@ -90,6 +93,7 @@ class LockerDetailQueryServiceTest {
             .roadAddress("서울 서대문구")
             .latitude(37.55)
             .longitude(126.93)
+            .distanceMeters(120L)
             .placeId(101L)
             .placeName("신촌역")
             .lockerType(LockerType.SUBWAY_STATION)

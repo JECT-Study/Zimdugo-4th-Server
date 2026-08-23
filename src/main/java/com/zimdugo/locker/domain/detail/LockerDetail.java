@@ -17,6 +17,7 @@ public record LockerDetail(
     String roadAddress,
     double latitude,
     double longitude,
+    long distanceMeters,
     Long placeId,
     String placeName,
     LockerType lockerType,

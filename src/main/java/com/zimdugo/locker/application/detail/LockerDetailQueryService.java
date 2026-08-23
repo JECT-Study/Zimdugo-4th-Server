@@ -3,6 +3,7 @@ package com.zimdugo.locker.application.detail;
 import com.zimdugo.common.i18n.CurrentRequestLanguage;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
+import com.zimdugo.locker.application.common.LocationValidator;
 import com.zimdugo.locker.application.result.detail.LockerDetailResult;
 import com.zimdugo.locker.domain.detail.LockerDetail;
 import com.zimdugo.locker.domain.detail.LockerDetailReader;
@@ -18,9 +19,10 @@ public class LockerDetailQueryService {
     private final LockerDetailReader lockerDetailReader;
     private final CurrentRequestLanguage currentRequestLanguage;
 
-    public LockerDetailResult getDetail(Long userId, Long lockerId) {
+    public LockerDetailResult getDetail(Long userId, Long lockerId, double latitude, double longitude) {
+        LocationValidator.validate(latitude, longitude);
         String languageCode = currentRequestLanguage.resolve().languageTag();
-        LockerDetail detail = lockerDetailReader.readById(lockerId, userId, languageCode)
+        LockerDetail detail = lockerDetailReader.readById(lockerId, userId, languageCode, latitude, longitude)
             .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
 
         return LockerDetailResult.from(detail);

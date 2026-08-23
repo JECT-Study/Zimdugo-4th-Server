@@ -16,6 +16,7 @@ public record LockerDetailResponse(
     String roadAddress,
     double latitude,
     double longitude,
+    long distanceMeters,
     Long placeId,
     String placeName,
     String lockerType,
@@ -48,8 +49,7 @@ public record LockerDetailResponse(
             .lockerId(result.lockerId())
             .lockerName(result.lockerName())
             .roadAddress(result.roadAddress())
-            .latitude(result.latitude())
-            .longitude(result.longitude())
+            .latitude(result.latitude()).longitude(result.longitude()).distanceMeters(result.distanceMeters())
             .placeId(result.placeId())
             .placeName(result.placeName())
             .lockerType(result.lockerType())
