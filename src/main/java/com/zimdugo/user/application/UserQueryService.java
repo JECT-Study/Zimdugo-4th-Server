@@ -21,8 +21,7 @@ public class UserQueryService {
     public UserProfileDto getProfile(Long userId) {
         User user = findById(userId);
 
-        String provider = socialAccountReader.findAllByUserId(userId).stream()
-            .findFirst()
+        String provider = socialAccountReader.findByUserId(userId)
             .map(SocialAccount::getProvider)
             .map(authProvider -> authProvider.name().toLowerCase())
             .orElse(null);

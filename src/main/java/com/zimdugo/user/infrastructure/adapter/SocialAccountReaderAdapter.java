@@ -23,6 +23,12 @@ public class SocialAccountReaderAdapter implements SocialAccountReader {
     }
 
     @Override
+    public Optional<SocialAccount> findByUserId(Long userId) {
+        return socialAccountRepository.findByUserId(userId)
+            .map(SocialAccountEntityMapper::toDomain);
+    }
+
+    @Override
     public List<SocialAccount> findAllByUserId(Long userId) {
         return socialAccountRepository.findAllByUserId(userId).stream()
             .map(SocialAccountEntityMapper::toDomain)
