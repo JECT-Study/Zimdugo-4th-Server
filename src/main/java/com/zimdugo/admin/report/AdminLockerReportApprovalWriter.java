@@ -12,6 +12,7 @@ import com.zimdugo.locker.infrastructure.persistence.LockerReportRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
 import com.zimdugo.locker.infrastructure.persistence.PlaceEntity;
 import com.zimdugo.locker.infrastructure.persistence.PlaceRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,13 +37,17 @@ public class AdminLockerReportApprovalWriter {
     ) {
         LockerReportEntity report = requireReportForUpdate(reportId);
         PlaceEntity place = resolvePlace(command, report);
-        LockerEntity locker = lockerRepository.save(LockerEntity.draft(
+        LockerEntity locker = LockerEntity.draft(
             command.lockerName(),
             command.roadAddress(),
             command.latitude(),
             command.longitude(),
             place
-        ));
+        );
+        locker.replaceImages(report.getImage() == null
+            ? List.of()
+            : List.of(report.getImage().getImageUrl()));
+        locker = lockerRepository.save(locker);
         detailRepository.save(toLockerDetail(report, locker));
         report.approve(
             command.lockerName(),
@@ -101,8 +106,7 @@ public class AdminLockerReportApprovalWriter {
                 report.getLockerSize(),
                 report.getAdditionalInfo(),
                 report.getStartTime(),
-                report.getEndTime(),
-                report.getImage() == null ? null : report.getImage().getImageUrl()
+                report.getEndTime()
             )
         );
     }

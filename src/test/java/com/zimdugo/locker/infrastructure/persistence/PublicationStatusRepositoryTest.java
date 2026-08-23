@@ -140,7 +140,6 @@ class PublicationStatusRepositoryTest {
                 Set.of(LockerSizeType.SMALL, LockerSizeType.LARGE),
                 null,
                 null,
-                null,
                 null
             )
         ));
@@ -180,7 +179,6 @@ class PublicationStatusRepositoryTest {
                 null,
                 null,
                 lockerSize,
-                null,
                 null,
                 null,
                 null

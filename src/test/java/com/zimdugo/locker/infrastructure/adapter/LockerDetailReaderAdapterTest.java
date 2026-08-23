@@ -129,7 +129,6 @@ class LockerDetailReaderAdapterTest {
         given(projection.getDetailInfo()).willReturn("개찰구 옆");
         given(projection.getStartTime()).willReturn(LocalTime.of(9, 0));
         given(projection.getEndTime()).willReturn(LocalTime.of(22, 0));
-        given(projection.getImageUrl()).willReturn("https://cdn.example.com/locker.jpg");
         given(projection.getAccurateVoteCount()).willReturn(10);
         given(projection.getInaccurateVoteCount()).willReturn(2);
         given(projection.getCreatedAt()).willReturn(LocalDateTime.of(2026, 6, 1, 12, 0));

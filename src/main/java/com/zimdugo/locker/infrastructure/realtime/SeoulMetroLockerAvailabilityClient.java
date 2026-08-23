@@ -1,5 +1,6 @@
 package com.zimdugo.locker.infrastructure.realtime;
 
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimdugo.core.exception.BusinessException;
@@ -38,7 +39,8 @@ public class SeoulMetroLockerAvailabilityClient implements LockerRealtimeAvailab
         int pageSize
     ) {
         this.restClient = restClient;
-        this.objectMapper = objectMapper;
+        this.objectMapper = objectMapper.copy()
+            .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature());
         this.apiKey = apiKey;
         this.pageSize = pageSize;
     }

@@ -16,7 +16,7 @@ class AdminLockerFormTest {
         AdminLockerDetailResult result = new AdminLockerDetailResult(
             1L, "서울역 보관함", "서울", 37.5, 127.0, null, null, PublicationStatus.DRAFT,
             LockerType.SUBWAY_STATION, IndoorOutdoorType.INDOOR, null, null, null, null, Set.of(),
-            null, null, null, "https://cdn.example.com/first.jpg",
+            null, null, null,
             List.of("https://cdn.example.com/first.jpg", "https://cdn.example.com/second.jpg"), 0, 0
         );
 

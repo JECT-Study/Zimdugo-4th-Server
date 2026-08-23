@@ -92,7 +92,6 @@ class AdminLockerSummaryRepositoryTest {
                 Set.of(),
                 null,
                 null,
-                null,
                 null
             )
         ));
@@ -153,7 +152,6 @@ class AdminLockerSummaryRepositoryTest {
                 Set.of(),
                 null,
                 null,
-                null,
                 null
             )
         ));
@@ -204,7 +202,6 @@ class AdminLockerSummaryRepositoryTest {
                 1000,
                 3000,
                 Set.of(),
-                null,
                 null,
                 null,
                 null

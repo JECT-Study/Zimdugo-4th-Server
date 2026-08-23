@@ -26,7 +26,4 @@ public record AdminLockerCommand(
     LocalTime endTime,
     List<String> imageUrls
 ) {
-    public String firstImageUrl() {
-        return imageUrls == null || imageUrls.isEmpty() ? null : imageUrls.getFirst();
-    }
 }

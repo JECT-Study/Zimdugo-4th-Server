@@ -20,7 +20,6 @@ public interface LockerDetailQueryProjection {
     String getDetailInfo();
     LocalTime getStartTime();
     LocalTime getEndTime();
-    String getImageUrl();
     int getAccurateVoteCount();
     int getInaccurateVoteCount();
     LocalDateTime getCreatedAt();

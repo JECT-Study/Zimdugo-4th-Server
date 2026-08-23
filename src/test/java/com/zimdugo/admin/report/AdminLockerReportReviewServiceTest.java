@@ -132,6 +132,9 @@ class AdminLockerReportReviewServiceTest {
     @Test
     void approvesReportWithExistingPlaceAndManualLockerName() {
         LockerReportEntity report = report();
+        report.addImage(LockerReportImageEntity.builder()
+            .imageUrl("https://cdn.example.com/report.jpg")
+            .build());
         PlaceEntity place = new PlaceEntity("서울역", 37.55, 126.97, "서울 중구 세종대로");
         LockerEntity savedLocker = org.mockito.Mockito.mock(LockerEntity.class);
         when(savedLocker.getId()).thenReturn(20L);
@@ -150,6 +153,9 @@ class AdminLockerReportReviewServiceTest {
         assertThat(report.getAppliedLockerId()).isEqualTo(20L);
         assertThat(place.getPublicationStatus()).isEqualTo(PublicationStatus.ACTIVE);
         assertThat(lockerCaptor.getValue().getPublicationStatus()).isEqualTo(PublicationStatus.DRAFT);
+        assertThat(lockerCaptor.getValue().getImages())
+            .extracting(image -> image.getImageUrl())
+            .containsExactly("https://cdn.example.com/report.jpg");
         verify(detailRepository).save(any(LockerDetailEntity.class));
     }
 

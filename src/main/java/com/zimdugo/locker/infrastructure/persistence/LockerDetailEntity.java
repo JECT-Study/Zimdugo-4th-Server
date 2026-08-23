@@ -85,9 +85,6 @@ public class LockerDetailEntity {
     @Column
     private LocalTime endTime;
 
-    @Column(name = "image_url", length = 500)
-    private String imageUrl;
-
     @Column(nullable = false)
     private int accurateVoteCount;
 
@@ -125,6 +122,5 @@ public class LockerDetailEntity {
         this.detailInfo = values.detailInfo();
         this.startTime = values.startTime();
         this.endTime = values.endTime();
-        this.imageUrl = values.imageUrl();
     }
 }
