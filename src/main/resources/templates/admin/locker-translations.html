@@ -12,7 +12,8 @@
         .definition-list { display:grid; grid-template-columns:120px 1fr; gap:.55rem .75rem; font-size:.88rem; }
         .definition-list dt { color:#888; font-weight:600; }
         .definition-list dd { color:#333; overflow-wrap:anywhere; }
-        .report-image { width:100%; max-height:420px; object-fit:contain; border-radius:8px; margin-top:1rem; border:1px solid #e5e5e5; background:#fafafa; }
+        .image-list { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.75rem; margin-top:1rem; }
+        .report-image { width:100%; max-height:420px; object-fit:contain; border-radius:8px; border:1px solid #e5e5e5; background:#fafafa; }
         .translation-list { display:flex; flex-direction:column; gap:1rem; }
         .translation-row { display:grid; grid-template-columns:minmax(320px,1fr) 52px minmax(380px,1fr); gap:.75rem; align-items:stretch; }
         .translation-panel { border:1px solid #e5e5e5; border-radius:8px; padding:1rem; background:#fff; min-width:0; }
@@ -107,7 +108,9 @@
             <dt>운영시간</dt><dd th:text="${locker.startTime() == null || locker.endTime() == null ? '-' : locker.startTime() + ' ~ ' + locker.endTime()}">운영 시간 정보 없음</dd>
             <dt>추가정보</dt><dd th:text="${locker.detailInfo() ?: '-'}">-</dd>
         </dl>
-        <img th:if="${!locker.imageUrls().isEmpty()}" th:src="${locker.imageUrls().getFirst()}" class="report-image" alt="보관함 이미지">
+        <div th:if="${!locker.imageUrls().isEmpty()}" class="image-list">
+            <img th:each="imageUrl : ${locker.imageUrls()}" th:src="${imageUrl}" class="report-image" alt="보관함 이미지">
+        </div>
     </section>
 
     <section class="card">
