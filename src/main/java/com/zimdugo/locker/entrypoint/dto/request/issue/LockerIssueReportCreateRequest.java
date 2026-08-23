@@ -3,7 +3,6 @@ package com.zimdugo.locker.entrypoint.dto.request.issue;
 import com.zimdugo.locker.application.issue.LockerIssueReportCreateCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -22,7 +21,6 @@ public record LockerIssueReportCreateRequest(
         },
         example = "OPERATING_HOURS_ERROR"
     )
-    @NotNull
     @NotBlank
     @Pattern(regexp = REPORT_TYPE_PATTERN)
     String reportType,
