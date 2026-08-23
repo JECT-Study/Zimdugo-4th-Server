@@ -41,9 +41,9 @@ class LockerDetailReaderAdapterTest {
     @DisplayName("상세 조회 projection을 도메인으로 변환한다")
     void convertsProjectionToDomain() {
         LockerDetailQueryProjection projection = projection();
-        given(lockerRepository.findDetailById(10L, null, "ko")).willReturn(Optional.of(projection));
+        given(lockerRepository.findDetailById(10L, null, "ko", 37.5, 127.0)).willReturn(Optional.of(projection));
 
-        Optional<LockerDetail> result = lockerDetailReaderAdapter.readById(10L);
+        Optional<LockerDetail> result = lockerDetailReaderAdapter.readById(10L, null, "ko", 37.5, 127.0);
 
         assertThat(result).isPresent();
         assertThat(result.orElseThrow().lockerId()).isEqualTo(10L);
@@ -52,6 +52,7 @@ class LockerDetailReaderAdapterTest {
             LockerSizeType.LARGE
         );
         assertThat(result.orElseThrow().placeName()).isEqualTo("신촌역");
+        assertThat(result.orElseThrow().distanceMeters()).isEqualTo(120L);
     }
 
     @Test
@@ -63,9 +64,9 @@ class LockerDetailReaderAdapterTest {
         given(projection.getMediumAvailableCount()).willReturn(2);
         given(projection.getLargeAvailableCount()).willReturn(1);
         given(projection.getRealtimeFetchedAt()).willReturn(fetchedAt);
-        given(lockerRepository.findDetailById(10L, null, "ko")).willReturn(Optional.of(projection));
+        given(lockerRepository.findDetailById(10L, null, "ko", 37.5, 127.0)).willReturn(Optional.of(projection));
 
-        LockerDetail result = lockerDetailReaderAdapter.readById(10L).orElseThrow();
+        LockerDetail result = lockerDetailReaderAdapter.readById(10L, null, "ko", 37.5, 127.0).orElseThrow();
 
         assertThat(result.realtimeAvailability()).isNotNull();
         assertThat(result.realtimeAvailability().smallAvailableCount()).isEqualTo(3);
@@ -77,9 +78,9 @@ class LockerDetailReaderAdapterTest {
     @Test
     @DisplayName("상세정보가 없는 보관함이면 빈 결과를 반환한다")
     void returnsEmptyWhenDetailDoesNotExist() {
-        given(lockerRepository.findDetailById(999L, null, "ko")).willReturn(Optional.empty());
+        given(lockerRepository.findDetailById(999L, null, "ko", 37.5, 127.0)).willReturn(Optional.empty());
 
-        Optional<LockerDetail> result = lockerDetailReaderAdapter.readById(999L);
+        Optional<LockerDetail> result = lockerDetailReaderAdapter.readById(999L, null, "ko", 37.5, 127.0);
 
         assertThat(result).isEmpty();
     }
@@ -88,13 +89,13 @@ class LockerDetailReaderAdapterTest {
     @DisplayName("상세 조회에 등록 순서대로 모든 이미지를 포함한다")
     void includesAllImagesInOrder() {
         LockerDetailQueryProjection projection = projection();
-        given(lockerRepository.findDetailById(10L, null, "ko")).willReturn(Optional.of(projection));
+        given(lockerRepository.findDetailById(10L, null, "ko", 37.5, 127.0)).willReturn(Optional.of(projection));
         given(lockerImageRepository.findByLockerIdOrderByListOrderAsc(10L)).willReturn(List.of(
             LockerImageEntity.of(new LockerEntity("보관함", "서울", 37.5, 127.0), "https://cdn.example.com/first.jpg", 0),
             LockerImageEntity.of(new LockerEntity("보관함", "서울", 37.5, 127.0), "https://cdn.example.com/second.jpg", 1)
         ));
 
-        LockerDetail result = lockerDetailReaderAdapter.readById(10L).orElseThrow();
+        LockerDetail result = lockerDetailReaderAdapter.readById(10L, null, "ko", 37.5, 127.0).orElseThrow();
 
         assertThat(result.imageUrls()).containsExactly(
             "https://cdn.example.com/first.jpg",
@@ -113,6 +114,7 @@ class LockerDetailReaderAdapterTest {
         given(projection.getRoadAddress()).willReturn("서울 서대문구");
         given(projection.getLatitude()).willReturn(37.55);
         given(projection.getLongitude()).willReturn(126.93);
+        given(projection.getDistanceMeters()).willReturn(120D);
         given(projection.getPlaceId()).willReturn(101L);
         given(projection.getPlaceName()).willReturn("신촌역");
         given(projection.getLockerType()).willReturn("SUBWAY_STATION");

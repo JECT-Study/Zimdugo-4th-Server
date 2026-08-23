@@ -9,6 +9,7 @@ public interface LockerDetailQueryProjection {
     String getRoadAddress();
     double getLatitude();
     double getLongitude();
+    double getDistanceMeters();
     Long getPlaceId();
     String getPlaceName();
     String getLockerType();

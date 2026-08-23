@@ -1,5 +1,4 @@
 package com.zimdugo.locker.infrastructure.persistence;
-
 import com.zimdugo.locker.domain.publication.PublicationStatus;
 import com.zimdugo.locker.infrastructure.projection.AdminLockerPlaceGroupProjection;
 import com.zimdugo.locker.infrastructure.projection.AdminLockerSummaryProjection;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
 
     @Query(
@@ -277,12 +275,16 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
     List<AdminLockerSummaryProjection> searchAdminSummariesWithoutPlace(@Param("keyword") String keyword);
 
     @Query(value = """
+        WITH target AS (
+            SELECT ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography AS point
+        )
         SELECT
             l.id AS lockerId,
             COALESCE(lt.name, l.name) AS lockerName,
             COALESCE(lt.road_address, l.road_address) AS roadAddress,
             l.latitude AS latitude,
             l.longitude AS longitude,
+            ST_Distance(l.location, target.point) AS distanceMeters,
             p.id AS placeId,
             COALESCE(pt.name, p.name) AS placeName,
             ld.locker_type AS lockerType,
@@ -328,6 +330,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             JOIN locker_realtime_availabilities ra ON ra.external_locker_id = rm.external_locker_id
             WHERE rm.locker_id = l.id
         ) ra ON true
+        CROSS JOIN target
         WHERE l.id = :lockerId
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
@@ -335,7 +338,9 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
     Optional<LockerDetailQueryProjection> findDetailById(
         @Param("lockerId") Long lockerId,
         @Param("userId") Long userId,
-        @Param("languageCode") String languageCode
+        @Param("languageCode") String languageCode,
+        @Param("latitude") double latitude,
+        @Param("longitude") double longitude
     );
 
     @Query(value = """

@@ -39,7 +39,7 @@ public interface LockerApi {
 
     @Operation(
         summary = "보관함 상세 조회",
-        description = "보관함 ID로 기본 정보, 위치, 운영 시간, 가격, 크기, 이미지, 정확도 투표 정보를 반환한다."
+        description = "보관함 ID와 사용자 좌표로 기본 정보, 현재 위치와의 거리, 운영 시간, 가격, 크기, 이미지, 정확도 투표 정보를 반환한다."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -50,7 +50,17 @@ public interface LockerApi {
     @GetMapping("/lockers/{lockerId}")
     ResponseEntity<RestResponse<LockerDetailResponse>> getLockerDetail(
         @NullableCurrentUser Long userId,
-        @PathVariable @Positive Long lockerId
+        @PathVariable @Positive Long lockerId,
+        @RequestParam("lat")
+        @Parameter(description = "사용자 위도", example = "37.498095")
+        @Schema(minimum = "-90", maximum = "90")
+        @DecimalMin(value = "-90.0")
+        @DecimalMax(value = "90.0") double latitude,
+        @RequestParam("lng")
+        @Parameter(description = "사용자 경도", example = "127.027610")
+        @Schema(minimum = "-180", maximum = "180")
+        @DecimalMin(value = "-180.0")
+        @DecimalMax(value = "180.0") double longitude
     );
 
     @Operation(
