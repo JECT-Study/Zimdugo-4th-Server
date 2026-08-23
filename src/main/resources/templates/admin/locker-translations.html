@@ -107,7 +107,7 @@
             <dt>운영시간</dt><dd th:text="${locker.startTime() == null || locker.endTime() == null ? '-' : locker.startTime() + ' ~ ' + locker.endTime()}">운영 시간 정보 없음</dd>
             <dt>추가정보</dt><dd th:text="${locker.detailInfo() ?: '-'}">-</dd>
         </dl>
-        <img th:if="${locker.imageUrl() != null}" th:src="${locker.imageUrl()}" class="report-image" alt="보관함 이미지">
+        <img th:if="${!locker.imageUrls().isEmpty()}" th:src="${locker.imageUrls().getFirst()}" class="report-image" alt="보관함 이미지">
     </section>
 
     <section class="card">

@@ -31,7 +31,6 @@ public record AdminLockerDetailResult(
     String detailInfo,
     LocalTime startTime,
     LocalTime endTime,
-    String imageUrl,
     List<String> imageUrls,
     int accurateVoteCount,
     int inaccurateVoteCount
@@ -53,11 +52,10 @@ public record AdminLockerDetailResult(
             detail.getFloor(),
             detail.getMinPrice(),
             detail.getMaxPrice(),
-            detail.getLockerSize(),
+            detail.getLockerSize() == null ? Set.of() : Set.copyOf(detail.getLockerSize()),
             detail.getDetailInfo(),
             detail.getStartTime(),
             detail.getEndTime(),
-            detail.getImageUrl(),
             locker.getImages().stream().map(image -> image.getImageUrl()).toList(),
             detail.getAccurateVoteCount(),
             detail.getInaccurateVoteCount()

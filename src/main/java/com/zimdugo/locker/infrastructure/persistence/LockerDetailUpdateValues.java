@@ -16,7 +16,6 @@ public record LockerDetailUpdateValues(
     Set<LockerSizeType> lockerSize,
     String detailInfo,
     LocalTime startTime,
-    LocalTime endTime,
-    String imageUrl
+    LocalTime endTime
 ) {
 }

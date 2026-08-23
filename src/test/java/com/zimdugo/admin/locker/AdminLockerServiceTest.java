@@ -105,7 +105,6 @@ class AdminLockerServiceTest {
         assertThat(locker.getImages())
             .extracting(image -> image.getImageUrl())
             .containsExactly("https://cdn.example.com/first.jpg", "https://cdn.example.com/second.jpg");
-        assertThat(detail.getImageUrl()).isEqualTo("https://cdn.example.com/first.jpg");
     }
 
     @Test
@@ -244,7 +243,6 @@ class AdminLockerServiceTest {
                 null,
                 null,
                 Set.of(),
-                null,
                 null,
                 null,
                 null

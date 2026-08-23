@@ -136,8 +136,7 @@ public class AdminLockerService {
             command.lockerSizes(),
             command.detailInfo(),
             command.startTime(),
-            command.endTime(),
-            command.firstImageUrl()
+            command.endTime()
         ));
         publishChanged(id);
         return AdminLockerDetailResult.from(locker, detail);

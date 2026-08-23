@@ -47,6 +47,37 @@ class SeoulMetroLockerAvailabilityClientTest {
     }
 
     @Test
+    void readsAvailabilityWhenProviderResponseContainsUnescapedLineBreak() {
+        server.expect(request -> assertThat(request.getURI().getPath())
+                .isEqualTo("/test-key/json/getFcLckr/1/1000/"))
+            .andRespond(withSuccess("""
+                {
+                  "response": {
+                    "header": {"resultCode": "00", "resultMsg": "NORMAL_CODE"},
+                    "body": {
+                      "items": {
+                        "item": [{
+                          "lckrDtlId": "TL124_DETAIL",
+                          "lckrLoc": "지하 1층
+                개찰구 앞",
+                          "usePsbltySmttypeLckrCnt": 12,
+                          "usePsbltyMdtypeLckrCnt": 2,
+                          "usePsbltyLrtypeLckrCnt": 0
+                        }]
+                      },
+                      "totalCount": 1
+                    }
+                  }
+                }
+                """, MediaType.APPLICATION_JSON));
+
+        assertThat(client().fetchAll()).containsExactly(new LockerRealtimeAvailabilitySnapshot(
+            "TL124_DETAIL", 12, 2, 0
+        ));
+        server.verify();
+    }
+
+    @Test
     void rejectsProviderErrorResponse() {
         server.expect(request -> assertThat(request.getURI().getPath())
                 .isEqualTo("/test-key/json/getFcLckr/1/1000/"))

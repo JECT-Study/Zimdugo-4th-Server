@@ -294,7 +294,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             COALESCE(lt.detail_info, ld.detail_info) AS detailInfo,
             ld.start_time AS startTime,
             ld.end_time AS endTime,
-            ld.image_url AS imageUrl,
             ld.accurate_vote_count AS accurateVoteCount,
             ld.inaccurate_vote_count AS inaccurateVoteCount,
             ld.created_at AS createdAt,

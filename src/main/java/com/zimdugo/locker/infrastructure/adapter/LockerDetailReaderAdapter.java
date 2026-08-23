@@ -78,9 +78,7 @@ public class LockerDetailReaderAdapter implements LockerDetailReader {
             .stream()
             .map(image -> image.getImageUrl())
             .toList();
-        return imageUrls.isEmpty() && projection.getImageUrl() != null
-            ? List.of(projection.getImageUrl())
-            : imageUrls;
+        return imageUrls;
     }
 
     private LockerRealtimeAvailability realtimeAvailability(LockerDetailQueryProjection projection) {
