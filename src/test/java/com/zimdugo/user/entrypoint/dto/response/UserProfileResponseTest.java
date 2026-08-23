@@ -6,7 +6,6 @@ import com.zimdugo.common.config.JacksonConfig;
 import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.user.application.UserProfileDto;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +23,7 @@ class UserProfileResponseTest {
             "zimdugo@gmail.com",
             "https://cdn.zimdugo.com/profile.png",
             "ACTIVE",
-            List.of("GOOGLE", "KAKAO")
+            "google"
         );
 
         JsonNode data = objectMapper.readTree(objectMapper.writeValueAsString(
@@ -33,6 +32,8 @@ class UserProfileResponseTest {
 
         assertThat(data.path("email").asText()).isEqualTo("zimdugo@gmail.com");
         assertThat(data.path("profileImageUrl").asText()).isEqualTo("https://cdn.zimdugo.com/profile.png");
+        assertThat(data.path("provider").asText()).isEqualTo("google");
+        assertThat(data.has("providers")).isFalse();
         assertThat(data.has("nickname")).isFalse();
     }
 }

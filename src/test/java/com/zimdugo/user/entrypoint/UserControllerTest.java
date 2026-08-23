@@ -10,7 +10,6 @@ import com.zimdugo.common.security.CurrentUser;
 import com.zimdugo.user.application.UserProfileDto;
 import com.zimdugo.user.application.UserProfileUpdateService;
 import com.zimdugo.user.application.UserQueryService;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,7 +51,7 @@ class UserControllerTest {
             "zimdugo@gmail.com",
             "https://cdn.zimdugo.com/profile.png",
             "ACTIVE",
-            List.of("google", "kakao")
+            "google"
         ));
 
         mockMvc.perform(get("/api/v1/me"))
@@ -62,7 +61,8 @@ class UserControllerTest {
             .andExpect(jsonPath("$.data.email").value("zimdugo@gmail.com"))
             .andExpect(jsonPath("$.data.profileImageUrl").value("https://cdn.zimdugo.com/profile.png"))
             .andExpect(jsonPath("$.data.status").value("ACTIVE"))
-            .andExpect(jsonPath("$.data.providers[0]").value("google"))
+            .andExpect(jsonPath("$.data.provider").value("google"))
+            .andExpect(jsonPath("$.data.providers").doesNotExist())
             .andExpect(jsonPath("$.data.nickname").doesNotExist());
     }
 

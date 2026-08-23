@@ -1,14 +1,13 @@
 package com.zimdugo.user.entrypoint.dto.response;
 
 import com.zimdugo.user.application.UserProfileDto;
-import java.util.List;
 
 public record UserProfileResponse(
     Long id,
     String email,
     String profileImageUrl,
     String status,
-    List<String> providers
+    String provider
 ) {
     public static UserProfileResponse from(UserProfileDto dto) {
         return new UserProfileResponse(
@@ -16,7 +15,7 @@ public record UserProfileResponse(
             dto.email(),
             dto.profileImageUrl(),
             dto.status(),
-            dto.providers()
+            dto.provider()
         );
     }
 }
