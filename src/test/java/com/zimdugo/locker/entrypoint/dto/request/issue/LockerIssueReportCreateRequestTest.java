@@ -43,6 +43,19 @@ class LockerIssueReportCreateRequestTest {
     }
 
     @Test
+    @DisplayName("신고 유형이 OTHER이면 상세 내용은 필수다")
+    void detailIsRequiredWhenReportTypeIsOther() {
+        LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(
+            "OTHER",
+            "   "
+        );
+
+        Set<ConstraintViolation<LockerIssueReportCreateRequest>> violations = validator.validate(request);
+
+        assertThat(violations).isNotEmpty();
+    }
+
+    @Test
     @DisplayName("상세 내용은 최대 1000자까지 허용한다")
     void detailMaxLength() {
         LockerIssueReportCreateRequest request = new LockerIssueReportCreateRequest(

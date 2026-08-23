@@ -2,6 +2,7 @@ package com.zimdugo.locker.entrypoint.dto.request.issue;
 
 import com.zimdugo.locker.application.issue.LockerIssueReportCreateCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -32,6 +33,14 @@ public record LockerIssueReportCreateRequest(
     private static final String REPORT_TYPE_PATTERN =
         "PRICE_ERROR|NO_LONGER_OPERATING|SIZE_ERROR|OPERATING_HOURS_ERROR|"
             + "WRONG_LOCATION|IMAGE_ERROR|CATEGORY_ERROR|OTHER";
+
+    @AssertTrue(message = "reportType이 OTHER인 경우 detail은 필수입니다.")
+    public boolean isDetailRequiredForOther() {
+        if (!"OTHER".equals(reportType)) {
+            return true;
+        }
+        return detail != null && !detail.isBlank();
+    }
 
     public LockerIssueReportCreateCommand toCommand(Long lockerId) {
         return new LockerIssueReportCreateCommand(lockerId, reportType, detail);
