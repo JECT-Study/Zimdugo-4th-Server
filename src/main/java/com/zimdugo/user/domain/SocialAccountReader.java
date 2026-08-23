@@ -9,5 +9,7 @@ public interface SocialAccountReader {
         String providerUserId
     );
 
+    Optional<SocialAccount> findByUserId(Long userId);
+
     List<SocialAccount> findAllByUserId(Long userId);
 }

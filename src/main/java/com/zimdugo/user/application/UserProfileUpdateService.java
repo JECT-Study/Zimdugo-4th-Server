@@ -31,7 +31,7 @@ public class UserProfileUpdateService {
             updatedUser.getEmail(),
             updatedUser.getProfileImageUrl(),
             updatedUser.getStatus().name(),
-            userQueryService.getProfile(userId).providers()
+            userQueryService.getProfile(userId).provider()
         );
     }
 }

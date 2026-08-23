@@ -6,7 +6,6 @@ import com.zimdugo.user.domain.User;
 import com.zimdugo.user.domain.UserReader;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,18 +21,17 @@ public class UserQueryService {
     public UserProfileDto getProfile(Long userId) {
         User user = findById(userId);
 
-        List<SocialAccount> socialAccounts = socialAccountReader.findAllByUserId(userId);
-
-        List<String> providers = socialAccounts.stream()
-            .map(sa -> sa.getProvider().name().toLowerCase())
-            .toList();
+        String provider = socialAccountReader.findByUserId(userId)
+            .map(SocialAccount::getProvider)
+            .map(authProvider -> authProvider.name().toLowerCase())
+            .orElse(null);
 
         return new UserProfileDto(
             user.getId(),
             user.getEmail(),
             user.getProfileImageUrl(),
             user.getStatus().name(),
-            providers
+            provider
         );
     }
 
