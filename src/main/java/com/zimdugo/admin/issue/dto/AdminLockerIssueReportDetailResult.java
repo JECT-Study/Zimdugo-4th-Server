@@ -9,10 +9,14 @@ public record AdminLockerIssueReportDetailResult(
     Long lockerId,
     String lockerName,
     String lockerRoadAddress,
+    boolean lockerDeleted,
     LockerIssueReportType reportType,
     String detail,
     LockerIssueReportStatus status,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    String reviewMemo,
+    String reviewedBy,
+    LocalDateTime reviewedAt
 ) {
 }
