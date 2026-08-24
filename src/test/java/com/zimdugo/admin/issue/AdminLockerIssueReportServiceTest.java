@@ -1,13 +1,14 @@
 package com.zimdugo.admin.issue;
 
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportDetailResult;
+import com.zimdugo.admin.issue.dto.AdminLockerIssueReportReviewCommand;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportSummaryResult;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
 import com.zimdugo.locker.domain.issue.LockerIssueReportType;
 import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportEntity;
-import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportLockerRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportRepository;
 import com.zimdugo.locker.infrastructure.projection.LockerIssueReportLockerProjection;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -122,7 +123,11 @@ class AdminLockerIssueReportServiceTest {
         ));
         given(lockerIssueReportRepository.findById(20L)).willReturn(Optional.of(report));
 
-        adminLockerIssueReportService.resolve(20L, "위치 정보 수정 완료", "admin");
+        adminLockerIssueReportService.resolve(new AdminLockerIssueReportReviewCommand(
+            20L,
+            "위치 정보 수정 완료",
+            "admin"
+        ));
 
         assertThat(report.getStatus()).isEqualTo(LockerIssueReportStatus.RESOLVED);
         assertThat(report.getReviewMemo()).isEqualTo("위치 정보 수정 완료");
@@ -143,7 +148,11 @@ class AdminLockerIssueReportServiceTest {
         ));
         given(lockerIssueReportRepository.findById(21L)).willReturn(Optional.of(report));
 
-        adminLockerIssueReportService.reject(21L, "   ", "reviewer");
+        adminLockerIssueReportService.reject(new AdminLockerIssueReportReviewCommand(
+            21L,
+            "   ",
+            "reviewer"
+        ));
 
         assertThat(report.getStatus()).isEqualTo(LockerIssueReportStatus.REJECTED);
         assertThat(report.getReviewMemo()).isNull();
@@ -186,7 +195,9 @@ class AdminLockerIssueReportServiceTest {
         ));
         given(lockerIssueReportRepository.findById(12L)).willReturn(Optional.of(report));
 
-        assertThatThrownBy(() -> adminLockerIssueReportService.resolve(12L, null, "admin"))
+        assertThatThrownBy(() -> adminLockerIssueReportService.resolve(
+            new AdminLockerIssueReportReviewCommand(12L, null, "admin")
+        ))
             .isInstanceOf(BusinessException.class);
     }
 
@@ -247,4 +258,3 @@ class AdminLockerIssueReportServiceTest {
     ) {
     }
 }
-

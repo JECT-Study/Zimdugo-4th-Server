@@ -1,14 +1,15 @@
 package com.zimdugo.admin.issue;
 
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportDetailResult;
+import com.zimdugo.admin.issue.dto.AdminLockerIssueReportReviewCommand;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportStatusOption;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportSummaryResult;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
 import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportEntity;
-import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportLockerRepository;
+import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportRepository;
 import com.zimdugo.locker.infrastructure.projection.LockerIssueReportLockerProjection;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,7 @@ public class AdminLockerIssueReportService {
 
         Map<Long, LockerIssueReportLockerProjection> lockers = lockerIssueReportLockerRepository.findLockersByIds(
             reports.stream().map(LockerIssueReportEntity::getLockerId).distinct().toList()
-)
+        )
             .stream()
             .collect(java.util.stream.Collectors.toMap(
                 LockerIssueReportLockerProjection::getId,
@@ -64,13 +65,13 @@ public class AdminLockerIssueReportService {
     }
 
     @Transactional
-    public void resolve(Long reportId, String reviewMemo, String reviewer) {
-        getEntity(reportId).resolve(reviewer, reviewMemo);
+    public void resolve(AdminLockerIssueReportReviewCommand command) {
+        getEntity(command.reportId()).resolve(command.reviewer(), command.reviewMemo());
     }
 
     @Transactional
-    public void reject(Long reportId, String reviewMemo, String reviewer) {
-        getEntity(reportId).reject(reviewer, reviewMemo);
+    public void reject(AdminLockerIssueReportReviewCommand command) {
+        getEntity(command.reportId()).reject(command.reviewer(), command.reviewMemo());
     }
 
     private LockerIssueReportStatus parseStatus(String statusCode) {
@@ -134,7 +135,3 @@ public class AdminLockerIssueReportService {
         return locker.getName();
     }
 }
-
-
-
-
