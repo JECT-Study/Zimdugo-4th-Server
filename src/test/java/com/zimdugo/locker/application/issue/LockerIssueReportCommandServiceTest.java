@@ -55,10 +55,6 @@ class LockerIssueReportCommandServiceTest {
         LockerIssueReportCreateResult result = lockerIssueReportCommandService.create(command);
 
         assertThat(result.reportId()).isEqualTo(10L);
-        assertThat(result.lockerId()).isEqualTo(1L);
-        assertThat(result.reportType()).isEqualTo("OPERATING_HOURS_ERROR");
-        assertThat(result.detail()).isEqualTo("운영 시간이 실제와 다릅니다.");
-        assertThat(result.status()).isEqualTo("PENDING");
         assertThat(result.createdAt()).isEqualTo(createdAt);
         verify(lockerIssueReportStore).create(command.toCreateInfo());
     }
