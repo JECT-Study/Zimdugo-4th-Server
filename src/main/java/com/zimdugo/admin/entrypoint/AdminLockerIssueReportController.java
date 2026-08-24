@@ -5,9 +5,8 @@ import com.zimdugo.admin.issue.AdminLockerIssueReportService;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportReviewCommand;
 import com.zimdugo.core.exception.BusinessException;
 import jakarta.validation.Valid;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -57,13 +56,14 @@ public class AdminLockerIssueReportController {
         @PathVariable(name = "id") Long id,
         @ModelAttribute(REVIEW_FORM_ATTRIBUTE) @Valid AdminLockerIssueReportReviewForm form,
         BindingResult bindingResult,
+        Principal principal,
         RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
             return redirectToDetailWithValidation(id, form, bindingResult, redirectAttributes);
         }
         try {
-            adminLockerIssueReportService.resolve(toReviewCommand(id, form));
+            adminLockerIssueReportService.resolve(toReviewCommand(id, form, principal));
             redirectAttributes.addFlashAttribute("successMessage", "신고를 처리 완료했습니다.");
         } catch (BusinessException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
@@ -76,13 +76,14 @@ public class AdminLockerIssueReportController {
         @PathVariable(name = "id") Long id,
         @ModelAttribute(REVIEW_FORM_ATTRIBUTE) @Valid AdminLockerIssueReportReviewForm form,
         BindingResult bindingResult,
+        Principal principal,
         RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
             return redirectToDetailWithValidation(id, form, bindingResult, redirectAttributes);
         }
         try {
-            adminLockerIssueReportService.reject(toReviewCommand(id, form));
+            adminLockerIssueReportService.reject(toReviewCommand(id, form, principal));
             redirectAttributes.addFlashAttribute("successMessage", "신고를 반려 처리했습니다.");
         } catch (BusinessException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
@@ -111,10 +112,10 @@ public class AdminLockerIssueReportController {
 
     private AdminLockerIssueReportReviewCommand toReviewCommand(
         Long id,
-        AdminLockerIssueReportReviewForm form
+        AdminLockerIssueReportReviewForm form,
+        Principal principal
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new AdminLockerIssueReportReviewCommand(id, form.getReviewMemo(), authentication.getName());
+        return new AdminLockerIssueReportReviewCommand(id, form.getReviewMemo(), principal.getName());
     }
 
     private String redirectToDetail(Long id) {

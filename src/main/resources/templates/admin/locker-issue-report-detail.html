@@ -24,6 +24,14 @@
             font: inherit;
         }
         .form-help { color: #737373; font-size: .82rem; }
+        .form-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+        }
+        .form-error { color: #dc2626; }
+        .char-count { color: #737373; font-size: .82rem; white-space: nowrap; }
         .locker-line { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
         .deleted-badge {
             display: inline-flex;
@@ -90,8 +98,14 @@
                         class="form-textarea"
                         maxlength="1000"
                         placeholder="확인한 내용이나 처리 결과를 남겨주세요. (선택)"></textarea>
-                    <p class="form-help" th:if="${#fields.hasErrors('reviewMemo')}" th:errors="*{reviewMemo}">처리 메모 오류</p>
-                    <p class="form-help">메모는 선택 사항이며, 처리 완료/반려 시 함께 저장됩니다.</p>
+                    <div class="form-meta">
+                        <p class="form-help form-error"
+                           th:if="${#fields.hasErrors('reviewMemo')}"
+                           th:errors="*{reviewMemo}">처리 메모 오류</p>
+                        <p class="form-help"
+                           th:unless="${#fields.hasErrors('reviewMemo')}">메모는 선택 사항이며, 처리 완료/반려 시 함께 저장됩니다.</p>
+                        <span id="reviewMemoCount" class="char-count">0 / 1000</span>
+                    </div>
                 </div>
                 <div class="detail-actions">
                     <button
@@ -122,6 +136,23 @@
             </dl>
         </section>
     </div>
+
+    <script>
+        (() => {
+            const reviewMemo = document.getElementById('reviewMemo');
+            const reviewMemoCount = document.getElementById('reviewMemoCount');
+            if (!reviewMemo || !reviewMemoCount) {
+                return;
+            }
+
+            const updateReviewMemoCount = () => {
+                reviewMemoCount.textContent = `${reviewMemo.value.length} / 1000`;
+            };
+
+            reviewMemo.addEventListener('input', updateReviewMemoCount);
+            updateReviewMemoCount();
+        })();
+    </script>
 </main>
 </body>
 </html>
