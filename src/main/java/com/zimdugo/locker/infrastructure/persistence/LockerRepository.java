@@ -1,5 +1,4 @@
 package com.zimdugo.locker.infrastructure.persistence;
-
 import com.zimdugo.locker.domain.publication.PublicationStatus;
 import com.zimdugo.locker.infrastructure.projection.AdminLockerPlaceGroupProjection;
 import com.zimdugo.locker.infrastructure.projection.AdminLockerSummaryProjection;
@@ -18,7 +17,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
 
-
     @Query(
         value = """
         SELECT
@@ -26,7 +24,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             COALESCE(p.name, '장소 미지정') AS placeName
         FROM lockers l
         LEFT JOIN places p ON p.id = l.place_id
-        WHERE l.deleted_at IS NULL
         GROUP BY p.id, p.name
         ORDER BY MAX(l.id) DESC
         """,
@@ -35,13 +32,13 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         FROM (
             SELECT COALESCE(l.place_id, 0)
             FROM lockers l
-            WHERE l.deleted_at IS NULL
             GROUP BY COALESCE(l.place_id, 0)
         ) place_groups
         """,
         nativeQuery = true
     )
     Page<AdminLockerPlaceGroupProjection> findAdminPlaceGroups(Pageable pageable);
+
     @Query(
         value = """
         SELECT
@@ -49,12 +46,9 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             COALESCE(p.name, '장소 미지정') AS placeName
         FROM lockers l
         LEFT JOIN places p ON p.id = l.place_id
-        WHERE l.deleted_at IS NULL
-          AND (
-               LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
            OR LOWER(l.road_address) LIKE LOWER(CONCAT('%', :keyword, '%'))
            OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-          )
         GROUP BY p.id, p.name
         ORDER BY MAX(l.id) DESC
         """,
@@ -64,12 +58,9 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             SELECT COALESCE(l.place_id, 0)
             FROM lockers l
             LEFT JOIN places p ON p.id = l.place_id
-            WHERE l.deleted_at IS NULL
-              AND (
-               LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                OR LOWER(l.road_address) LIKE LOWER(CONCAT('%', :keyword, '%'))
                OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-              )
             GROUP BY COALESCE(l.place_id, 0)
         ) place_groups
         """,
@@ -79,6 +70,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("keyword") String keyword,
         Pageable pageable
     );
+
     @Query("""
         SELECT
             l.id AS id,
@@ -98,6 +90,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         """
     )
     Page<AdminLockerSummaryProjection> findAdminSummaries(Pageable pageable);
+
     @Query(
         value = """
         SELECT
@@ -132,6 +125,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("keyword") String keyword,
         Pageable pageable
     );
+
     @Query("""
         SELECT
             l.id AS id,
@@ -152,6 +146,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         """
     )
     List<AdminLockerSummaryProjection> findAdminSummariesByPlaceIds(@Param("placeIds") List<Long> placeIds);
+
     @Query("""
         SELECT
             l.id AS id,
@@ -174,6 +169,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
     List<AdminLockerSummaryProjection> findAdminSummariesByPlaceIdsOrWithoutPlace(
         @Param("placeIds") List<Long> placeIds
     );
+
     @Query("""
         SELECT
             l.id AS id,
@@ -194,6 +190,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         """
     )
     List<AdminLockerSummaryProjection> findAdminSummariesWithoutPlace();
+
     @Query("""
         SELECT
             l.id AS id,
@@ -222,6 +219,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("placeIds") List<Long> placeIds,
         @Param("keyword") String keyword
     );
+
     @Query("""
         SELECT
             l.id AS id,
@@ -275,13 +273,18 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         """
     )
     List<AdminLockerSummaryProjection> searchAdminSummariesWithoutPlace(@Param("keyword") String keyword);
+
     @Query(value = """
+        WITH target AS (
+            SELECT ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography AS point
+        )
         SELECT
             l.id AS lockerId,
             COALESCE(lt.name, l.name) AS lockerName,
             COALESCE(lt.road_address, l.road_address) AS roadAddress,
             l.latitude AS latitude,
             l.longitude AS longitude,
+            ST_Distance(l.location, target.point) AS distanceMeters,
             p.id AS placeId,
             COALESCE(pt.name, p.name) AS placeName,
             ld.locker_type AS lockerType,
@@ -293,7 +296,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             COALESCE(lt.detail_info, ld.detail_info) AS detailInfo,
             ld.start_time AS startTime,
             ld.end_time AS endTime,
-            ld.image_url AS imageUrl,
             ld.accurate_vote_count AS accurateVoteCount,
             ld.inaccurate_vote_count AS inaccurateVoteCount,
             ld.created_at AS createdAt,
@@ -328,8 +330,8 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
             JOIN locker_realtime_availabilities ra ON ra.external_locker_id = rm.external_locker_id
             WHERE rm.locker_id = l.id
         ) ra ON true
+        CROSS JOIN target
         WHERE l.id = :lockerId
-          AND l.deleted_at IS NULL
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
         """, nativeQuery = true)
@@ -340,6 +342,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("latitude") double latitude,
         @Param("longitude") double longitude
     );
+
     @Query(value = """
         SELECT
             l.id AS lockerId,
@@ -352,7 +355,6 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         JOIN places p ON p.id = l.place_id
         JOIN locker_details ld ON ld.locker_id = l.id
         WHERE l.location && ST_MakeEnvelope(:swLng, :swLat, :neLng, :neLat, 4326)::geography
-          AND l.deleted_at IS NULL
           AND l.place_id IS NOT NULL
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
@@ -378,6 +380,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("neLng") double neLng,
         @Param("filter") LockerBoundsFilter filter
     );
+
     @Query(value = """
         SELECT
             l.id AS lockerId,
@@ -395,12 +398,12 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         FROM lockers l
         JOIN places p ON p.id = l.place_id
         JOIN locker_details ld ON ld.locker_id = l.id
-        WHERE l.deleted_at IS NULL
-          AND l.place_id IS NOT NULL
+        WHERE l.place_id IS NOT NULL
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
         """, nativeQuery = true)
     List<LockerSuggestIndexQueryProjection> findAllForSuggestIndex();
+
     @Query(value = """
         SELECT
             l.id AS lockerId,
@@ -418,14 +421,14 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         FROM lockers l
         JOIN places p ON p.id = l.place_id
         JOIN locker_details ld ON ld.locker_id = l.id
-        WHERE l.deleted_at IS NULL
-          AND l.place_id IN (:placeIds)
+        WHERE l.place_id IN (:placeIds)
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
         """, nativeQuery = true)
     List<LockerSuggestIndexQueryProjection> findAllForSuggestIndexByPlaceIds(
         @Param("placeIds") List<Long> placeIds
     );
+
     @Query("""
         SELECT DISTINCT l.place.id
         FROM LockerEntity l
@@ -437,6 +440,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
     List<Long> findPlaceIdsByLockerIds(@Param("lockerIds") List<Long> lockerIds);
 
     boolean existsByIdAndPublicationStatus(Long id, PublicationStatus publicationStatus);
+
     @Query(value = """
         WITH target AS (
             SELECT ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography AS point
@@ -458,8 +462,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         JOIN places p ON p.id = l.place_id
         LEFT JOIN locker_translations lt ON lt.locker_id = l.id AND lt.language_code = :languageCode
         CROSS JOIN target
-        WHERE l.deleted_at IS NULL
-          AND l.place_id IN (:placeIds)
+        WHERE l.place_id IN (:placeIds)
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
         ORDER BY l.place_id ASC, ST_Distance(l.location, target.point) ASC
@@ -470,6 +473,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         @Param("placeIds") List<Long> placeIds,
         @Param("languageCode") String languageCode
     );
+
     @Query(value = """
         SELECT locker_id AS lockerId, size_type AS sizeType
         FROM locker_size_types
@@ -479,6 +483,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
     List<LockerSizeTypeQueryProjection> findLockerSizeTypesByLockerIds(
         @Param("lockerIds") List<Long> lockerIds
     );
+
     @Query(value = """
         SELECT
             l.id AS lockerId,
@@ -488,11 +493,8 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         FROM lockers l
         JOIN locker_details ld ON ld.locker_id = l.id
         LEFT JOIN locker_translations lt ON lt.locker_id = l.id
-        WHERE l.deleted_at IS NULL
-          AND l.publication_status = 'ACTIVE'
+        WHERE l.publication_status = 'ACTIVE'
         ORDER BY l.id DESC
         """, nativeQuery = true)
     List<LockerSeoQueryProjection> findAllForSeo();
 }
-
-
