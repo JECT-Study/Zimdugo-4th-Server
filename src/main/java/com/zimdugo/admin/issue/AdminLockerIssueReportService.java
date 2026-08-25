@@ -111,12 +111,15 @@ public class AdminLockerIssueReportService {
         LockerIssueReportEntity report,
         LockerIssueReportLockerProjection locker
     ) {
+        boolean lockerDeleted = locker != null && locker.isDeleted();
+        boolean lockerManageable = locker != null && !lockerDeleted;
         return new AdminLockerIssueReportDetailResult(
             report.getId(),
             report.getLockerId(),
             lockerName(locker),
             locker == null ? null : locker.getRoadAddress(),
-            locker != null && locker.isDeleted(),
+            lockerDeleted,
+            lockerManageable,
             report.getReportType(),
             report.getDetail(),
             report.getStatus(),

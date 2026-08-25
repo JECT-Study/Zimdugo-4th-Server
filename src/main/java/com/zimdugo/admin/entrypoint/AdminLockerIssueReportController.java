@@ -2,7 +2,9 @@ package com.zimdugo.admin.entrypoint;
 
 import com.zimdugo.admin.entrypoint.dto.AdminLockerIssueReportReviewForm;
 import com.zimdugo.admin.issue.AdminLockerIssueReportService;
+import com.zimdugo.admin.issue.dto.AdminLockerIssueReportDetailResult;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportReviewCommand;
+import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
 import com.zimdugo.core.exception.BusinessException;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -43,9 +45,10 @@ public class AdminLockerIssueReportController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable(name = "id") Long id, Model model) {
-        model.addAttribute("report", adminLockerIssueReportService.getReport(id));
+        AdminLockerIssueReportDetailResult report = adminLockerIssueReportService.getReport(id);
+        model.addAttribute("report", report);
         if (!model.containsAttribute(REVIEW_FORM_ATTRIBUTE)) {
-            model.addAttribute(REVIEW_FORM_ATTRIBUTE, new AdminLockerIssueReportReviewForm());
+            model.addAttribute(REVIEW_FORM_ATTRIBUTE, createDefaultReviewForm(report));
         }
         model.addAttribute("activeMenu", "locker-issue-reports");
         return "admin/locker-issue-report-detail";
@@ -64,7 +67,7 @@ public class AdminLockerIssueReportController {
         }
         try {
             adminLockerIssueReportService.resolve(toReviewCommand(id, form, principal));
-            redirectAttributes.addFlashAttribute("successMessage", "신고를 처리 완료했습니다.");
+            redirectAttributes.addFlashAttribute("successMessage", "신고 상태를 처리 완료로 저장했습니다.");
         } catch (BusinessException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
         }
@@ -84,7 +87,7 @@ public class AdminLockerIssueReportController {
         }
         try {
             adminLockerIssueReportService.reject(toReviewCommand(id, form, principal));
-            redirectAttributes.addFlashAttribute("successMessage", "신고를 반려 처리했습니다.");
+            redirectAttributes.addFlashAttribute("successMessage", "신고 상태를 반려로 저장했습니다.");
         } catch (BusinessException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
         }
@@ -94,6 +97,14 @@ public class AdminLockerIssueReportController {
     @ModelAttribute(REVIEW_FORM_ATTRIBUTE)
     public AdminLockerIssueReportReviewForm reviewForm() {
         return new AdminLockerIssueReportReviewForm();
+    }
+
+    private AdminLockerIssueReportReviewForm createDefaultReviewForm(AdminLockerIssueReportDetailResult report) {
+        AdminLockerIssueReportReviewForm form = new AdminLockerIssueReportReviewForm();
+        if (report.status() != LockerIssueReportStatus.PENDING && report.reviewMemo() != null) {
+            form.setReviewMemo(report.reviewMemo());
+        }
+        return form;
     }
 
     private String redirectToDetailWithValidation(
