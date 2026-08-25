@@ -33,6 +33,17 @@
         .muted { color: #888; font-size: 0.82rem; }
         .empty-state { text-align: center; padding: 3rem 1rem; color: #999; }
         .filter-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .locker-line { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+        .deleted-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: .18rem .5rem;
+            border-radius: 999px;
+            background: #fff7ed;
+            color: #c2410c;
+            font-size: .75rem;
+            font-weight: 600;
+        }
     </style>
 
     <div class="page-header">
@@ -72,11 +83,15 @@
                 <tr th:each="report : ${reports}">
                     <td class="muted" th:text="${report.id}">1</td>
                     <td>
-                        <a class="title-link"
-                           th:href="@{/admin/locker-issue-reports/{id}(id=${report.id})}"
-                           th:text="${report.lockerName}">
-                            보관함 이름
-                        </a>
+                        <div class="locker-line">
+                            <a class="title-link"
+                               th:href="@{/admin/locker-issue-reports/{id}(id=${report.id})}"
+                               th:text="${report.lockerName}">
+                                보관함 이름
+                            </a>
+                            <span class="deleted-badge" th:if="${report.lockerDeleted}">삭제됨</span>
+                        </div>
+                        <div class="muted" th:if="${report.lockerDeleted}">삭제된 보관함에 대한 신고 이력입니다.</div>
                         <div class="muted" th:text="'lockerId: ' + ${report.lockerId}">lockerId</div>
                         <div class="muted" th:text="${report.lockerRoadAddress} ?: '-'">주소</div>
                     </td>

@@ -1,15 +1,16 @@
 package com.zimdugo.admin.issue;
 
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportDetailResult;
+import com.zimdugo.admin.issue.dto.AdminLockerIssueReportReviewCommand;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportStatusOption;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportSummaryResult;
 import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
-import com.zimdugo.locker.infrastructure.persistence.LockerEntity;
 import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportEntity;
+import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportLockerRepository;
 import com.zimdugo.locker.infrastructure.persistence.LockerIssueReportRepository;
-import com.zimdugo.locker.infrastructure.persistence.LockerRepository;
+import com.zimdugo.locker.infrastructure.projection.LockerIssueReportLockerProjection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -23,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminLockerIssueReportService {
 
     private final LockerIssueReportRepository lockerIssueReportRepository;
-    private final LockerRepository lockerRepository;
+    private final LockerIssueReportLockerRepository lockerIssueReportLockerRepository;
 
     public List<AdminLockerIssueReportStatusOption> getStatusOptions() {
         return java.util.Arrays.stream(LockerIssueReportStatus.values())
@@ -37,9 +38,18 @@ public class AdminLockerIssueReportService {
             ? lockerIssueReportRepository.findAllByOrderByCreatedAtDesc()
             : lockerIssueReportRepository.findAllByStatusOrderByCreatedAtDesc(status);
 
-        Map<Long, LockerEntity> lockers = lockerRepository.findAllById(
+        if (reports.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, LockerIssueReportLockerProjection> lockers = lockerIssueReportLockerRepository.findLockersByIds(
             reports.stream().map(LockerIssueReportEntity::getLockerId).distinct().toList()
-        ).stream().collect(java.util.stream.Collectors.toMap(LockerEntity::getId, Function.identity()));
+        )
+            .stream()
+            .collect(java.util.stream.Collectors.toMap(
+                LockerIssueReportLockerProjection::getId,
+                Function.identity()
+            ));
 
         return reports.stream()
             .map(report -> toSummaryResult(report, lockers.get(report.getLockerId())))
@@ -48,19 +58,20 @@ public class AdminLockerIssueReportService {
 
     public AdminLockerIssueReportDetailResult getReport(Long reportId) {
         LockerIssueReportEntity report = getEntity(reportId);
-        LockerEntity locker = lockerRepository.findById(report.getLockerId())
-            .orElseThrow(() -> new BusinessException(ErrorCode.LOCKER_NOT_FOUND));
+        LockerIssueReportLockerProjection locker =
+            lockerIssueReportLockerRepository.findLockerById(report.getLockerId())
+                .orElse(null);
         return toDetailResult(report, locker);
     }
 
     @Transactional
-    public void resolve(Long reportId) {
-        getEntity(reportId).resolve();
+    public void resolve(AdminLockerIssueReportReviewCommand command) {
+        getEntity(command.reportId()).resolve(command.reviewer(), command.reviewMemo());
     }
 
     @Transactional
-    public void reject(Long reportId) {
-        getEntity(reportId).reject();
+    public void reject(AdminLockerIssueReportReviewCommand command) {
+        getEntity(command.reportId()).reject(command.reviewer(), command.reviewMemo());
     }
 
     private LockerIssueReportStatus parseStatus(String statusCode) {
@@ -81,13 +92,14 @@ public class AdminLockerIssueReportService {
 
     private AdminLockerIssueReportSummaryResult toSummaryResult(
         LockerIssueReportEntity report,
-        LockerEntity locker
+        LockerIssueReportLockerProjection locker
     ) {
         return new AdminLockerIssueReportSummaryResult(
             report.getId(),
             report.getLockerId(),
-            locker == null ? "삭제된 보관함" : locker.getName(),
+            lockerName(locker),
             locker == null ? null : locker.getRoadAddress(),
+            locker != null && locker.isDeleted(),
             report.getReportType(),
             report.getDetail(),
             report.getStatus(),
@@ -97,18 +109,29 @@ public class AdminLockerIssueReportService {
 
     private AdminLockerIssueReportDetailResult toDetailResult(
         LockerIssueReportEntity report,
-        LockerEntity locker
+        LockerIssueReportLockerProjection locker
     ) {
         return new AdminLockerIssueReportDetailResult(
             report.getId(),
             report.getLockerId(),
-            locker.getName(),
-            locker.getRoadAddress(),
+            lockerName(locker),
+            locker == null ? null : locker.getRoadAddress(),
+            locker != null && locker.isDeleted(),
             report.getReportType(),
             report.getDetail(),
             report.getStatus(),
             report.getCreatedAt(),
-            report.getUpdatedAt()
+            report.getUpdatedAt(),
+            report.getReviewMemo(),
+            report.getReviewedBy(),
+            report.getReviewedAt()
         );
+    }
+
+    private String lockerName(LockerIssueReportLockerProjection locker) {
+        if (locker == null) {
+            return "알 수 없는 보관함";
+        }
+        return locker.getName();
     }
 }

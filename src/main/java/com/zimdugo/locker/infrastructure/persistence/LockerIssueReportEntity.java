@@ -50,6 +50,15 @@ public class LockerIssueReportEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "review_memo", length = 1000)
+    private String reviewMemo;
+
+    @Column(length = 100)
+    private String reviewedBy;
+
+    @Column
+    private LocalDateTime reviewedAt;
+
     @Builder
     private LockerIssueReportEntity(
         Long lockerId,
@@ -75,19 +84,35 @@ public class LockerIssueReportEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    public void resolve() {
+    public void resolve(String reviewer, String reviewMemo) {
         validatePending();
         this.status = LockerIssueReportStatus.RESOLVED;
+        recordReview(reviewer, reviewMemo);
     }
 
-    public void reject() {
+    public void reject(String reviewer, String reviewMemo) {
         validatePending();
         this.status = LockerIssueReportStatus.REJECTED;
+        recordReview(reviewer, reviewMemo);
     }
 
     private void validatePending() {
         if (status != LockerIssueReportStatus.PENDING) {
             throw new BusinessException(ErrorCode.LOCKER_ISSUE_REPORT_ALREADY_REVIEWED);
         }
+    }
+
+    private void recordReview(String reviewer, String reviewMemo) {
+        this.reviewedBy = reviewer;
+        this.reviewMemo = normalizeMemo(reviewMemo);
+        this.reviewedAt = LocalDateTime.now();
+    }
+
+    private String normalizeMemo(String reviewMemo) {
+        if (reviewMemo == null) {
+            return null;
+        }
+        String trimmed = reviewMemo.trim();
+        return trimmed.isBlank() ? null : trimmed;
     }
 }

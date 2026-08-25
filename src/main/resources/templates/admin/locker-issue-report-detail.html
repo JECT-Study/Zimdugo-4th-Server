@@ -12,6 +12,37 @@
         .stack { display: grid; gap: 1rem; }
         .muted { color: #737373; font-size: .82rem; }
         .detail-actions { display: flex; gap: .65rem; justify-content: flex-end; margin-top: 1rem; }
+        .form-stack { display: grid; gap: .75rem; }
+        .form-label { font-weight: 600; font-size: .88rem; }
+        .form-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: .85rem 1rem;
+            border: 1px solid #d4d4d4;
+            border-radius: 8px;
+            resize: vertical;
+            font: inherit;
+        }
+        .form-help { color: #737373; font-size: .82rem; }
+        .form-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+        }
+        .form-error { color: #dc2626; }
+        .char-count { color: #737373; font-size: .82rem; white-space: nowrap; }
+        .locker-line { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+        .deleted-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: .18rem .5rem;
+            border-radius: 999px;
+            background: #fff7ed;
+            color: #c2410c;
+            font-size: .75rem;
+            font-weight: 600;
+        }
     </style>
 
     <div class="page-header">
@@ -25,6 +56,7 @@
     </div>
 
     <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
     <div class="stack">
         <section class="card">
@@ -37,35 +69,90 @@
                 </span>
             </div>
             <dl class="detail-grid">
-                <dt>대상 보관함</dt><dd th:text="${report.lockerName}">보관함</dd>
+                <dt>대상 보관함</dt>
+                <dd>
+                    <div class="locker-line">
+                        <span th:text="${report.lockerName}">보관함</span>
+                        <span class="deleted-badge" th:if="${report.lockerDeleted}">삭제됨</span>
+                    </div>
+                    <div class="muted" th:if="${report.lockerDeleted}">삭제된 보관함에 대한 신고 이력입니다.</div>
+                </dd>
                 <dt>보관함 ID</dt><dd th:text="${report.lockerId}">1</dd>
-                <dt>주소</dt><dd th:text="${report.lockerRoadAddress}">주소</dd>
+                <dt>주소</dt><dd th:text="${report.lockerRoadAddress} ?: '-'">주소</dd>
                 <dt>신고 유형</dt><dd th:text="${report.reportType.name()}">WRONG_LOCATION</dd>
                 <dt>상세 내용</dt><dd th:text="${report.detail != null and !report.detail.isBlank()} ? ${report.detail} : '상세 내용 없음'">상세 내용</dd>
                 <dt>접수 일시</dt><dd th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2026-08-20 23:00:00</dd>
                 <dt>수정 일시</dt><dd th:text="${#temporals.format(report.updatedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-08-20 23:00:00</dd>
             </dl>
-            <div class="detail-actions" th:if="${report.status.name() == 'PENDING'}">
-                <form th:action="@{/admin/locker-issue-reports/{id}/reject(id=${report.id})}"
-                      method="post"
-                      onsubmit="return confirm('이 신고를 반려 처리할까요?');">
-                    <button type="submit" class="btn btn-danger">
+        </section>
+
+        <section class="card" th:if="${report.status.name() == 'PENDING'}">
+            <strong style="display:block; margin-bottom: 1rem;">처리 정보 입력</strong>
+            <form method="post" class="form-stack" th:object="${reviewForm}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <div>
+                    <label class="form-label" for="reviewMemo">처리 메모</label>
+                    <textarea
+                        id="reviewMemo"
+                        th:field="*{reviewMemo}"
+                        class="form-textarea"
+                        maxlength="1000"
+                        placeholder="확인한 내용이나 처리 결과를 남겨주세요. (선택)"></textarea>
+                    <div class="form-meta">
+                        <p class="form-help form-error"
+                           th:if="${#fields.hasErrors('reviewMemo')}"
+                           th:errors="*{reviewMemo}">처리 메모 오류</p>
+                        <p class="form-help"
+                           th:unless="${#fields.hasErrors('reviewMemo')}">메모는 선택 사항이며, 처리 완료/반려 시 함께 저장됩니다.</p>
+                        <span id="reviewMemoCount" class="char-count">0 / 1000</span>
+                    </div>
+                </div>
+                <div class="detail-actions">
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                        th:formaction="@{/admin/locker-issue-reports/{id}/reject(id=${report.id})}"
+                        onclick="return confirm('이 신고를 반려 처리할까요?');">
                         <i class="fa-solid fa-xmark"></i> 반려
                     </button>
-                </form>
-                <form th:action="@{/admin/locker-issue-reports/{id}/resolve(id=${report.id})}"
-                      method="post"
-                      onsubmit="return confirm('이 신고를 처리 완료할까요?');">
-                    <button type="submit" class="btn btn-primary">
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        th:formaction="@{/admin/locker-issue-reports/{id}/resolve(id=${report.id})}"
+                        onclick="return confirm('이 신고를 처리 완료할까요?');">
                         <i class="fa-solid fa-check"></i> 처리 완료
                     </button>
-                </form>
-            </div>
-            <p class="muted" th:if="${report.status.name() != 'PENDING'}">
-                이미 처리된 신고입니다.
-            </p>
+                </div>
+            </form>
+        </section>
+
+        <section class="card" th:if="${report.status.name() != 'PENDING'}">
+            <strong style="display:block; margin-bottom: 1rem;">처리 결과</strong>
+            <dl class="detail-grid">
+                <dt>최종 상태</dt><dd th:text="${report.status.displayName()}">처리 완료</dd>
+                <dt>처리 메모</dt><dd th:text="${report.reviewMemo != null and !report.reviewMemo.isBlank()} ? ${report.reviewMemo} : '처리 메모 없음'">메모</dd>
+                <dt>처리자</dt><dd th:text="${report.reviewedBy != null and !report.reviewedBy.isBlank()} ? ${report.reviewedBy} : '-'">admin</dd>
+                <dt>처리 일시</dt><dd th:text="${report.reviewedAt != null} ? ${#temporals.format(report.reviewedAt, 'yyyy-MM-dd HH:mm:ss')} : '-'">2026-08-20 23:10:00</dd>
+            </dl>
         </section>
     </div>
+
+    <script>
+        (() => {
+            const reviewMemo = document.getElementById('reviewMemo');
+            const reviewMemoCount = document.getElementById('reviewMemoCount');
+            if (!reviewMemo || !reviewMemoCount) {
+                return;
+            }
+
+            const updateReviewMemoCount = () => {
+                reviewMemoCount.textContent = `${reviewMemo.value.length} / 1000`;
+            };
+
+            reviewMemo.addEventListener('input', updateReviewMemoCount);
+            updateReviewMemoCount();
+        })();
+    </script>
 </main>
 </body>
 </html>

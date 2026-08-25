@@ -9,6 +9,7 @@ public record AdminLockerIssueReportSummaryResult(
     Long lockerId,
     String lockerName,
     String lockerRoadAddress,
+    boolean lockerDeleted,
     LockerIssueReportType reportType,
     String detail,
     LockerIssueReportStatus status,
