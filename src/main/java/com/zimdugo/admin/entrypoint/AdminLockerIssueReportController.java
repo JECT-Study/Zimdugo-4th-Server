@@ -4,7 +4,6 @@ import com.zimdugo.admin.entrypoint.dto.AdminLockerIssueReportReviewForm;
 import com.zimdugo.admin.issue.AdminLockerIssueReportService;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportDetailResult;
 import com.zimdugo.admin.issue.dto.AdminLockerIssueReportReviewCommand;
-import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
 import com.zimdugo.core.exception.BusinessException;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -101,7 +100,7 @@ public class AdminLockerIssueReportController {
 
     private AdminLockerIssueReportReviewForm createDefaultReviewForm(AdminLockerIssueReportDetailResult report) {
         AdminLockerIssueReportReviewForm form = new AdminLockerIssueReportReviewForm();
-        if (report.status() != LockerIssueReportStatus.PENDING && report.reviewMemo() != null) {
+        if (report.reviewMemo() != null) {
             form.setReviewMemo(report.reviewMemo());
         }
         return form;
