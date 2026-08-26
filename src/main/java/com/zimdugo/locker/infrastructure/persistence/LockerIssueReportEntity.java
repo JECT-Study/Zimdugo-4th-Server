@@ -2,8 +2,6 @@ package com.zimdugo.locker.infrastructure.persistence;
 
 import com.zimdugo.locker.domain.issue.LockerIssueReportStatus;
 import com.zimdugo.locker.domain.issue.LockerIssueReportType;
-import com.zimdugo.core.exception.BusinessException;
-import com.zimdugo.core.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -85,21 +83,13 @@ public class LockerIssueReportEntity {
     }
 
     public void resolve(String reviewer, String reviewMemo) {
-        validatePending();
         this.status = LockerIssueReportStatus.RESOLVED;
         recordReview(reviewer, reviewMemo);
     }
 
     public void reject(String reviewer, String reviewMemo) {
-        validatePending();
         this.status = LockerIssueReportStatus.REJECTED;
         recordReview(reviewer, reviewMemo);
-    }
-
-    private void validatePending() {
-        if (status != LockerIssueReportStatus.PENDING) {
-            throw new BusinessException(ErrorCode.LOCKER_ISSUE_REPORT_ALREADY_REVIEWED);
-        }
     }
 
     private void recordReview(String reviewer, String reviewMemo) {

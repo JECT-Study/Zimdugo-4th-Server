@@ -10,6 +10,7 @@ public record AdminLockerIssueReportDetailResult(
     String lockerName,
     String lockerRoadAddress,
     boolean lockerDeleted,
+    boolean lockerManageable,
     LockerIssueReportType reportType,
     String detail,
     LockerIssueReportStatus status,

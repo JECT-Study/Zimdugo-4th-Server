@@ -103,6 +103,7 @@ class AdminLockerIssueReportServiceTest {
 
         assertThat(result.lockerName()).isEqualTo("강남역 보관함");
         assertThat(result.lockerDeleted()).isFalse();
+        assertThat(result.lockerManageable()).isTrue();
         assertThat(result.reportType()).isEqualTo(LockerIssueReportType.IMAGE_ERROR);
         assertThat(result.status()).isEqualTo(LockerIssueReportStatus.RESOLVED);
         assertThat(result.reviewMemo()).isNull();
@@ -161,6 +162,34 @@ class AdminLockerIssueReportServiceTest {
     }
 
     @Test
+    @DisplayName("이미 처리된 신고도 처리 결과를 수정할 수 있다")
+    void resolveUpdatesReviewedReport() {
+        LockerIssueReportEntity report = issueReport(new IssueReportFixture(
+            30L,
+            8L,
+            LockerIssueReportType.OTHER,
+            "기존 신고",
+            LockerIssueReportStatus.REJECTED,
+            LocalDateTime.of(2026, 8, 20, 23, 45, 0)
+        ));
+        setField(report, "reviewMemo", "기존 반려 메모");
+        setField(report, "reviewedBy", "reviewer-a");
+        setField(report, "reviewedAt", LocalDateTime.of(2026, 8, 20, 23, 50, 0));
+        given(lockerIssueReportRepository.findById(30L)).willReturn(Optional.of(report));
+
+        adminLockerIssueReportService.resolve(new AdminLockerIssueReportReviewCommand(
+            30L,
+            "확인 후 처리 완료로 수정",
+            "reviewer-b"
+        ));
+
+        assertThat(report.getStatus()).isEqualTo(LockerIssueReportStatus.RESOLVED);
+        assertThat(report.getReviewMemo()).isEqualTo("확인 후 처리 완료로 수정");
+        assertThat(report.getReviewedBy()).isEqualTo("reviewer-b");
+        assertThat(report.getReviewedAt()).isNotNull();
+    }
+
+    @Test
     @DisplayName("삭제된 보관함 신고도 상세를 조회할 수 있다")
     void getReportWhenLockerDeleted() {
         LockerIssueReportEntity report = issueReport(new IssueReportFixture(
@@ -179,26 +208,8 @@ class AdminLockerIssueReportServiceTest {
 
         assertThat(result.lockerName()).isEqualTo("폐업 처리된 보관함");
         assertThat(result.lockerDeleted()).isTrue();
+        assertThat(result.lockerManageable()).isFalse();
         assertThat(result.lockerRoadAddress()).isNull();
-    }
-
-    @Test
-    @DisplayName("이미 처리된 신고는 다시 처리할 수 없다")
-    void rejectAlreadyReviewedReport() {
-        LockerIssueReportEntity report = issueReport(new IssueReportFixture(
-            12L,
-            3L,
-            LockerIssueReportType.OTHER,
-            null,
-            LockerIssueReportStatus.REJECTED,
-            LocalDateTime.of(2026, 8, 20, 23, 32, 0)
-        ));
-        given(lockerIssueReportRepository.findById(12L)).willReturn(Optional.of(report));
-
-        assertThatThrownBy(() -> adminLockerIssueReportService.resolve(
-            new AdminLockerIssueReportReviewCommand(12L, null, "admin")
-        ))
-            .isInstanceOf(BusinessException.class);
     }
 
     private LockerIssueReportEntity issueReport(IssueReportFixture fixture) {
