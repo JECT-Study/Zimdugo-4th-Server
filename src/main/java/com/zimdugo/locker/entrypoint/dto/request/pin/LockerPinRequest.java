@@ -6,6 +6,7 @@ import com.zimdugo.locker.application.filter.LockerSizeFilterType;
 import com.zimdugo.locker.application.pin.LockerPinQuery;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import java.util.Set;
@@ -41,13 +42,13 @@ public record LockerPinRequest(
     @DecimalMax(value = "21.0")
     double zoom,
 
-    @Parameter(description = "검색 기준 사용자 위도", example = "37.498095")
+    @Parameter(description = "검색 기준 사용자 위도. lng와 함께 전달하거나 둘 다 생략", example = "37.498095")
     @Schema(minimum = "-90", maximum = "90")
     @DecimalMin(value = "-90.0")
     @DecimalMax(value = "90.0")
     Double lat,
 
-    @Parameter(description = "검색 기준 사용자 경도", example = "127.027610")
+    @Parameter(description = "검색 기준 사용자 경도. lat과 함께 전달하거나 둘 다 생략", example = "127.027610")
     @Schema(minimum = "-180", maximum = "180")
     @DecimalMin(value = "-180.0")
     @DecimalMax(value = "180.0")
@@ -65,6 +66,11 @@ public record LockerPinRequest(
     @Parameter(description = "보관함 유형 필터")
     Set<LockerFacilityFilterType> lockerTypes
 ) {
+    @AssertTrue(message = "lat과 lng는 함께 전달해야 합니다.")
+    public boolean hasCompleteUserCoordinates() {
+        return (lat == null) == (lng == null);
+    }
+
     public LockerPinQuery toQuery() {
         return new LockerPinQuery(
             swLat,

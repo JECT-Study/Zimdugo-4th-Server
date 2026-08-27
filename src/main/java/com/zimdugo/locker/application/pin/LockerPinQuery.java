@@ -31,4 +31,8 @@ public record LockerPinQuery(
     public boolean hasKeywordSearch() {
         return keyword != null && !keyword.isBlank();
     }
+
+    public boolean hasCompleteUserCoordinates() {
+        return (userLat == null) == (userLng == null);
+    }
 }
