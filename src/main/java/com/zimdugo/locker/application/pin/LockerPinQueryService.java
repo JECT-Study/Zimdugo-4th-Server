@@ -1,5 +1,7 @@
 package com.zimdugo.locker.application.pin;
 
+import com.zimdugo.core.exception.BusinessException;
+import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.locker.application.filter.LockerSearchFilterFactory;
 import com.zimdugo.locker.application.common.LocationValidator;
 import com.zimdugo.locker.application.search.LockerSearchDisplayQueryService;
@@ -31,6 +33,9 @@ public class LockerPinQueryService {
 
     public LockerPinResult getPins(Long userId, LockerPinQuery query) {
         LocationValidator.validateBounds(query.swLat(), query.swLng(), query.neLat(), query.neLng()); //좌표 검증
+        if (!query.hasCompleteUserCoordinates()) {
+            throw new BusinessException(ErrorCode.INVALID_LOCATION_RANGE);
+        }
 
         LockerSearchFilter filter = LockerSearchFilterFactory.create(
             query.sizeTypes(),
