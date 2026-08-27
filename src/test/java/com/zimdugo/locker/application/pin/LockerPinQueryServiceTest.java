@@ -160,6 +160,52 @@ class LockerPinQueryServiceTest {
     }
 
     @Test
+    @DisplayName("키워드 검색에서 위도 또는 경도만 전달되면 요청을 거절한다")
+    void rejectsKeywordSearchWhenOnlyOneUserCoordinateIsProvided() {
+        LockerPinQuery query = new LockerPinQuery(
+            37.54,
+            126.92,
+            37.56,
+            126.94,
+            13.0,
+            37.55,
+            null,
+            "station",
+            null,
+            null,
+            null
+        );
+
+        assertThatThrownBy(() -> lockerPinQueryService.getPins(1L, query))
+            .isInstanceOf(BusinessException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.INVALID_LOCATION_RANGE);
+    }
+
+    @Test
+    @DisplayName("키워드 검색에서 경도만 전달되면 요청을 거절한다")
+    void rejectsKeywordSearchWhenOnlyUserLongitudeIsProvided() {
+        LockerPinQuery query = new LockerPinQuery(
+            37.54,
+            126.92,
+            37.56,
+            126.94,
+            13.0,
+            null,
+            126.93,
+            "station",
+            null,
+            null,
+            null
+        );
+
+        assertThatThrownBy(() -> lockerPinQueryService.getPins(1L, query))
+            .isInstanceOf(BusinessException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.INVALID_LOCATION_RANGE);
+    }
+
+    @Test
     @DisplayName("키워드 검색 핀은 검색 결과를 bounds 안에서만 클러스터링한다")
     void clustersKeywordPinsWithinBounds() {
         LockerPinQuery query = new LockerPinQuery(
