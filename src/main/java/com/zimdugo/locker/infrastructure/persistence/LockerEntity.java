@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -54,6 +55,9 @@ public class LockerEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PublicationStatus publicationStatus = PublicationStatus.ACTIVE;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "locker", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("listOrder ASC")
