@@ -93,6 +93,7 @@ public class GeminiDocumentTranslationDraftGenerator implements DocumentTranslat
                 e
             );
         } catch (RestClientException e) {
+            log.warn("문서 번역 초안 생성 실패. type={}", e.getClass().getSimpleName(), e);
             String message = "문서 번역 초안 생성 실패: " + e.getClass().getSimpleName();
             throw new ExternalApiException(message, e);
         }

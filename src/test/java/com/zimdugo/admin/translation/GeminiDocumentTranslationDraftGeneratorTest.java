@@ -4,12 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimdugo.admin.translation.dto.AdminDocumentTranslationSource;
 import com.zimdugo.common.i18n.SupportedLanguage;
 import com.zimdugo.core.exception.ExternalApiException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -48,6 +52,36 @@ class GeminiDocumentTranslationDraftGeneratorTest {
         assertThatThrownBy(() -> generator.generate(source()))
             .isInstanceOf(ExternalApiException.class)
             .hasMessage("번역 API 사용 한도를 초과했습니다. 사용량과 요금제를 확인한 후 다시 시도해 주세요.");
+        server.verify();
+    }
+
+    @Test
+    void logsUnderlyingCauseWhenResponseBodyCannotBeRead() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://example.com");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(request -> { })
+            .andRespond(withStatus(HttpStatus.OK)
+                .contentType(MediaType.TEXT_PLAIN)
+                .body("not-json"));
+        GeminiDocumentTranslationDraftGenerator generator = generator(builder.build());
+        Logger logger = (Logger) LoggerFactory.getLogger(GeminiDocumentTranslationDraftGenerator.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+
+        try {
+            assertThatThrownBy(() -> generator.generate(source()))
+                .isInstanceOf(ExternalApiException.class);
+
+            assertThat(appender.list)
+                .anySatisfy(event -> {
+                    assertThat(event.getFormattedMessage()).contains("문서 번역 초안 생성 실패");
+                    assertThat(event.getThrowableProxy()).isNotNull();
+                });
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
         server.verify();
     }
 
