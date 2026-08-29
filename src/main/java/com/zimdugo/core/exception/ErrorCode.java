@@ -36,6 +36,7 @@ public enum ErrorCode implements BaseCode {
     ),
     TOO_MANY_NOTICE_IMAGES("ADMIN-400-6", "공지 이미지는 최대 10장까지 등록할 수 있습니다.", HttpStatus.BAD_REQUEST),
     INVALID_NOTICE_IMAGE_ORDER("ADMIN-400-7", "공지 이미지 순서 정보가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_MAINTENANCE_NOTICE_PERIOD("ADMIN-400-8", "점검 종료 시간은 시작 시간보다 빠를 수 없습니다.", HttpStatus.BAD_REQUEST),
 
     // 인증 (AUTH)
     REFRESH_TOKEN_NOT_FOUND("AUTH-400-1", "리프레시 토큰이 없습니다.", HttpStatus.BAD_REQUEST),
