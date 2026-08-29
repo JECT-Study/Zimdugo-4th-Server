@@ -77,3 +77,7 @@ visitor:
 push:
   device:
     cookie-secure: false
+  vapid:
+    public-key: ${PUSH_VAPID_PUBLIC_KEY:local-vapid-public-key}
+    private-key: ${PUSH_VAPID_PRIVATE_KEY:}
+    subject: ${PUSH_VAPID_SUBJECT:mailto:admin@zimdugo.com}
