@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>서비스 점검 설정</title>
+</head>
+<body>
+<main>
+    <style>
+        .maintenance-form { max-width: 760px; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; margin-bottom: 0.45rem; font-size: 0.85rem; font-weight: 600; color: #374151; }
+        .form-control { width: 100%; padding: 0.65rem 0.8rem; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
+        .form-control:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); }
+        textarea.form-control { min-height: 150px; resize: vertical; }
+        .form-description { margin-top: 0.4rem; color: #6b7280; font-size: 0.8rem; }
+        .error-message { display: block; margin-top: 0.4rem; color: #dc2626; font-size: 0.8rem; }
+        .toggle-panel { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
+        .toggle-title { font-weight: 600; color: #1f2937; }
+        .toggle-description { margin-top: 0.3rem; color: #6b7280; font-size: 0.8rem; }
+        .toggle-input { width: 1.2rem; height: 1.2rem; accent-color: #4f46e5; }
+        .form-actions { display: flex; justify-content: flex-end; padding-top: 1.25rem; margin-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+    </style>
+
+    <div class="page-header">
+        <div>
+            <div class="type-label">서비스 운영</div>
+            <h1>서비스 점검 설정</h1>
+        </div>
+    </div>
+
+    <div class="card maintenance-form">
+        <form th:action="@{/admin/maintenance-notice}" th:object="${form}" method="post">
+            <div class="form-group">
+                <div class="toggle-panel">
+                    <div>
+                        <div class="toggle-title">현재 점검 중</div>
+                        <div class="toggle-description">켜면 클라이언트 화면을 점검 안내로 가립니다.</div>
+                    </div>
+                    <input id="enabled" class="toggle-input" type="checkbox" th:field="*{enabled}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="title">제목</label>
+                <input id="title" class="form-control" type="text" th:field="*{title}" maxlength="255" required>
+                <span class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">제목 오류</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="message">안내 문구</label>
+                <textarea id="message" class="form-control" th:field="*{message}" maxlength="2000" required></textarea>
+                <span class="error-message" th:if="${#fields.hasErrors('message')}" th:errors="*{message}">안내 문구 오류</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="startedAt">점검 시작 시간</label>
+                <input id="startedAt" class="form-control" type="datetime-local" th:field="*{startedAt}" required>
+                <span class="error-message" th:if="${#fields.hasErrors('startedAt')}" th:errors="*{startedAt}">점검 시작 시간 오류</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="endedAt">점검 종료 시간</label>
+                <input id="endedAt" class="form-control" type="datetime-local" th:field="*{endedAt}">
+                <p class="form-description">비워 두면 무기한 점검으로 안내합니다.</p>
+                <span class="error-message" th:if="${#fields.hasErrors('endedAt')}" th:errors="*{endedAt}">점검 종료 시간 오류</span>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> 적용하기</button>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

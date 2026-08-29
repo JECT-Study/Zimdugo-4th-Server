@@ -220,6 +220,11 @@
                     <i class="fa-solid fa-bullhorn"></i> 공지사항
                 </a>
             </li>
+            <li class="sidebar-menu-item" th:classappend="${activeMenu == 'maintenance'} ? 'active'">
+                <a th:href="@{/admin/maintenance-notice}">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> 서비스 점검
+                </a>
+            </li>
             <li class="sidebar-menu-item" th:classappend="${activeMenu == 'terms'} ? 'active'">
                 <a th:href="@{/admin/documents(type='TERMS')}">
                     <i class="fa-solid fa-file-lines"></i> 이용 약관
