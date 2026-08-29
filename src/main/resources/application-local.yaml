@@ -73,7 +73,3 @@ auth:
 visitor:
   cookie:
     secure: false
-
-push:
-  device:
-    cookie-secure: false
