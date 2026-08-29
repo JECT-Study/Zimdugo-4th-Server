@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,7 +36,9 @@ public class AdminMaintenanceNoticeForm {
         form.setEnabled(result.enabled());
         form.setTitle(result.title());
         form.setMessage(result.message());
-        form.setStartedAt(result.startedAt() == null ? LocalDateTime.now() : result.startedAt());
+        form.setStartedAt(
+            result.startedAt() == null ? LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES) : result.startedAt()
+        );
         form.setEndedAt(result.endedAt());
         return form;
     }

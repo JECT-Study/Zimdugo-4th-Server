@@ -14,11 +14,29 @@
         textarea.form-control { min-height: 150px; resize: vertical; }
         .form-description { margin-top: 0.4rem; color: #6b7280; font-size: 0.8rem; }
         .error-message { display: block; margin-top: 0.4rem; color: #dc2626; font-size: 0.8rem; }
-        .toggle-panel { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
-        .toggle-title { font-weight: 600; color: #1f2937; }
-        .toggle-description { margin-top: 0.3rem; color: #6b7280; font-size: 0.8rem; }
-        .toggle-input { width: 1.2rem; height: 1.2rem; accent-color: #4f46e5; }
+        .maintenance-status { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 10px; background: #fafafa; transition: background 0.2s, border-color 0.2s; }
+        .maintenance-status.is-active { border-color: #c4b5fd; background: #f5f3ff; }
+        .toggle-title { font-weight: 700; color: #1f2937; }
+        .toggle-description { margin-top: 0.35rem; color: #6b7280; font-size: 0.82rem; }
+        .switch { display: inline-flex; flex: 0 0 auto; align-items: center; cursor: pointer; }
+        .switch-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+        .switch-track { position: relative; width: 48px; height: 28px; border-radius: 999px; background: #d1d5db; transition: background 0.2s; }
+        .switch-track::after { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); content: ''; transition: transform 0.2s; }
+        .switch-input:checked + .switch-track { background: #4f46e5; }
+        .switch-input:checked + .switch-track::after { transform: translateX(20px); }
+        .switch-input:focus-visible + .switch-track { outline: 3px solid rgba(79, 70, 229, 0.3); outline-offset: 3px; }
+        .schedule-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+        .schedule-card { padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
+        .schedule-card.is-disabled { opacity: 0.55; background: #f9fafb; }
+        .schedule-card-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.7rem; }
+        .schedule-card .form-label { margin-bottom: 0; }
+        .schedule-card .form-control { background: #fff; cursor: pointer; }
+        .flatpickr-calendar { font-family: inherit; }
+        .flatpickr-calendar .flatpickr-day.selected, .flatpickr-calendar .flatpickr-day.selected:hover { background: #4f46e5; border-color: #4f46e5; }
+        .end-toggle { display: inline-flex; align-items: center; gap: 0.4rem; color: #4b5563; font-size: 0.78rem; white-space: nowrap; cursor: pointer; }
+        .end-toggle input { accent-color: #4f46e5; }
         .form-actions { display: flex; justify-content: flex-end; padding-top: 1.25rem; margin-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+        @media (max-width: 680px) { .schedule-grid { grid-template-columns: 1fr; } }
     </style>
 
     <div class="page-header">
@@ -31,12 +49,18 @@
     <div class="card maintenance-form">
         <form th:action="@{/admin/maintenance-notice}" th:object="${form}" method="post">
             <div class="form-group">
-                <div class="toggle-panel">
+                <div id="maintenanceStatus" class="maintenance-status" th:classappend="${form.enabled} ? 'is-active'">
                     <div>
                         <div class="toggle-title">현재 점검 중</div>
-                        <div class="toggle-description">켜면 클라이언트 화면을 점검 안내로 가립니다.</div>
+                        <div id="maintenanceStatusDescription" class="toggle-description"
+                             th:text="${form.enabled} ? '클라이언트 점검 화면을 노출 중입니다.' : '클라이언트 일반 화면을 노출 중입니다.'">
+                            클라이언트 일반 화면을 노출 중입니다.
+                        </div>
                     </div>
-                    <input id="enabled" class="toggle-input" type="checkbox" th:field="*{enabled}">
+                    <label class="switch" for="enabled">
+                        <input id="enabled" class="switch-input" type="checkbox" th:field="*{enabled}">
+                        <span class="switch-track" aria-hidden="true"></span>
+                    </label>
                 </div>
             </div>
 
@@ -53,16 +77,30 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="startedAt">점검 시작 시간</label>
-                <input id="startedAt" class="form-control" type="datetime-local" th:field="*{startedAt}" required>
-                <span class="error-message" th:if="${#fields.hasErrors('startedAt')}" th:errors="*{startedAt}">점검 시작 시간 오류</span>
-            </div>
+                <div class="schedule-grid">
+                    <div class="schedule-card">
+                        <div class="schedule-card-header">
+                            <label class="form-label" for="startedAt">점검 시작 시간</label>
+                        </div>
+                        <input id="startedAt" name="startedAt" class="form-control" type="text"
+                               th:value="${form.startedAt == null ? '' : #temporals.format(form.startedAt, 'yyyy-MM-dd''T''HH:mm')}" required>
+                        <span class="error-message" th:if="${#fields.hasErrors('startedAt')}" th:errors="*{startedAt}">점검 시작 시간 오류</span>
+                    </div>
 
-            <div class="form-group">
-                <label class="form-label" for="endedAt">점검 종료 시간</label>
-                <input id="endedAt" class="form-control" type="datetime-local" th:field="*{endedAt}">
-                <p class="form-description">비워 두면 무기한 점검으로 안내합니다.</p>
-                <span class="error-message" th:if="${#fields.hasErrors('endedAt')}" th:errors="*{endedAt}">점검 종료 시간 오류</span>
+                    <div id="endScheduleCard" class="schedule-card" th:classappend="${form.endedAt == null} ? 'is-disabled'">
+                        <div class="schedule-card-header">
+                            <label class="form-label" for="endedAt">점검 종료 시간</label>
+                            <label class="end-toggle" for="indefiniteEnd">
+                                <input id="indefiniteEnd" type="checkbox" th:checked="${form.endedAt == null}">
+                                무기한
+                            </label>
+                        </div>
+                        <input id="endedAt" name="endedAt" class="form-control" type="text"
+                               th:value="${form.endedAt == null ? '' : #temporals.format(form.endedAt, 'yyyy-MM-dd''T''HH:mm')}">
+                        <p class="form-description">무기한을 끄면 종료 시간을 선택할 수 있습니다.</p>
+                        <span class="error-message" th:if="${#fields.hasErrors('endedAt')}" th:errors="*{endedAt}">점검 종료 시간 오류</span>
+                    </div>
+                </div>
             </div>
 
             <div class="form-actions">
@@ -70,6 +108,57 @@
             </div>
         </form>
     </div>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ko.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const enabled = document.getElementById('enabled');
+            const status = document.getElementById('maintenanceStatus');
+            const statusDescription = document.getElementById('maintenanceStatusDescription');
+            const indefiniteEnd = document.getElementById('indefiniteEnd');
+            const endScheduleCard = document.getElementById('endScheduleCard');
+            const endedAt = document.getElementById('endedAt');
+
+            function syncMaintenanceStatus() {
+                status.classList.toggle('is-active', enabled.checked);
+                statusDescription.textContent = enabled.checked
+                    ? '클라이언트 점검 화면을 노출 중입니다.'
+                    : '클라이언트 일반 화면을 노출 중입니다.';
+            }
+
+            const pickerOptions = {
+                altInput: true,
+                altFormat: 'Y년 n월 j일 (D) H:i',
+                dateFormat: 'Y-m-d\\TH:i',
+                enableTime: true,
+                locale: 'ko',
+                minuteIncrement: 5,
+                time_24hr: true
+            };
+            const startPicker = flatpickr('#startedAt', pickerOptions);
+            const endPicker = flatpickr('#endedAt', pickerOptions);
+
+            function syncEndSchedule() {
+                const isIndefinite = indefiniteEnd.checked;
+                endScheduleCard.classList.toggle('is-disabled', isIndefinite);
+                endedAt.disabled = isIndefinite;
+                endPicker.altInput.disabled = isIndefinite;
+                endPicker.altInput.required = !isIndefinite;
+            }
+
+            enabled.addEventListener('change', syncMaintenanceStatus);
+            indefiniteEnd.addEventListener('change', syncEndSchedule);
+            startPicker.config.onChange.push(function (selectedDates) {
+                if (selectedDates.length > 0) {
+                    endPicker.set('minDate', selectedDates[0]);
+                }
+            });
+            syncMaintenanceStatus();
+            syncEndSchedule();
+        });
+    </script>
 </main>
 </body>
 </html>

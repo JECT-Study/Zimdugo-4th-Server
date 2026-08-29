@@ -3,12 +3,26 @@ package com.zimdugo.admin.entrypoint.dto;
 import com.zimdugo.maintenance.application.dto.AdminMaintenanceNoticeResult;
 import com.zimdugo.maintenance.application.dto.MaintenanceNoticeUpdateCommand;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AdminMaintenanceNoticeFormTest {
+
+    @Test
+    @DisplayName("저장된 공지가 없으면 점검 시작 시간을 현재 분으로 채운다")
+    void fillsStartedAtWithCurrentMinuteWhenNoticeIsEmpty() {
+        LocalDateTime before = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+
+        AdminMaintenanceNoticeForm form = AdminMaintenanceNoticeForm.from(AdminMaintenanceNoticeResult.empty());
+
+        LocalDateTime after = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        assertThat(form.getStartedAt()).isBetween(before, after);
+        assertThat(form.getStartedAt().getSecond()).isZero();
+        assertThat(form.getStartedAt().getNano()).isZero();
+    }
 
     @Test
     @DisplayName("저장된 점검 공지는 관리자 폼 값으로 변환한다")
