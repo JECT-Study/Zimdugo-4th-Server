@@ -8,7 +8,6 @@ import com.zimdugo.auth.entrypoint.oauth2.OAuth2FailureHandler;
 import com.zimdugo.auth.entrypoint.oauth2.OAuth2SuccessHandler;
 import com.zimdugo.common.security.CustomAccessDeniedHandler;
 import com.zimdugo.common.security.CustomAuthenticationEntryPoint;
-import com.zimdugo.auth.entrypoint.filter.PushOriginValidationFilter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +39,6 @@ public class SecurityConfig {
     private final OAuth2CallbackUrlCaptureFilter oAuth2CallbackUrlCaptureFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
-    private final PushOriginValidationFilter pushOriginValidationFilter;
     private final AuthProperties authProperties;
 
     @Bean
@@ -84,7 +82,6 @@ public class SecurityConfig {
 
         http.logout(AbstractHttpConfigurer::disable)
             .addFilterBefore(oAuth2CallbackUrlCaptureFilter, OAuth2AuthorizationRequestRedirectFilter.class)
-            .addFilterBefore(pushOriginValidationFilter, JwtAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
