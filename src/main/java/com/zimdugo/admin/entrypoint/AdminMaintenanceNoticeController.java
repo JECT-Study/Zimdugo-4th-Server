@@ -1,35 +1,53 @@
 package com.zimdugo.admin.entrypoint;
 
-import com.zimdugo.admin.entrypoint.dto.AdminMaintenanceNoticeUpdateRequest;
-import com.zimdugo.core.response.RestResponse;
-import com.zimdugo.core.response.SuccessCode;
+import com.zimdugo.admin.entrypoint.dto.AdminMaintenanceNoticeForm;
+import com.zimdugo.core.exception.BusinessException;
 import com.zimdugo.maintenance.application.MaintenanceNoticeService;
-import com.zimdugo.maintenance.application.dto.AdminMaintenanceNoticeResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/admin/api/maintenance-notice")
+@Controller
+@RequestMapping("/admin/maintenance-notice")
 @RequiredArgsConstructor
 public class AdminMaintenanceNoticeController {
+
+    private static final String FORM_VIEW = "admin/maintenance-notice-form";
 
     private final MaintenanceNoticeService maintenanceNoticeService;
 
     @GetMapping
-    public ResponseEntity<RestResponse<AdminMaintenanceNoticeResult>> getMaintenanceNotice() {
-        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, maintenanceNoticeService.getAdminNotice()));
+    public String form(final Model model) {
+        model.addAttribute("form", AdminMaintenanceNoticeForm.from(maintenanceNoticeService.getAdminNotice()));
+        model.addAttribute("activeMenu", "maintenance");
+        return FORM_VIEW;
     }
 
-    @PutMapping
-    public ResponseEntity<RestResponse<AdminMaintenanceNoticeResult>> updateMaintenanceNotice(
-        @Valid @RequestBody AdminMaintenanceNoticeUpdateRequest request
+    @PostMapping
+    public String update(
+        @Valid @ModelAttribute("form") final AdminMaintenanceNoticeForm form,
+        final BindingResult bindingResult,
+        final Model model
     ) {
-        return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, maintenanceNoticeService.update(request.toCommand())));
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("activeMenu", "maintenance");
+            return FORM_VIEW;
+        }
+
+        try {
+            maintenanceNoticeService.update(form.toCommand());
+        } catch (final BusinessException exception) {
+            bindingResult.rejectValue("endedAt", "maintenanceNotice.invalidPeriod", exception.getMessage());
+            model.addAttribute("activeMenu", "maintenance");
+            return FORM_VIEW;
+        }
+
+        return "redirect:/admin/maintenance-notice";
     }
 }
