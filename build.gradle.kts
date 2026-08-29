@@ -52,6 +52,10 @@ dependencies {
     // API Docs
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 
+    // Web Push / VAPID
+    implementation("nl.martijndwars:web-push:5.1.2")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.85.2")
+
     // Jackson
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
