@@ -41,6 +41,10 @@ visitor:
   cookie:
     secure: true
 
+push:
+  device:
+    cookie-secure: true
+
 management:
   endpoints:
     web:
