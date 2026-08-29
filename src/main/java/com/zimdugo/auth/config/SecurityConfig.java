@@ -84,8 +84,8 @@ public class SecurityConfig {
 
         http.logout(AbstractHttpConfigurer::disable)
             .addFilterBefore(oAuth2CallbackUrlCaptureFilter, OAuth2AuthorizationRequestRedirectFilter.class)
-            .addFilterBefore(pushOriginValidationFilter, JwtAuthenticationFilter.class)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(pushOriginValidationFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }
