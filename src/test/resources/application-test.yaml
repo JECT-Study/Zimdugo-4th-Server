@@ -64,8 +64,8 @@ jwt:
 
 push:
   vapid:
-    public-key: test-vapid-public-key
-    private-key: test-vapid-private-key
+    public-key: BGgL7I82SAQM78oyGwaJdrQFhVfZqL9h4Y18BLtgJQ-9pSGXwxqAWQudqmcv41RcWgk1ssUeItv4-8khxbhYveM=
+    private-key: ANlfcVVFB4JiMYcI74_h9h04QZ1Ks96AyEa1yrMgDwn3
     subject: mailto:test@zimdugo.com
 
 storage:

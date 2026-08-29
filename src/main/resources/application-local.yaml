@@ -78,6 +78,6 @@ push:
   device:
     cookie-secure: false
   vapid:
-    public-key: ${PUSH_VAPID_PUBLIC_KEY:local-vapid-public-key}
-    private-key: ${PUSH_VAPID_PRIVATE_KEY:}
+    public-key: ${PUSH_VAPID_PUBLIC_KEY:BGgL7I82SAQM78oyGwaJdrQFhVfZqL9h4Y18BLtgJQ-9pSGXwxqAWQudqmcv41RcWgk1ssUeItv4-8khxbhYveM=}
+    private-key: ${PUSH_VAPID_PRIVATE_KEY:ANlfcVVFB4JiMYcI74_h9h04QZ1Ks96AyEa1yrMgDwn3}
     subject: ${PUSH_VAPID_SUBJECT:mailto:admin@zimdugo.com}
