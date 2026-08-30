@@ -56,7 +56,7 @@ class SocialAccountUnlinkServiceTest {
     @DisplayName("skips when unlink client is missing")
     void skipsWhenUnlinkClientIsMissing() {
         SocialAccount socialAccount = socialAccount(AuthProvider.FACEBOOK);
-        given(socialAccountReader.findAllByUserId(1L)).willReturn(List.of(socialAccount));
+        given(socialAccountReader.findByUserId(1L)).willReturn(Optional.of(socialAccount));
 
         SocialAccountUnlinkSummary summary = socialAccountUnlinkService.unlinkAll(1L);
 
@@ -70,7 +70,7 @@ class SocialAccountUnlinkServiceTest {
     @DisplayName("skips when provider token is missing")
     void skipsWhenProviderTokenIsMissing() {
         SocialAccount socialAccount = socialAccount(AuthProvider.GOOGLE);
-        given(socialAccountReader.findAllByUserId(1L)).willReturn(List.of(socialAccount));
+        given(socialAccountReader.findByUserId(1L)).willReturn(Optional.of(socialAccount));
         given(socialProviderTokenRepository.find(1L, AuthProvider.GOOGLE)).willReturn(Optional.empty());
 
         SocialAccountUnlinkSummary summary = socialAccountUnlinkService.unlinkAll(1L);
@@ -88,7 +88,7 @@ class SocialAccountUnlinkServiceTest {
         SocialAccount socialAccount = socialAccount(AuthProvider.GOOGLE);
         SocialProviderToken token = token();
 
-        given(socialAccountReader.findAllByUserId(1L)).willReturn(List.of(socialAccount));
+        given(socialAccountReader.findByUserId(1L)).willReturn(Optional.of(socialAccount));
         given(socialProviderTokenRepository.find(1L, AuthProvider.GOOGLE)).willReturn(Optional.of(token));
         doThrow(new BusinessException(ErrorCode.EXTERNAL_API_ERROR))
             .when(googleUnlinkClient)
@@ -108,7 +108,7 @@ class SocialAccountUnlinkServiceTest {
         SocialAccount socialAccount = socialAccount(AuthProvider.GOOGLE);
         SocialProviderToken token = token();
 
-        given(socialAccountReader.findAllByUserId(1L)).willReturn(List.of(socialAccount));
+        given(socialAccountReader.findByUserId(1L)).willReturn(Optional.of(socialAccount));
         given(socialProviderTokenRepository.find(1L, AuthProvider.GOOGLE)).willReturn(Optional.of(token));
         doThrow(new IllegalStateException("unexpected"))
             .when(googleUnlinkClient)
@@ -117,6 +117,20 @@ class SocialAccountUnlinkServiceTest {
         assertThatThrownBy(() -> socialAccountUnlinkService.unlinkAll(1L))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("unexpected");
+    }
+
+    @Test
+    @DisplayName("social account가 없으면 빈 요약을 반환한다")
+    void returnsEmptySummaryWhenSocialAccountDoesNotExist() {
+        given(socialAccountReader.findByUserId(1L)).willReturn(Optional.empty());
+
+        SocialAccountUnlinkSummary summary = socialAccountUnlinkService.unlinkAll(1L);
+
+        assertThat(summary.unlinkedCount()).isZero();
+        assertThat(summary.skippedUnsupportedProviderCount()).isZero();
+        assertThat(summary.skippedMissingTokenCount()).isZero();
+        assertThat(summary.failedExternalCount()).isZero();
+        verify(googleUnlinkClient, never()).unlink(any(), any());
     }
 
     private SocialAccount socialAccount(AuthProvider provider) {
