@@ -18,8 +18,8 @@
         .maintenance-status.is-active { border-color: #c4b5fd; background: #f5f3ff; }
         .toggle-title { font-weight: 700; color: #1f2937; }
         .toggle-description { margin-top: 0.35rem; color: #6b7280; font-size: 0.82rem; }
-        .switch { display: inline-flex; flex: 0 0 auto; align-items: center; cursor: pointer; }
-        .switch-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+        .switch { position: relative; display: inline-flex; flex: 0 0 auto; width: 48px; height: 28px; cursor: pointer; }
+        .switch-input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
         .switch-track { position: relative; width: 48px; height: 28px; border-radius: 999px; background: #d1d5db; transition: background 0.2s; }
         .switch-track::after { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); content: ''; transition: transform 0.2s; }
         .switch-input:checked + .switch-track { background: #4f46e5; }
@@ -36,6 +36,8 @@
         .end-toggle { display: inline-flex; align-items: center; gap: 0.4rem; color: #4b5563; font-size: 0.78rem; white-space: nowrap; cursor: pointer; }
         .end-toggle input { accent-color: #4f46e5; }
         .form-actions { display: flex; justify-content: flex-end; padding-top: 1.25rem; margin-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+        .toast { position: fixed; right: 2rem; bottom: 2rem; z-index: 10; display: flex; align-items: center; gap: 0.65rem; max-width: 360px; padding: 0.9rem 1rem; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); color: #166534; font-size: 0.88rem; font-weight: 600; }
+        .toast i { font-size: 1rem; }
         @media (max-width: 680px) { .schedule-grid { grid-template-columns: 1fr; } }
     </style>
 
@@ -57,7 +59,7 @@
                             클라이언트 일반 화면을 노출 중입니다.
                         </div>
                     </div>
-                    <label class="switch" for="enabled">
+                    <label class="switch">
                         <input id="enabled" class="switch-input" type="checkbox" th:field="*{enabled}">
                         <span class="switch-track" aria-hidden="true"></span>
                     </label>
@@ -97,7 +99,6 @@
                         </div>
                         <input id="endedAt" name="endedAt" class="form-control" type="text"
                                th:value="${form.endedAt == null ? '' : #temporals.format(form.endedAt, 'yyyy-MM-dd''T''HH:mm')}">
-                        <p class="form-description">무기한을 끄면 종료 시간을 선택할 수 있습니다.</p>
                         <span class="error-message" th:if="${#fields.hasErrors('endedAt')}" th:errors="*{endedAt}">점검 종료 시간 오류</span>
                     </div>
                 </div>
@@ -107,6 +108,11 @@
                 <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> 적용하기</button>
             </div>
         </form>
+    </div>
+
+    <div class="toast" role="alert" th:if="${successMessage}">
+        <i class="fa-solid fa-circle-check"></i>
+        <span th:text="${successMessage}">점검 설정을 적용했습니다.</span>
     </div>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">

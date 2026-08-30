@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/maintenance-notice")
@@ -33,7 +34,8 @@ public class AdminMaintenanceNoticeController {
     public String update(
         @Valid @ModelAttribute("form") final AdminMaintenanceNoticeForm form,
         final BindingResult bindingResult,
-        final Model model
+        final Model model,
+        final RedirectAttributes redirectAttributes
     ) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("activeMenu", "maintenance");
@@ -48,6 +50,7 @@ public class AdminMaintenanceNoticeController {
             return FORM_VIEW;
         }
 
+        redirectAttributes.addFlashAttribute("successMessage", "점검 설정을 적용했습니다.");
         return "redirect:/admin/maintenance-notice";
     }
 }

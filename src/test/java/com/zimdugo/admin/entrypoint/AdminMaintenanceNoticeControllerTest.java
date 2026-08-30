@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -55,13 +56,17 @@ class AdminMaintenanceNoticeControllerTest {
         form.setMessage("점검 안내 문구입니다.");
         form.setStartedAt(LocalDateTime.of(2026, 8, 30, 1, 0));
 
+        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
         String view = controller.update(
             form,
             new BeanPropertyBindingResult(form, "form"),
-            new ExtendedModelMap()
+            new ExtendedModelMap(),
+            redirectAttributes
         );
 
         assertThat(view).isEqualTo("redirect:/admin/maintenance-notice");
+        assertThat(redirectAttributes.getFlashAttributes().get("successMessage"))
+            .isEqualTo("점검 설정을 적용했습니다.");
         verify(maintenanceNoticeService).update(form.toCommand());
     }
 }
