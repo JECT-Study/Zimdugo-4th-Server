@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -28,4 +29,12 @@ public interface PushSubscriptionApi {
         @Valid @RequestBody PushSubscriptionUpsertRequest request,
         String deviceToken
     );
+
+    @Operation(summary = "현재 기기 푸시 구독 해제")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "해제 성공 또는 해제할 구독 없음")
+    })
+    @SecurityRequirements
+    @DeleteMapping("/push/subscriptions")
+    ResponseEntity<RestResponse<Void>> deleteSubscription(String deviceToken);
 }
