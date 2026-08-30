@@ -19,6 +19,10 @@ public enum ErrorCode implements BaseCode {
     INVALID_LOCALIZED_CONTENT("COMMON-400-5", "다국어 콘텐츠 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_LANGUAGE_TAG("COMMON-400-6", "지원하지 않는 언어 태그입니다.", HttpStatus.BAD_REQUEST),
 
+    // 푸시 (PUSH)
+    PUSH_DEVICE_NOT_FOUND("PUSH-404-1", "푸시 기기를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    PUSH_SUBSCRIPTION_ENDPOINT_CONFLICT("PUSH-409-1", "다른 기기에 등록된 푸시 구독입니다.", HttpStatus.CONFLICT),
+
     // 관리자 (ADMIN)
     ADMIN_DOCUMENT_NOT_FOUND("ADMIN-404-1", "관리자 문서를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     INVALID_ADMIN_DOCUMENT_TRANSLATION("ADMIN-400-1", "관리자 문서 번역 요청이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
