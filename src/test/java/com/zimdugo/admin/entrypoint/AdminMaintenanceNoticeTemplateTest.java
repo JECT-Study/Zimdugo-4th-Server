@@ -18,6 +18,7 @@ class AdminMaintenanceNoticeTemplateTest {
 
         assertThat(template).contains("<label id=\"maintenanceStatus\" class=\"maintenance-status\"");
         assertThat(template).contains(".switch-input { position: absolute; inset: 0;");
+        assertThat(template).contains(".switch-input:checked ~ .switch-track");
         assertThat(template).doesNotContain("clip: rect");
     }
 }
