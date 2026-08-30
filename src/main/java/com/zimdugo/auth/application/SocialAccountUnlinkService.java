@@ -8,7 +8,6 @@ import com.zimdugo.core.exception.ErrorCode;
 import com.zimdugo.user.domain.AuthProvider;
 import com.zimdugo.user.domain.SocialAccount;
 import com.zimdugo.user.domain.SocialAccountReader;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +36,9 @@ public class SocialAccountUnlinkService {
     }
 
     public SocialAccountUnlinkSummary unlinkAll(Long userId) {
-        List<SocialAccountUnlinkResult> results = new ArrayList<>();
-        for (SocialAccount socialAccount : socialAccountReader.findAllByUserId(userId)) {
-            results.add(unlinkSocialAccount(userId, socialAccount));
-        }
-        return SocialAccountUnlinkSummary.from(results);
+        return socialAccountReader.findByUserId(userId)
+            .map(socialAccount -> SocialAccountUnlinkSummary.from(List.of(unlinkSocialAccount(userId, socialAccount))))
+            .orElseGet(() -> SocialAccountUnlinkSummary.from(List.of()));
     }
 
     private SocialAccountUnlinkResult unlinkSocialAccount(Long userId, SocialAccount socialAccount) {
