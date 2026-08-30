@@ -8,4 +8,6 @@ public interface PushSubscriptionRepository extends JpaRepository<PushSubscripti
     Optional<PushSubscriptionEntity> findByEndpoint(String endpoint);
 
     Optional<PushSubscriptionEntity> findByDeviceId(Long deviceId);
+
+    void deleteByDeviceId(Long deviceId);
 }

@@ -29,6 +29,11 @@ public class PushSubscriptionPersistenceAdapter implements PushSubscriptionStore
             );
     }
 
+    @Override
+    public void deleteByDeviceId(Long deviceId) {
+        pushSubscriptionRepository.deleteByDeviceId(deviceId);
+    }
+
     private void rejectDifferentDevice(Long deviceId, PushSubscriptionEntity subscription) {
         if (!subscription.getDeviceId().equals(deviceId)) {
             throw new BusinessException(ErrorCode.PUSH_SUBSCRIPTION_ENDPOINT_CONFLICT);
