@@ -51,7 +51,7 @@
     <div class="card maintenance-form">
         <form th:action="@{/admin/maintenance-notice}" th:object="${form}" method="post">
             <div class="form-group">
-                <div id="maintenanceStatus" class="maintenance-status" th:classappend="${form.enabled} ? 'is-active'">
+                <label id="maintenanceStatus" class="maintenance-status" th:classappend="${form.enabled} ? 'is-active'">
                     <div>
                         <div class="toggle-title">현재 점검 중</div>
                         <div id="maintenanceStatusDescription" class="toggle-description"
@@ -59,11 +59,11 @@
                             클라이언트 일반 화면을 노출 중입니다.
                         </div>
                     </div>
-                    <label class="switch">
+                    <span class="switch">
                         <input id="enabled" class="switch-input" type="checkbox" th:field="*{enabled}">
                         <span class="switch-track" aria-hidden="true"></span>
-                    </label>
-                </div>
+                    </span>
+                </label>
             </div>
 
             <div class="form-group">

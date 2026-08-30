@@ -16,6 +16,7 @@ class AdminMaintenanceNoticeTemplateTest {
         String template = new ClassPathResource("templates/admin/maintenance-notice-form.html")
             .getContentAsString(StandardCharsets.UTF_8);
 
+        assertThat(template).contains("<label id=\"maintenanceStatus\" class=\"maintenance-status\"");
         assertThat(template).contains(".switch-input { position: absolute; inset: 0;");
         assertThat(template).doesNotContain("clip: rect");
     }
