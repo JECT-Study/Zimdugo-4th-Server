@@ -79,4 +79,39 @@ class PushSubscriptionPersistenceAdapterTest {
         assertThat(pushSubscriptionRepository.findByEndpoint(endpoint).orElseThrow().getDeviceId())
             .isEqualTo(ownerDeviceId);
     }
+
+    @Test
+    void rejectsEndpointOwnedByAnotherDeviceWhenRequestingDeviceAlreadyHasSubscription() {
+        Long ownerDeviceId = pushDeviceRepository.save(new PushDeviceEntity("owner-token-hash")).getId();
+        Long requestingDeviceId = pushDeviceRepository.save(new PushDeviceEntity("requesting-token-hash")).getId();
+        String ownerEndpoint = "https://fcm.googleapis.com/fcm/send/owner-endpoint";
+        String requestingEndpoint = "https://fcm.googleapis.com/fcm/send/requesting-endpoint";
+        pushSubscriptionPersistenceAdapter.upsert(
+            ownerDeviceId,
+            ownerEndpoint,
+            "owner-p256dh",
+            "owner-auth",
+            PushLocale.KO
+        );
+        pushSubscriptionPersistenceAdapter.upsert(
+            requestingDeviceId,
+            requestingEndpoint,
+            "requesting-p256dh",
+            "requesting-auth",
+            PushLocale.JA
+        );
+
+        assertThatThrownBy(() -> pushSubscriptionPersistenceAdapter.upsert(
+            requestingDeviceId,
+            ownerEndpoint,
+            "changed-p256dh",
+            "changed-auth",
+            PushLocale.EN
+        ))
+            .isInstanceOf(BusinessException.class)
+            .extracting(exception -> ((BusinessException) exception).getErrorCode())
+            .isEqualTo(ErrorCode.PUSH_SUBSCRIPTION_ENDPOINT_CONFLICT);
+        assertThat(pushSubscriptionRepository.findByDeviceId(requestingDeviceId).orElseThrow().getEndpoint())
+            .isEqualTo(requestingEndpoint);
+    }
 }
