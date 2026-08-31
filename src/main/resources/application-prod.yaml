@@ -41,6 +41,14 @@ visitor:
   cookie:
     secure: true
 
+push:
+  device:
+    cookie-secure: true
+  vapid:
+    public-key: ${PUSH_VAPID_PUBLIC_KEY}
+    private-key: ${PUSH_VAPID_PRIVATE_KEY}
+    subject: ${PUSH_VAPID_SUBJECT}
+
 management:
   endpoints:
     web:

@@ -19,6 +19,14 @@ public enum ErrorCode implements BaseCode {
     INVALID_LOCALIZED_CONTENT("COMMON-400-5", "다국어 콘텐츠 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_LANGUAGE_TAG("COMMON-400-6", "지원하지 않는 언어 태그입니다.", HttpStatus.BAD_REQUEST),
 
+    // 푸시 (PUSH)
+    PUSH_INVALID_FIRE_TIME("PUSH-400-1", "리마인더 발화 시각이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    PUSH_REMINDER_LIMIT_EXCEEDED("PUSH-400-2", "리마인더 예약 한도를 초과했습니다.", HttpStatus.BAD_REQUEST),
+    PUSH_DEVICE_NOT_FOUND("PUSH-404-1", "푸시 기기를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    PUSH_SUBSCRIPTION_ENDPOINT_CONFLICT("PUSH-409-1", "다른 기기에 등록된 푸시 구독입니다.", HttpStatus.CONFLICT),
+    PUSH_SUBSCRIPTION_NOT_FOUND("PUSH-409-2", "현재 기기에 활성 푸시 구독이 없습니다.", HttpStatus.CONFLICT),
+    PUSH_RATE_LIMIT_EXCEEDED("PUSH-429-1", "리마인더 생성 요청이 너무 많습니다.", HttpStatus.TOO_MANY_REQUESTS),
+
     // 관리자 (ADMIN)
     ADMIN_DOCUMENT_NOT_FOUND("ADMIN-404-1", "관리자 문서를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     INVALID_ADMIN_DOCUMENT_TRANSLATION("ADMIN-400-1", "관리자 문서 번역 요청이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
@@ -36,6 +44,7 @@ public enum ErrorCode implements BaseCode {
     ),
     TOO_MANY_NOTICE_IMAGES("ADMIN-400-6", "공지 이미지는 최대 10장까지 등록할 수 있습니다.", HttpStatus.BAD_REQUEST),
     INVALID_NOTICE_IMAGE_ORDER("ADMIN-400-7", "공지 이미지 순서 정보가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_MAINTENANCE_NOTICE_PERIOD("ADMIN-400-8", "점검 종료 시간은 시작 시간보다 빠를 수 없습니다.", HttpStatus.BAD_REQUEST),
 
     // 인증 (AUTH)
     REFRESH_TOKEN_NOT_FOUND("AUTH-400-1", "리프레시 토큰이 없습니다.", HttpStatus.BAD_REQUEST),

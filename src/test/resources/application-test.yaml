@@ -62,6 +62,12 @@ jwt:
   access-token-expiration-seconds: 900
   refresh-token-expiration-seconds: 2592000
 
+push:
+  vapid:
+    public-key: BGgL7I82SAQM78oyGwaJdrQFhVfZqL9h4Y18BLtgJQ-9pSGXwxqAWQudqmcv41RcWgk1ssUeItv4-8khxbhYveM=
+    private-key: ANlfcVVFB4JiMYcI74_h9h04QZ1Ks96AyEa1yrMgDwn3
+    subject: mailto:test@zimdugo.com
+
 storage:
   oci:
     region: ap-osaka-1
