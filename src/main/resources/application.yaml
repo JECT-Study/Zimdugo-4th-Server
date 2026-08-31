@@ -114,6 +114,19 @@ search:
   keyword-aggregation:
     fixed-delay-millis: ${SEARCH_KEYWORD_AGGREGATION_FIXED_DELAY_MILLIS:10000}
 
+push:
+  reminder:
+    minimum-lead-seconds: ${PUSH_REMINDER_MINIMUM_LEAD_SECONDS:60}
+    maximum-duration-seconds: ${PUSH_REMINDER_MAXIMUM_DURATION_SECONDS:86400}
+    maximum-active-count: ${PUSH_REMINDER_MAXIMUM_ACTIVE_COUNT:1}
+    allowed-before-minutes: ${PUSH_REMINDER_ALLOWED_BEFORE_MINUTES:5,10,15}
+    maximum-create-requests: ${PUSH_REMINDER_MAXIMUM_CREATE_REQUESTS:10}
+    create-rate-limit-window-seconds: ${PUSH_REMINDER_RATE_LIMIT_WINDOW_SECONDS:60}
+    delivery-ttl-seconds: ${PUSH_REMINDER_DELIVERY_TTL_SECONDS:60}
+    delivery-retry-delay-seconds: ${PUSH_REMINDER_DELIVERY_RETRY_DELAY_SECONDS:5}
+    maximum-delivery-attempts: ${PUSH_REMINDER_MAXIMUM_DELIVERY_ATTEMPTS:3}
+    rate-limit-cleanup-fixed-delay-millis: ${PUSH_REMINDER_RATE_LIMIT_CLEANUP_FIXED_DELAY_MILLIS:60000}
+
 seoul-metro:
   locker-api:
     base-url: ${SEOUL_METRO_LOCKER_API_BASE_URL:http://openapi.seoul.go.kr:8088}
