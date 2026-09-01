@@ -4,6 +4,7 @@ import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.push.application.PushDeviceTokenHasher;
 import com.zimdugo.push.application.PushReminderCreateService;
+import com.zimdugo.push.application.PushReminderDeleteService;
 import com.zimdugo.push.application.PushReminderQueryService;
 import com.zimdugo.push.application.PushReminderResult;
 import com.zimdugo.push.entrypoint.dto.PushReminderCreateRequest;
@@ -18,10 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
-public class PushReminderController implements PushReminderCreateApi, PushReminderQueryApi {
+public class PushReminderController implements PushReminderCreateApi, PushReminderDeleteApi, PushReminderQueryApi {
 
     private final PushReminderCreateService pushReminderCreateService;
     private final PushReminderQueryService pushReminderQueryService;
+    private final PushReminderDeleteService pushReminderDeleteService;
     private final PushDeviceTokenHasher pushDeviceTokenHasher;
 
     @Override
@@ -44,6 +46,15 @@ public class PushReminderController implements PushReminderCreateApi, PushRemind
             .map(PushReminderResponse::from)
             .toList();
         return ResponseEntity.ok(RestResponse.of(SuccessCode.OK, responses));
+    }
+
+    @Override
+    public ResponseEntity<RestResponse<Void>> deleteReminder(
+        Long reminderId,
+        @CookieValue(name = "deviceToken", required = false) String deviceToken
+    ) {
+        pushReminderDeleteService.delete(hashDeviceToken(deviceToken), reminderId);
+        return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
     }
 
     private String hashDeviceToken(String deviceToken) {

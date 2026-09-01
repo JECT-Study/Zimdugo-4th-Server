@@ -40,6 +40,24 @@ public interface PushReminderRepository extends JpaRepository<PushReminderEntity
     @Modifying
     @Query("""
         update PushReminderEntity reminder
+        set reminder.deletedAt = :deletedAt
+        where reminder.id = :reminderId
+          and reminder.deviceId = :deviceId
+          and reminder.status = :activeStatus
+          and reminder.deletedAt is null
+          and reminder.endAt > :now
+        """)
+    int softDeleteActiveByIdAndDeviceId(
+        @Param("reminderId") Long reminderId,
+        @Param("deviceId") Long deviceId,
+        @Param("deletedAt") Instant deletedAt,
+        @Param("activeStatus") PushReminderStatus activeStatus,
+        @Param("now") Instant now
+    );
+
+    @Modifying
+    @Query("""
+        update PushReminderEntity reminder
         set reminder.status = :completedStatus
         where reminder.deviceId = :deviceId
           and reminder.status = :activeStatus

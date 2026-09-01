@@ -2,6 +2,8 @@ package com.zimdugo.push.infrastructure.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.zimdugo.push.domain.PushNotificationType;
+import com.zimdugo.push.domain.PushReminderJobStatus;
 import com.zimdugo.push.domain.PushReminderSaveCommand;
 import com.zimdugo.push.domain.PushReminderStatus;
 import jakarta.persistence.EntityManager;
@@ -18,6 +20,9 @@ class PushReminderRepositoryTest {
 
     @Autowired
     private PushReminderRepository pushReminderRepository;
+
+    @Autowired
+    private PushReminderJobRepository pushReminderJobRepository;
 
     @Autowired
     private EntityManager entityManager;
@@ -57,6 +62,62 @@ class PushReminderRepositoryTest {
             .isEqualTo(PushReminderStatus.ACTIVE);
     }
 
+    @Test
+    void cancelsOnlyPendingJobsWhenOwnedActiveReminderIsDeleted() {
+        PushReminderEntity reminder = save(7L, NOW.plusSeconds(600));
+        PushReminderJobEntity startJob = saveJob(reminder.getId(), PushNotificationType.START);
+        PushReminderJobEntity beforeEndJob = saveJob(reminder.getId(), PushNotificationType.BEFORE_END);
+        PushReminderJobEntity endJob = saveJob(reminder.getId(), PushNotificationType.END);
+        PushReminderJobEntity dispatchingJob = saveJob(reminder.getId(), PushNotificationType.START);
+        PushReminderJobEntity processedJob = saveJob(reminder.getId(), PushNotificationType.END);
+        processedJob.markSent(NOW.minusSeconds(1));
+        flushAndClear();
+        pushReminderJobRepository.claimPendingById(
+            dispatchingJob.getId(),
+            PushReminderJobStatus.PENDING,
+            PushReminderJobStatus.DISPATCHING,
+            NOW.plusSeconds(30)
+        );
+        flushAndClear();
+
+        new PushReminderPersistenceAdapter(pushReminderRepository, pushReminderJobRepository)
+            .cancelActiveByIdAndDeviceId(reminder.getId(), 7L, NOW);
+        flushAndClear();
+
+        assertThat(pushReminderRepository.findById(reminder.getId()).orElseThrow().getDeletedAt()).isEqualTo(NOW);
+        assertThat(pushReminderJobRepository.findById(startJob.getId()).orElseThrow().getStatus())
+            .isEqualTo(PushReminderJobStatus.CANCELLED);
+        assertThat(pushReminderJobRepository.claimPendingById(
+            startJob.getId(),
+            PushReminderJobStatus.PENDING,
+            PushReminderJobStatus.DISPATCHING,
+            NOW.plusSeconds(30)
+        )).isZero();
+        assertThat(pushReminderJobRepository.findById(beforeEndJob.getId()).orElseThrow().getStatus())
+            .isEqualTo(PushReminderJobStatus.CANCELLED);
+        assertThat(pushReminderJobRepository.findById(endJob.getId()).orElseThrow().getStatus())
+            .isEqualTo(PushReminderJobStatus.CANCELLED);
+        assertThat(pushReminderJobRepository.findById(dispatchingJob.getId()).orElseThrow().getStatus())
+            .isEqualTo(PushReminderJobStatus.DISPATCHING);
+        assertThat(pushReminderJobRepository.findById(processedJob.getId()).orElseThrow().getProcessedAt())
+            .isEqualTo(NOW.minusSeconds(1));
+    }
+
+    @Test
+    void doesNotDeleteOrCancelJobsForExpiredReminder() {
+        PushReminderEntity reminder = save(7L, NOW.minusSeconds(1));
+        PushReminderJobEntity job = saveJob(reminder.getId(), PushNotificationType.END);
+        flushAndClear();
+
+        new PushReminderPersistenceAdapter(pushReminderRepository, pushReminderJobRepository)
+            .cancelActiveByIdAndDeviceId(reminder.getId(), 7L, NOW);
+        flushAndClear();
+
+        assertThat(pushReminderRepository.findById(reminder.getId()).orElseThrow().getDeletedAt()).isNull();
+        assertThat(pushReminderJobRepository.findById(job.getId()).orElseThrow().getStatus())
+            .isEqualTo(PushReminderJobStatus.PENDING);
+    }
+
     private PushReminderEntity save(Long deviceId, Instant endAt) {
         return pushReminderRepository.save(new PushReminderEntity(new PushReminderSaveCommand(
             deviceId,
@@ -66,6 +127,10 @@ class PushReminderRepositoryTest {
             10,
             5
         )));
+    }
+
+    private PushReminderJobEntity saveJob(Long reminderId, PushNotificationType type) {
+        return pushReminderJobRepository.save(new PushReminderJobEntity(reminderId, type, NOW.plusSeconds(30)));
     }
 
     private void flushAndClear() {
