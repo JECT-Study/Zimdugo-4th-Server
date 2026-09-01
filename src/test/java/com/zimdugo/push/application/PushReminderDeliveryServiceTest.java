@@ -15,6 +15,7 @@ import com.zimdugo.push.infrastructure.scheduler.PushReminderDeliveryProcessor;
 import com.zimdugo.push.config.PushReminderDispatchProperties;
 import com.zimdugo.push.domain.WebPushSender;
 import com.zimdugo.push.domain.PushLockerNameReader;
+import com.zimdugo.push.domain.PushReminderJobStatus;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -62,6 +63,9 @@ class PushReminderDeliveryServiceTest {
             properties(),
             Clock.fixed(now, ZoneOffset.UTC)
         );
+        given(pushReminderJobRepository.claimPendingById(
+            1L, PushReminderJobStatus.PENDING, PushReminderJobStatus.DISPATCHING, now.plusSeconds(30)
+        )).willReturn(1);
         given(pushReminderJobRepository.findById(1L)).willReturn(Optional.of(job));
         given(job.getReminderId()).willReturn(2L);
         given(pushReminderRepository.findById(2L)).willReturn(Optional.of(reminder));
@@ -70,7 +74,6 @@ class PushReminderDeliveryServiceTest {
 
         service.prepare(1L);
 
-        verify(job).recordAttempt();
         verify(job).discard(now);
         verifyNoInteractions(pushSubscriptionRepository, webPushSender);
     }
@@ -86,6 +89,9 @@ class PushReminderDeliveryServiceTest {
             properties(),
             Clock.fixed(now, ZoneOffset.UTC)
         );
+        given(pushReminderJobRepository.claimPendingById(
+            1L, PushReminderJobStatus.PENDING, PushReminderJobStatus.DISPATCHING, now.plusSeconds(30)
+        )).willReturn(1);
         given(pushReminderJobRepository.findById(1L)).willReturn(Optional.of(job));
         given(job.getFireAt()).willReturn(now.minusSeconds(61));
         given(job.getReminderId()).willReturn(2L);
@@ -94,7 +100,6 @@ class PushReminderDeliveryServiceTest {
 
         service.prepare(1L);
 
-        verify(job).recordAttempt();
         verify(job).discard(now);
         verifyNoInteractions(pushSubscriptionRepository, webPushSender);
     }
@@ -114,6 +119,7 @@ class PushReminderDeliveryServiceTest {
             1L,
             2L,
             com.zimdugo.push.domain.PushNotificationType.END,
+            1,
             2L,
             3L,
             "https://fcm.googleapis.com/fcm/send/old-endpoint",
@@ -123,7 +129,8 @@ class PushReminderDeliveryServiceTest {
             "서울역 보관함"
         );
         given(pushReminderJobRepository.findById(1L)).willReturn(Optional.of(job));
-        given(job.getProcessedAt()).willReturn(null);
+        given(job.getStatus()).willReturn(PushReminderJobStatus.DISPATCHING);
+        given(job.getAttemptCount()).willReturn(1);
         given(pushReminderRepository.findById(2L)).willReturn(Optional.of(reminder));
         given(pushSubscriptionRepository.findById(3L)).willReturn(Optional.of(subscription));
         given(subscription.getEndpoint()).willReturn("https://fcm.googleapis.com/fcm/send/new-endpoint");
@@ -131,7 +138,7 @@ class PushReminderDeliveryServiceTest {
         service.complete(candidate, com.zimdugo.push.domain.WebPushSendResult.SUBSCRIPTION_EXPIRED);
 
         verify(pushSubscriptionRepository, never()).delete(subscription);
-        verify(job).markProcessed(now);
+        verify(job).discard(now);
     }
 
     @Test
@@ -147,7 +154,7 @@ class PushReminderDeliveryServiceTest {
         );
         PushReminderDeliveryProcessor.DeliveryCandidate candidate = candidate();
         given(pushReminderJobRepository.findById(1L)).willReturn(Optional.of(job));
-        given(job.getProcessedAt()).willReturn(null);
+        given(job.getStatus()).willReturn(PushReminderJobStatus.DISPATCHING);
         given(job.getAttemptCount()).willReturn(1);
         given(pushReminderRepository.findById(2L)).willReturn(Optional.of(reminder));
 
@@ -161,6 +168,7 @@ class PushReminderDeliveryServiceTest {
             1L,
             2L,
             com.zimdugo.push.domain.PushNotificationType.END,
+            1,
             2L,
             3L,
             "https://fcm.googleapis.com/fcm/send/endpoint",
@@ -176,6 +184,7 @@ class PushReminderDeliveryServiceTest {
         properties.setDeliveryTtlSeconds(60);
         properties.setDeliveryRetryDelaySeconds(5);
         properties.setMaximumDeliveryAttempts(3);
+        properties.setDispatchClaimSeconds(30);
         return properties;
     }
 }

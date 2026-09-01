@@ -1,18 +1,23 @@
 package com.zimdugo.push.infrastructure.scheduler;
 
+import com.zimdugo.push.domain.PushReminderJobStatus;
 import com.zimdugo.push.domain.WebPushSendResult;
 import com.zimdugo.push.domain.WebPushSender;
 import com.zimdugo.push.infrastructure.persistence.PushReminderJobEntity;
 import com.zimdugo.push.infrastructure.persistence.PushReminderJobRepository;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class PushReminderDeliveryScheduler {
+
+    private static final int DUE_JOB_BATCH_SIZE = 100;
 
     private final PushReminderJobRepository pushReminderJobRepository;
     private final PushReminderDeliveryProcessor pushReminderDeliveryProcessor;
@@ -21,9 +26,13 @@ public class PushReminderDeliveryScheduler {
 
     @Scheduled(fixedDelayString = "${push.reminder.dispatch-fixed-delay-millis:1000}")
     public void dispatchDueJobs() {
-        // DB가 미처리 작업의 기준이므로 재시작 뒤에도 다음 폴링에서 발송 후보를 복구한다.
+        // 리스가 만료된 선점은 재시도 대기로 되돌려 서버 중단 뒤에도 발송 후보를 복구한다.
+        Instant now = clock.instant();
+        pushReminderJobRepository.requeueExpiredDispatches(
+            PushReminderJobStatus.DISPATCHING, PushReminderJobStatus.PENDING, now
+        );
         List<PushReminderJobEntity> jobs = pushReminderJobRepository
-            .findTop100ByProcessedAtIsNullAndNextAttemptAtLessThanEqualOrderByFireAtAsc(clock.instant());
+            .findDueJobs(PushReminderJobStatus.PENDING, now, PageRequest.of(0, DUE_JOB_BATCH_SIZE));
         jobs.forEach(job -> dispatch(job.getId()));
     }
 

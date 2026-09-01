@@ -125,6 +125,7 @@ push:
     delivery-ttl-seconds: ${PUSH_REMINDER_DELIVERY_TTL_SECONDS:60}
     delivery-retry-delay-seconds: ${PUSH_REMINDER_DELIVERY_RETRY_DELAY_SECONDS:5}
     maximum-delivery-attempts: ${PUSH_REMINDER_MAXIMUM_DELIVERY_ATTEMPTS:3}
+    dispatch-claim-seconds: ${PUSH_REMINDER_DISPATCH_CLAIM_SECONDS:30}
     rate-limit-cleanup-fixed-delay-millis: ${PUSH_REMINDER_RATE_LIMIT_CLEANUP_FIXED_DELAY_MILLIS:60000}
 
 seoul-metro:

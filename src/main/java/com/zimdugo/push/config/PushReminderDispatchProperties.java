@@ -20,4 +20,7 @@ public class PushReminderDispatchProperties {
 
     @Min(1)
     private int maximumDeliveryAttempts;
+
+    @Min(1)
+    private int dispatchClaimSeconds;
 }
