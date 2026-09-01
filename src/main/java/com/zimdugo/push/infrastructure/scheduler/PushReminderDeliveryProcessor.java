@@ -3,6 +3,7 @@ package com.zimdugo.push.infrastructure.scheduler;
 import com.zimdugo.push.config.PushReminderDispatchProperties;
 import com.zimdugo.push.domain.PushLockerNameReader;
 import com.zimdugo.push.domain.PushNotificationType;
+import com.zimdugo.push.domain.PushReminderJobStatus;
 import com.zimdugo.push.domain.PushReminderStatus;
 import com.zimdugo.push.domain.PushSubscription;
 import com.zimdugo.push.domain.WebPushSendResult;
@@ -32,11 +33,10 @@ public class PushReminderDeliveryProcessor {
     @Transactional
     public DeliveryCandidate prepare(Long jobId) {
         Instant now = clock.instant();
-        PushReminderJobEntity job = pushReminderJobRepository.findById(jobId).orElse(null);
-        if (job == null || job.getProcessedAt() != null) {
+        PushReminderJobEntity job = claim(jobId, now);
+        if (job == null) {
             return null;
         }
-        job.recordAttempt();
         PushReminderEntity reminder = pushReminderRepository.findById(job.getReminderId()).orElse(null);
         if (reminder == null || reminder.getStatus() != PushReminderStatus.ACTIVE || reminder.getDeletedAt() != null) {
             discard(job, reminder, now);
@@ -55,6 +55,19 @@ public class PushReminderDeliveryProcessor {
         return candidate(job, reminder, subscription);
     }
 
+    private PushReminderJobEntity claim(Long jobId, Instant now) {
+        int claimedCount = pushReminderJobRepository.claimPendingById(
+            jobId,
+            PushReminderJobStatus.PENDING,
+            PushReminderJobStatus.DISPATCHING,
+            now.plusSeconds(properties.getDispatchClaimSeconds())
+        );
+        if (claimedCount == 0) {
+            return null;
+        }
+        return pushReminderJobRepository.findById(jobId).orElse(null);
+    }
+
     private DeliveryCandidate candidate(
         PushReminderJobEntity job,
         PushReminderEntity reminder,
@@ -64,6 +77,7 @@ public class PushReminderDeliveryProcessor {
             job.getId(),
             reminder.getId(),
             job.getType(),
+            job.getAttemptCount(),
             reminder.getLockerId(),
             subscription.getId(),
             subscription.getEndpoint(),
@@ -77,7 +91,9 @@ public class PushReminderDeliveryProcessor {
     @Transactional
     public void complete(DeliveryCandidate candidate, WebPushSendResult result) {
         PushReminderJobEntity job = pushReminderJobRepository.findById(candidate.jobId()).orElse(null);
-        if (job == null || job.getProcessedAt() != null) {
+        if (job == null ||
+            job.getStatus() != PushReminderJobStatus.DISPATCHING ||
+            job.getAttemptCount() != candidate.attemptCount()) {
             return;
         }
         Instant now = clock.instant();
@@ -90,8 +106,10 @@ public class PushReminderDeliveryProcessor {
             pushSubscriptionRepository.findById(candidate.subscriptionId())
                 .filter(subscription -> subscription.getEndpoint().equals(candidate.endpoint()))
                 .ifPresent(pushSubscriptionRepository::delete);
+            discard(job, reminder, now);
+            return;
         }
-        job.markProcessed(now);
+        job.markSent(now);
         completeReminderAtEnd(job, reminder);
     }
 
@@ -118,6 +136,7 @@ public class PushReminderDeliveryProcessor {
         Long jobId,
         Long reminderId,
         PushNotificationType type,
+        int attemptCount,
         Long lockerId,
         Long subscriptionId,
         String endpoint,
