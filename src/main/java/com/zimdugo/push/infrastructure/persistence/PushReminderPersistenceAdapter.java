@@ -1,6 +1,7 @@
 package com.zimdugo.push.infrastructure.persistence;
 
 import com.zimdugo.push.domain.PushNotificationType;
+import com.zimdugo.push.domain.PushReminderJobStatus;
 import com.zimdugo.push.domain.PushReminderReader;
 import com.zimdugo.push.domain.PushReminderSaveCommand;
 import com.zimdugo.push.domain.PushReminderSummary;
@@ -43,6 +44,19 @@ public class PushReminderPersistenceAdapter implements PushReminderReader, PushR
     @Override
     public long countActiveByDeviceId(Long deviceId, Instant now) {
         return pushReminderRepository.countActiveByDeviceId(deviceId, now);
+    }
+
+    @Override
+    public void cancelActiveByIdAndDeviceId(Long reminderId, Long deviceId, Instant now) {
+        int deletedCount = pushReminderRepository.softDeleteActiveByIdAndDeviceId(
+            reminderId, deviceId, now, PushReminderStatus.ACTIVE, now
+        );
+        if (deletedCount > 0) {
+            // 선점 전 작업만 취소해 삭제 이후 발송은 막고, 이미 시작된 외부 전송은 되돌리지 않는다.
+            pushReminderJobRepository.cancelPendingByReminderId(
+                reminderId, PushReminderJobStatus.PENDING, PushReminderJobStatus.CANCELLED, now
+            );
+        }
     }
 
     @Override

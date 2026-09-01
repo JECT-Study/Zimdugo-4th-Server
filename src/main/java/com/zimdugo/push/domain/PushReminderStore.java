@@ -8,6 +8,8 @@ public interface PushReminderStore {
 
     long countActiveByDeviceId(Long deviceId, Instant now);
 
+    void cancelActiveByIdAndDeviceId(Long reminderId, Long deviceId, Instant now);
+
     Long save(PushReminderSaveCommand command);
 
     void schedule(Long reminderId, PushNotificationType type, Instant fireAt);
