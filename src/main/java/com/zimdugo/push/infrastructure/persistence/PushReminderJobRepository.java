@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface PushReminderJobRepository extends JpaRepository<PushReminderJobEntity, Long> {
 
@@ -41,6 +42,7 @@ public interface PushReminderJobRepository extends JpaRepository<PushReminderJob
     );
 
     @Modifying
+    @Transactional
     @Query("""
         update PushReminderJobEntity job
         set job.status = :pendingStatus

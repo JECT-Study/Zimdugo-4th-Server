@@ -1,6 +1,7 @@
 package com.zimdugo.push.infrastructure.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.zimdugo.push.domain.PushNotificationType;
 import com.zimdugo.push.domain.PushReminderJobStatus;
@@ -9,6 +10,9 @@ import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @DataJpaTest
 class PushReminderJobRepositoryTest {
@@ -66,6 +70,21 @@ class PushReminderJobRepositoryTest {
             PushReminderJobStatus.DISPATCHING, PushReminderJobStatus.PENDING, NOW
         );
         flushAndClear();
+
+        assertThat(pushReminderJobRepository.findById(job.getId()).orElseThrow().getStatus())
+            .isEqualTo(PushReminderJobStatus.PENDING);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void requeuesExpiredDispatchingJobWithoutCallerTransaction() {
+        PushReminderJobEntity job = new PushReminderJobEntity(1L, PushNotificationType.START, NOW);
+        ReflectionTestUtils.setField(job, "status", PushReminderJobStatus.DISPATCHING);
+        pushReminderJobRepository.saveAndFlush(job);
+
+        assertThatCode(() -> pushReminderJobRepository.requeueExpiredDispatches(
+            PushReminderJobStatus.DISPATCHING, PushReminderJobStatus.PENDING, NOW
+        )).doesNotThrowAnyException();
 
         assertThat(pushReminderJobRepository.findById(job.getId()).orElseThrow().getStatus())
             .isEqualTo(PushReminderJobStatus.PENDING);
