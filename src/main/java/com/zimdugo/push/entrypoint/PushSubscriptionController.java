@@ -4,7 +4,7 @@ import com.zimdugo.core.response.RestResponse;
 import com.zimdugo.core.response.SuccessCode;
 import com.zimdugo.push.application.PushDeviceTokenHasher;
 import com.zimdugo.push.application.PushSubscriptionDeleteService;
-import com.zimdugo.push.application.PushSubscriptionService;
+import com.zimdugo.push.application.PushSubscriptionUpsertCoordinator;
 import com.zimdugo.push.entrypoint.dto.PushSubscriptionUpsertRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class PushSubscriptionController implements PushSubscriptionApi {
 
-    private final PushSubscriptionService pushSubscriptionService;
+    private final PushSubscriptionUpsertCoordinator pushSubscriptionUpsertCoordinator;
     private final PushSubscriptionDeleteService pushSubscriptionDeleteService;
     private final PushDeviceTokenHasher pushDeviceTokenHasher;
 
@@ -28,7 +28,7 @@ public class PushSubscriptionController implements PushSubscriptionApi {
     ) {
         // 원본 토큰은 영속 계층으로 넘기지 않고 해시 조회로만 기기 소유 여부를 확인한다.
         String deviceTokenHash = pushDeviceTokenHasher.hash(deviceToken == null ? "" : deviceToken);
-        pushSubscriptionService.upsert(request.toCommand(deviceTokenHash));
+        pushSubscriptionUpsertCoordinator.upsert(request.toCommand(deviceTokenHash));
         return ResponseEntity.ok(RestResponse.ok(SuccessCode.OK));
     }
 
