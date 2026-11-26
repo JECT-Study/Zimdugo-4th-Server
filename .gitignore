@@ -3,7 +3,6 @@ HELP.md
 build/
 .code-review-graph/
 .worktrees/
-AGENTS.md
 .venv/
 .env
 *.env
@@ -46,13 +45,8 @@ src/main/resources/application-h2.yaml
 src/main/resources/application-private.yaml
 /zimdugo-server-keypair.pem
 /scripts/db/03-i18n.sql
-/docs/solutions/
-/docs/superpowers/
 /tmp/zimdugo-coffee-coupon-event-1080.png
-/docs/solutions/
-/docs/superpowers/
 
-AGENTS.md
 /scripts/db/05-locker-realtime-availability.sql
 /scripts/db/06-seed-seoul-metro-locker-mappings.sql
 /scripts/db/07-seed-seoul-metro-lockers.sql
