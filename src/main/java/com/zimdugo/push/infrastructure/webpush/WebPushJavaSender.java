@@ -69,6 +69,9 @@ public class WebPushJavaSender implements WebPushSender {
             response.cancel(true);
             log.warn("웹 푸시 발송 응답 대기 시간 초과. timeoutMillis={}", properties.getDeliveryTimeoutMillis());
             return TIMEOUT_STATUS;
+        } catch (InterruptedException exception) {
+            response.cancel(true);
+            throw exception;
         }
     }
 

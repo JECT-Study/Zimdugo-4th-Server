@@ -72,6 +72,30 @@ class PushReminderDeliverySchedulerTest {
     }
 
     @Test
+    void stopsRemainingJobsWhenThreadIsInterrupted() {
+        Instant now = Instant.parse("2026-08-28T12:00:00Z");
+        PushReminderDeliveryScheduler scheduler = new PushReminderDeliveryScheduler(
+            pushReminderJobRepository,
+            pushReminderDeliveryProcessor,
+            webPushSender,
+            Clock.fixed(now, ZoneOffset.UTC)
+        );
+        given(pushReminderJobRepository.findDueJobs(
+            PushReminderJobStatus.PENDING, now, PageRequest.of(0, 100)
+        ))
+            .willReturn(List.of(job));
+
+        Thread.currentThread().interrupt();
+        try {
+            scheduler.dispatchDueJobs();
+        } finally {
+            Thread.interrupted();
+        }
+
+        verifyNoInteractions(pushReminderDeliveryProcessor, webPushSender);
+    }
+
+    @Test
     void doesNotSendWhenJobWasCancelledBeforeItCouldBeClaimed() {
         Instant now = Instant.parse("2026-08-28T12:00:00Z");
         PushReminderDeliveryScheduler scheduler = new PushReminderDeliveryScheduler(

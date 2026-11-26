@@ -68,6 +68,21 @@ class WebPushJavaSenderTest {
     }
 
     @Test
+    @DisplayName("응답 대기 중 인터럽트되면 요청을 취소하고 인터럽트 상태를 유지한다")
+    void cancelsDeliveryWhenInterrupted() throws Exception {
+        CompletableFuture<HttpResponse> hangingResponse = new CompletableFuture<>();
+        given(pushService.sendAsync(any(Notification.class))).willReturn(hangingResponse);
+
+        Thread.currentThread().interrupt();
+        WebPushSendResult result = send();
+        boolean interrupted = Thread.interrupted();
+
+        assertThat(result).isEqualTo(WebPushSendResult.RETRYABLE_FAILURE);
+        assertThat(hangingResponse.isCancelled()).isTrue();
+        assertThat(interrupted).isTrue();
+    }
+
+    @Test
     @DisplayName("푸시 서비스가 2xx로 응답하면 발송 성공으로 반환한다")
     void returnsSentForSuccessfulResponse() throws Exception {
         given(pushService.sendAsync(any(Notification.class)))
