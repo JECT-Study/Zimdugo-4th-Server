@@ -354,7 +354,7 @@ public interface LockerRepository extends JpaRepository<LockerEntity, Long> {
         FROM lockers l
         JOIN places p ON p.id = l.place_id
         JOIN locker_details ld ON ld.locker_id = l.id
-        WHERE l.location && ST_MakeEnvelope(:swLng, :swLat, :neLng, :neLat, 4326)::geography
+        WHERE l.latitude BETWEEN :swLat AND :neLat AND l.longitude BETWEEN :swLng AND :neLng
           AND l.place_id IS NOT NULL
           AND l.publication_status = 'ACTIVE'
           AND p.publication_status = 'ACTIVE'
