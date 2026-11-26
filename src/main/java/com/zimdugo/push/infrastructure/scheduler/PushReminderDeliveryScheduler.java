@@ -33,7 +33,13 @@ public class PushReminderDeliveryScheduler {
         );
         List<PushReminderJobEntity> jobs = pushReminderJobRepository
             .findDueJobs(PushReminderJobStatus.PENDING, now, PageRequest.of(0, DUE_JOB_BATCH_SIZE));
-        jobs.forEach(job -> dispatch(job.getId()));
+        for (PushReminderJobEntity job : jobs) {
+            // 종료 중 인터럽트되면 남은 작업은 리스 만료 후 다음 실행에서 다시 선점한다.
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
+            dispatch(job.getId());
+        }
     }
 
     public void dispatch(Long jobId) {
