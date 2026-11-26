@@ -97,7 +97,7 @@ OCI Object Storage는 Instance Principal로 인증합니다. 그래서 서버에
 
 ## 테스트
 
-- 단위·슬라이스 테스트 약 430개
+- 단위·통합 테스트 약 440개
 - PostGIS 전용 네이티브 쿼리(공간 조건, `LATERAL` 집계, 크기 필터)는 H2로 검증할 수 없어서, Testcontainers PostGIS로 실제 DB에서 검증합니다. Docker가 없는 환경에서는 이 테스트를 건너뜁니다.
 - Checkstyle을 CI와 pre-commit hook에서 함께 검사합니다.
 
