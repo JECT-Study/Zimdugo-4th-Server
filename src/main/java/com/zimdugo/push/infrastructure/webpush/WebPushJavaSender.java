@@ -9,11 +9,17 @@ import com.zimdugo.push.domain.PushSubscription;
 import com.zimdugo.push.domain.WebPushSendResult;
 import com.zimdugo.push.domain.WebPushSender;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nl.martijndwars.webpush.Notification;
-import nl.martijndwars.webpush.PushService;
+import org.apache.http.HttpResponse;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class WebPushJavaSender implements WebPushSender {
@@ -22,6 +28,7 @@ public class WebPushJavaSender implements WebPushSender {
     private static final int GONE_STATUS = 410;
     private static final int SUCCESS_STATUS_MIN = 200;
     private static final int SUCCESS_STATUS_MAX = 299;
+    private static final int TIMEOUT_STATUS = -1;
 
     private final WebPushServiceFactory webPushServiceFactory;
     private final ObjectMapper objectMapper;
@@ -35,7 +42,6 @@ public class WebPushJavaSender implements WebPushSender {
         String lockerName
     ) {
         try {
-            PushService pushService = webPushServiceFactory.create();
             Notification notification = Notification.builder()
                 .endpoint(subscription.endpoint())
                 .userPublicKey(subscription.p256dh())
@@ -43,17 +49,36 @@ public class WebPushJavaSender implements WebPushSender {
                 .payload(payload(type, lockerId, subscription.locale(), lockerName))
                 .ttl(properties.getDeliveryTtlSeconds())
                 .build();
-            int statusCode = pushService.send(notification).getStatusLine().getStatusCode();
-            if (statusCode == NOT_FOUND_STATUS || statusCode == GONE_STATUS) {
-                return WebPushSendResult.SUBSCRIPTION_EXPIRED;
-            }
-            return statusCode >= SUCCESS_STATUS_MIN && statusCode <= SUCCESS_STATUS_MAX
-                ? WebPushSendResult.SENT
-                : WebPushSendResult.RETRYABLE_FAILURE;
+            return toResult(awaitResponse(webPushServiceFactory.create().sendAsync(notification)));
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return WebPushSendResult.RETRYABLE_FAILURE;
         } catch (Exception exception) {
             // 작업 완료 여부는 scheduler가 결정하므로 여기서는 재시도 가능한 결과만 반환한다.
             return WebPushSendResult.RETRYABLE_FAILURE;
         }
+    }
+
+    private int awaitResponse(Future<HttpResponse> response) throws InterruptedException, ExecutionException {
+        try {
+            // 푸시 서비스가 응답하지 않아도 공유 스케줄러 스레드가 무기한 묶이지 않도록 대기 시간을 제한한다.
+            return response.get(properties.getDeliveryTimeoutMillis(), TimeUnit.MILLISECONDS)
+                .getStatusLine()
+                .getStatusCode();
+        } catch (TimeoutException exception) {
+            response.cancel(true);
+            log.warn("웹 푸시 발송 응답 대기 시간 초과. timeoutMillis={}", properties.getDeliveryTimeoutMillis());
+            return TIMEOUT_STATUS;
+        }
+    }
+
+    private WebPushSendResult toResult(int statusCode) {
+        if (statusCode == NOT_FOUND_STATUS || statusCode == GONE_STATUS) {
+            return WebPushSendResult.SUBSCRIPTION_EXPIRED;
+        }
+        return statusCode >= SUCCESS_STATUS_MIN && statusCode <= SUCCESS_STATUS_MAX
+            ? WebPushSendResult.SENT
+            : WebPushSendResult.RETRYABLE_FAILURE;
     }
 
     private String payload(
