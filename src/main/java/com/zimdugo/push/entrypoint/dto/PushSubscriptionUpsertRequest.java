@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
 
 public record PushSubscriptionUpsertRequest(
-    @NotBlank @URL(protocol = "https") @Size(max = 2048) String endpoint,
+    @NotBlank @URL(protocol = "https") @AllowedPushServiceEndpoint @Size(max = 2048) String endpoint,
     @NotNull @Valid PushSubscriptionKeys keys,
     @NotBlank @Pattern(regexp = "ko|en|ja|zh-Hans|zh-Hant") String locale
 ) {
