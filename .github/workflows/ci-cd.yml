@@ -117,7 +117,6 @@ jobs:
           path: build/libs/
 
       - name: Login to GHCR
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
@@ -160,7 +159,26 @@ jobs:
           cache-from: type=gha,scope=application-arm64
           cache-to: type=gha,mode=max,scope=application-arm64
 
+      - name: Check existing infrastructure images
+        id: existing
+        shell: bash
+        env:
+          OWNER: ${{ steps.image.outputs.owner }}
+          ELASTICSEARCH_TAG: ${{ steps.image.outputs.elasticsearch_tag }}
+          POSTGIS_TAG: ${{ steps.image.outputs.postgis_tag }}
+        run: |
+          # Dockerfile 해시로 태그한 이미지가 이미 있으면 다시 빌드하지 않는다.
+          # 재빌드는 apt 저장소 상태에 따라 실패하거나, 같은 태그에 다른 이미지를 덮어써 DB 컨테이너를 재생성할 수 있다.
+          image_exists() {
+            docker manifest inspect "$1" >/dev/null 2>&1 && echo true || echo false
+          }
+          {
+            echo "elasticsearch=$(image_exists "ghcr.io/${OWNER}/zimdugo-elasticsearch:${ELASTICSEARCH_TAG}")"
+            echo "postgis=$(image_exists "ghcr.io/${OWNER}/zimdugo-postgis:${POSTGIS_TAG}")"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and push Elasticsearch image
+        if: steps.existing.outputs.elasticsearch != 'true'
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
@@ -174,6 +192,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=elasticsearch-arm64
 
       - name: Build and push PostGIS image
+        if: steps.existing.outputs.postgis != 'true'
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: docker/postgres/postgis
