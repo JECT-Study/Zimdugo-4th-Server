@@ -12,6 +12,8 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "push.reminder")
 public class PushReminderDispatchProperties {
 
+    private static final long DEFAULT_DELIVERY_TIMEOUT_MILLIS = 5_000L;
+
     @Min(1)
     private int deliveryTtlSeconds;
 
@@ -23,4 +25,7 @@ public class PushReminderDispatchProperties {
 
     @Min(1)
     private int dispatchClaimSeconds;
+
+    @Min(1)
+    private long deliveryTimeoutMillis = DEFAULT_DELIVERY_TIMEOUT_MILLIS;
 }
