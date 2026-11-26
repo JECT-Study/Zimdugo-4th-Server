@@ -71,7 +71,11 @@ public class LockerDetailEntity {
     private Integer maxPrice;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "locker_size_types", joinColumns = @JoinColumn(name = "locker_id"))
+    // 크기 행은 상세 PK가 아닌 보관함 ID로 연결해 네이티브 조회와 같은 기준을 사용한다.
+    @CollectionTable(
+        name = "locker_size_types",
+        joinColumns = @JoinColumn(name = "locker_id", referencedColumnName = "locker_id")
+    )
     @Enumerated(EnumType.STRING)
     @Column(name = "size_type", nullable = false, length = 20)
     private Set<LockerSizeType> lockerSize = EnumSet.noneOf(LockerSizeType.class);

@@ -5,6 +5,7 @@ import com.zimdugo.locker.domain.locker.IndoorOutdoorType;
 import com.zimdugo.locker.domain.locker.LockerSizeType;
 import com.zimdugo.locker.domain.locker.LockerType;
 import jakarta.persistence.EntityManager;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -156,6 +157,38 @@ class PublicationStatusRepositoryTest {
             .getResultList();
 
         assertThat(sizeTypes).containsExactly("LARGE", "SMALL");
+    }
+
+    @Test
+    void sizeTypesFollowLockerIdWhenDetailIdDiffers() {
+        PlaceEntity place = placeRepository.save(new PlaceEntity("공개 장소", 37.55, 126.97, "서울 중구"));
+        lockerRepository.save(new LockerEntity("상세 없는 보관함", "서울 중구", 37.549, 126.969, place));
+        LockerEntity locker = saveLocker(
+            new LockerEntity("크기 대상", "서울 중구", 37.550, 126.970, place),
+            LockerType.SUBWAY_STATION,
+            IndoorOutdoorType.INDOOR,
+            Set.of(LockerSizeType.LARGE)
+        );
+        entityManager.flush();
+        entityManager.createNativeQuery("""
+            UPDATE lockers
+            SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+            """).executeUpdate();
+        entityManager.clear();
+        LockerDetailEntity detail = lockerDetailRepository.findAll().getFirst();
+
+        assertThat(detail.getId()).isNotEqualTo(locker.getId());
+        assertThat(lockerRepository.findLockerSizeTypesByLockerIds(List.of(locker.getId())))
+            .extracting(projection -> projection.getSizeType())
+            .containsExactly("LARGE");
+        assertThat(lockerRepository.findLockersWithinBounds(
+            37.54,
+            126.96,
+            37.56,
+            126.98,
+            new LockerBoundsFilter(true, "LARGE", false, "", false, "")
+        )).extracting(projection -> projection.getLockerId()).containsExactly(locker.getId());
+        assertThat(detail.getLockerSize()).containsExactly(LockerSizeType.LARGE);
     }
 
     private LockerEntity saveLocker(LockerEntity locker) {
