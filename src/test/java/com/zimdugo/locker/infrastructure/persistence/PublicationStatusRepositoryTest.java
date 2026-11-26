@@ -122,6 +122,30 @@ class PublicationStatusRepositoryTest {
     }
 
     @Test
+    void boundsQueryExcludesLockersOutsideViewportRectangle() {
+        PlaceEntity place = placeRepository.save(new PlaceEntity("공개 장소", 37.55, 126.97, "서울 중구"));
+        LockerEntity insideLocker = saveLocker(new LockerEntity("화면 안", "서울 중구", 37.550, 126.970, place));
+        // geography 박스(&&)는 3차원 경계 상자로 비교해 이 좌표까지 포함하지만, 화면 사각형 밖이다.
+        saveLocker(new LockerEntity("화면 밖", "서울 중구", 37.550, 126.985, place));
+        entityManager.flush();
+        entityManager.createNativeQuery("""
+            UPDATE lockers
+            SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+            """).executeUpdate();
+        entityManager.clear();
+
+        var results = lockerRepository.findLockersWithinBounds(
+            37.54,
+            126.96,
+            37.56,
+            126.98,
+            new LockerBoundsFilter(false, "", false, "", false, "")
+        );
+
+        assertThat(results).extracting(projection -> projection.getLockerId()).containsExactly(insideLocker.getId());
+    }
+
+    @Test
     void lockerDetailStoresEachLockerSizeInNormalizedTable() {
         LockerEntity locker = lockerRepository.save(new LockerEntity(
             "크기 정규화 대상",
